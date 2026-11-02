@@ -115,7 +115,7 @@ table.log tr.open td{font-weight:600}
 .lock{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:#8a6a1f;background:#f6ecd2;border:1px solid #e3cf9b;border-radius:999px;padding:1px 7px 1px 6px}
 .premnote{display:block;visibility:hidden;font-size:12px;color:#8a6a1f;background:#fbf5e6;border:1px solid #e3cf9b;border-radius:8px;padding:6px 10px}
 .premnote.on{visibility:visible}
-.premstack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;vertical-align:top}
+.premstack{display:inline-block;position:relative;vertical-align:baseline}.premstack .subpill{position:absolute;left:0;top:100%;margin-top:3px;white-space:nowrap}
 .subpill{display:inline-flex;align-items:center;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:999px;padding:1px 8px;text-decoration:none;font-weight:600}
 .subpill:hover{background:var(--jade);color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lock,:root:not([data-theme="light"]) .premnote{color:#e8c77a;background:#2c2614;border-color:#5c4b22}}
