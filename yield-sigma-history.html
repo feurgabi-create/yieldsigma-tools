@@ -115,6 +115,9 @@ table.log tr.open td{font-weight:600}
 .lock{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:#8a6a1f;background:#f6ecd2;border:1px solid #e3cf9b;border-radius:999px;padding:1px 7px 1px 6px}
 .premnote{display:block;visibility:hidden;font-size:12px;color:#8a6a1f;background:#fbf5e6;border:1px solid #e3cf9b;border-radius:8px;padding:6px 10px}
 .premnote.on{visibility:visible}
+.premstack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;vertical-align:top}
+.subpill{display:inline-flex;align-items:center;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:999px;padding:1px 8px;text-decoration:none;font-weight:600}
+.subpill:hover{background:var(--jade);color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lock,:root:not([data-theme="light"]) .premnote{color:#e8c77a;background:#2c2614;border-color:#5c4b22}}
 :root[data-theme="dark"] .lock,:root[data-theme="dark"] .premnote{color:#e8c77a;background:#2c2614;border-color:#5c4b22}
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
@@ -135,7 +138,6 @@ table.log tr.open td{font-weight:600}
     <div class="lg" id="leg-vd"><b>Volatility dispersion</b> · How far the dividend yield sits from its 10-year average, compared with how much it normally moves: Tight, Moderate or Wide. Tighter means a faster return toward normal.</div>
     <div class="lgf">Proprietary metrics by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a> for <a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a>.</div>
   </div>
-  <div class="premnote" id="premnote">Full history is a Premium view.</div>
 
   <div class="controls">
     <label class="ctl" for="stock">Stock
@@ -144,7 +146,7 @@ table.log tr.open td{font-weight:600}
     <fieldset>
       <legend>Period</legend>
       <label class="ctl"><input type="radio" name="rng" value="120" checked> 10 years</label>
-      <label class="ctl prem"><input type="radio" name="rng" value="all"> Full history <span class="lock" aria-label="Premium"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"/></svg>Premium</span></label>
+      <label class="ctl prem"><input type="radio" name="rng" value="all"> Full history <span class="premstack"><span class="lock" aria-label="Premium"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"/></svg>Premium</span><a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></span></label>
     </fieldset>
     <fieldset>
       <legend>Show</legend>
@@ -542,7 +544,6 @@ function draw(){
   const t=sel.value, rows=VIEW(t);
   document.getElementById('since').textContent='Monthly chart since '+fmtMonth(rows[0][0])+'. Each point compiled from the previous 10 years.';
   { const el=document.getElementById('thru'); if(el){ let mx=''; for(const k in DATA){ const L=DATA[k][DATA[k].length-1][0]; if(L>mx) mx=L; } el.textContent='Data through '+fmtMonth(mx); } }
-  document.getElementById('premnote').classList.toggle('on', document.querySelector('input[name="rng"]:checked').value==='all');
   const mode=document.getElementById('showPx').checked?'px':'none'; 
   document.getElementById('pxnote').classList.toggle('off', mode!=='px');
   const fitR = a => { a.width = mode==='none' ? 4 : 42; };
