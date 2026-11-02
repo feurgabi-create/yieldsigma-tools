@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dividend Framework Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+    --paper:#0F1B13;
+  }
+}
+:root[data-theme="dark"]{
+  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  --paper:#0F1B13;
+}
+html{height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.stage{padding:32px 16px}
+.sheet{width:100%;max-width:1040px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28)}
+.empty{padding:100px 10px;text-align:center;color:var(--muted);font:16px/1.6 var(--serif)}
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:20px}
+.pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.pageHead h2 a.fwLink{color:var(--jade);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.pageHead h2 a.fwLink:hover{text-decoration-thickness:2px}
+.pageHead .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pageHead .asof{font-size:11.5px;color:var(--muted)}
+.controls{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;margin-bottom:12px}
+.tabs{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.tab{border:0;background:var(--field);padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tab.on{background:var(--jade);color:#fff}
+.controls input[type=search]{flex:1 1 200px;min-width:0;padding:7px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--field);font-size:12.5px}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.note{font-size:11.5px;color:var(--muted);margin:0 0 14px}
+.note svg,.lock svg{vertical-align:-2px}
+.lockNote{white-space:nowrap}
+/* LIST_HEIGHT 0 = the full list, page grows with it. Any other number = the list
+   scrolls inside a box that tall (headers stay put), so the page has one fixed
+   height and the Google Sites embed is sized once. */
+.tblWrap{overflow-x:auto}
+.tblWrap.fixed{overflow:auto;border-bottom:1px solid var(--rule)}
+table.dir{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+table.dir th,table.dir td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:left}
+table.dir th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--rule);white-space:nowrap}
+table.dir thead th{position:sticky;top:0;z-index:1;background:var(--paper);border-bottom:0;box-shadow:inset 0 -2px 0 var(--rule)}
+table.dir th.on{color:var(--ink)}
+.sortBtn{all:unset;cursor:pointer}
+.sortBtn:hover{text-decoration:underline}
+.sortBtn:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+table.dir .num{text-align:right;font-variant-numeric:tabular-nums}
+table.dir th.num{text-align:right}
+table.dir td.tk{font-weight:700;letter-spacing:.02em}
+table.dir td.nm{color:var(--ink)}
+table.dir .cardCol{text-align:center;width:80px}
+table.dir tr.free td.tk{color:var(--jade)}
+table.dir a.open{color:var(--jade);font-weight:600;text-decoration:none;font-size:12px}
+table.dir a.open:hover{text-decoration:underline}
+table.dir .lock{color:var(--muted);opacity:.7}
+table.dir td.none{text-align:center;color:var(--muted);padding:30px}
+.foot{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--jade);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:11.5px;margin-left:6px}
+.nmSub{display:none}
+@media(max-width:640px){.sheet{padding:24px 16px 20px}.stage{padding:16px 0}table.dir{min-width:0;font-size:12px}table.dir th,table.dir td{padding:8px 6px}.nmCol{display:none}.nmSub{display:block;font-weight:400;font-size:10.5px;color:var(--muted);letter-spacing:0;margin-top:2px}table.dir .cardCol{width:auto}table.dir th{white-space:normal;font-size:10px;letter-spacing:.02em;vertical-align:bottom}}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.labsBy a:hover{text-decoration:underline}
+.foot .footLinks{flex-basis:100%}
+.foot a,.foot a:visited{color:var(--jade,#1F7A52)}
+</style>
+</head>
+<body>
+<main class="stage"><article class="sheet" id="sheet"></article></main>
+<script>
+/* ===== EDIT LINKS HERE =====
+   Every page link used by this tool. If a page moves, change it here only. */
+var LINKS={
+  card:        "https://tools.stardustcapital.net/card.html?ticker=",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide",
+  framework:   "https://www.yieldsigma.com/dividend-framework/dividend-framework"
+};
+</script>
+<script>
+(function(){
+'use strict';
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num'},
+ {k:'par', label:'Par (yield-parity price)', type:'money'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'5y CAGR (dividend)', type:'pct'},
+ {k:'cagr10y', label:'10y CAGR (dividend)', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200-day moving average', type:'money'},
+ {k:'ma200diff', label:'200-day MA, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct'}
+];
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio'];
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtBps(v){if(v===null)return '\u2013';var b=Math.round(v*100);return (b>=0?'+':'')+b+'bps';}
+
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/);
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' columns found, expected '+schema.length+'.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+/* Sigma sign convention (matches the sigma card exactly): negative =
+   "rich"/overvalued (yield abnormally low vs its own 10y average),
+   positive = "cheap"/undervalued (yield abnormally high). */
+function analyzeRow(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.ticker=rec.ticker||ne.tick||'\u2013';
+  var sigma=rec.sigma;
+  var sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigma=sigma!==null?sigma:sigmaComputed;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  return a;
+}
+
+/* Company-name abbreviation — same dictionary as the sigma card, used
+   only for the hover preview's full-name line. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',COMPANY:'Co',CO:'Co',INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',INTERNATIONAL:'Intl',HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',ASSOCIATES:'Assoc',MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',RESIDENTIAL:'Res',DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * CSV parsing + live fetch — same as the sigma card.
+ * ------------------------------------------------------------------ */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+function fetchLiveRows(stocksUrl,reitsUrl){
+  var sources=[];
+  if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
+  if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
+  if(!sources.length)return Promise.resolve(null);
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url,{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    });
+  })).then(function(texts){
+    var lines=[],tags=[];
+    texts.forEach(function(t,i){
+      var these=csvTextToLines(t);
+      lines=lines.concat(these);
+      these.forEach(function(){tags.push(sources[i].kind);});
+    });
+    return {lines:lines,tags:tags};
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Zoning, ranking and aggregation
+ * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ * Dividend Framework universe directory
+ * Lists every name in the live Gist feed. Only a rotating subset links
+ * to its full sigma card: every other name among the 20 most
+ * undervalued, the 20 most overvalued and the 20 normal names closest
+ * to 0 sigma (ranks 1, 3, 5 ... 19 in each band; most extreme first,
+ * closest to 0 first for normal). Everything else shows a lock. The free set
+ * is recomputed from the live data on every load/refresh, so it always
+ * matches the current sigma ranking.
+ * ------------------------------------------------------------------ */
+var LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var CARD_URL=LINKS.card;
+var FREE_BAND=20;   // how far down each band's ranking the free links reach
+var FREE_STEP=2;    // 2 = every other name (ranks 1, 3, 5 ...)
+var LIST_HEIGHT=0;  // 0 = full length; otherwise list box height in pixels
+
+/* Same zone cutoffs as the matching heat map. */
+function zoneOf(kind,s){
+  if(s===null||s===undefined||!isFinite(s))return null;
+  if(kind==='reits'){if(s>1.5)return 'under';if(s<0)return 'over';return 'normal';}
+  if(Math.abs(s)<1)return 'normal';
+  return s<0?'over':'under';
+}
+
+var DATA={stocks:[],reits:[]};
+var STATE={kind:'stocks',sort:'name',dir:1,q:'',long25:false};
+var lastUpdated=null;
+
+function buildRows(lines,tags){
+  var out={stocks:[],reits:[]};
+  lines.forEach(function(line,i){
+    var kind=tags[i]==='reits'?'reits':'stocks';
+    var p=parseRow(line,kind==='reits'?SCHEMA_REITS:SCHEMA_STOCKS);
+    var rec=p.rec;if(!rec)return;
+    var a=analyzeRow(rec);
+    if(!a.ticker||a.ticker==='–')return;
+    out[kind].push({
+      name:((a.name||'').trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord).join(' ').replace(/,+$/,''))||a.ticker,
+      ticker:a.ticker.trim().toUpperCase(),
+      years:(rec.divGrowthYears!==null&&isFinite(rec.divGrowthYears))?rec.divGrowthYears:null,
+      price:(rec.price!==null&&isFinite(rec.price))?rec.price:null,
+      div:(rec.divDollar!==null&&isFinite(rec.divDollar))?rec.divDollar:null,
+      sigma:a.sigma,
+      free:false
+    });
+  });
+  ['stocks','reits'].forEach(function(kind){markFree(out[kind],kind);});
+  return out;
+}
+function markFree(rows,kind){
+  var under=rows.filter(function(r){return zoneOf(kind,r.sigma)==='under';}).sort(function(p,q){return q.sigma-p.sigma;});
+  var over=rows.filter(function(r){return zoneOf(kind,r.sigma)==='over';}).sort(function(p,q){return p.sigma-q.sigma;});
+  /* normal band: closest to 0 sigma first */
+  var normal=rows.filter(function(r){return zoneOf(kind,r.sigma)==='normal';}).sort(function(p,q){return Math.abs(p.sigma)-Math.abs(q.sigma);});
+  [under,over,normal].forEach(function(list){
+    list.slice(0,FREE_BAND).forEach(function(r,i){if(i%FREE_STEP===0)r.free=true;});
+  });
+}
+
+function cmp(a,b,key){
+  var x=a[key],y=b[key];
+  if(key==='name'||key==='ticker'){x=String(x).toLowerCase();y=String(y).toLowerCase();return x<y?-1:x>y?1:0;}
+  var xn=(x===null||x===undefined),yn=(y===null||y===undefined);
+  if(xn&&yn)return 0;if(xn)return 1;if(yn)return -1;   // blanks always last
+  return x-y;
+}
+function visibleRows(){
+  var q=STATE.q.trim().toLowerCase();
+  var rows=DATA[STATE.kind].filter(function(r){
+    if(STATE.long25&&!(r.years!==null&&r.years>=25))return false;
+    if(q&&r.name.toLowerCase().indexOf(q)<0&&r.ticker.toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var key=STATE.sort,dir=STATE.dir;
+  rows.sort(function(a,b){
+    var c=cmp(a,b,key);
+    if((a[key]===null)!==(b[key]===null))return c; // keep blanks last in both directions
+    return c*dir||cmp(a,b,'name');
+  });
+  return rows;
+}
+
+var LOCK_SVG='<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
+
+function headCell(key,label,numeric){
+  var on=STATE.sort===key;
+  var arrow=on?(STATE.dir>0?' ▴':' ▾'):'';
+  return '<th class="'+(numeric?'num':'')+(on?' on':'')+'" aria-sort="'+(on?(STATE.dir>0?'ascending':'descending'):'none')+'">'+
+    '<button type="button" class="sortBtn" data-key="'+key+'">'+esc(label)+arrow+'</button></th>';
+}
+function render(){
+  var sheet=$('#sheet');
+  var all=DATA[STATE.kind];
+  if(!DATA.stocks.length&&!DATA.reits.length){
+    sheet.innerHTML='<div class="empty">Loading the universe…</div>';return;
+  }
+  var rows=visibleRows();
+  var freeCount=all.filter(function(r){return r.free;}).length;
+  var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.framework)+'" target="_blank" rel="noopener">Dividend Framework</a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
+    '<div class="sub">'+DATA.stocks.length+' dividend growers · '+DATA.reits.length+' REITs</div></div>'+
+    '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
+  h+='<div class="controls">'+
+    '<div class="tabs" role="tablist">'+
+      '<button type="button" role="tab" class="tab'+(STATE.kind==='stocks'?' on':'')+'" data-kind="stocks" aria-selected="'+(STATE.kind==='stocks')+'">Stocks</button>'+
+      '<button type="button" role="tab" class="tab'+(STATE.kind==='reits'?' on':'')+'" data-kind="reits" aria-selected="'+(STATE.kind==='reits')+'">REITs</button>'+
+    '</div>'+
+    '<input type="search" id="q" placeholder="Search name or ticker" value="'+esc(STATE.q)+'" aria-label="Search name or ticker">'+
+    '<label class="chk"><input type="checkbox" id="long25"'+(STATE.long25?' checked':'')+'> 25+ years of growth</label>'+
+  '</div>';
+  h+='<p class="note">'+freeCount+' names in this list open their full sigma card. '+
+     '<span class="lockNote">'+LOCK_SVG+' marks a card reserved for members.</span></p>';
+  h+='<div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'"><table class="dir"><thead><tr>'+
+    headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+headCell('years','Years of growth',true)+
+    headCell('price','Price',true)+headCell('div','Dividend / share',true)+'<th class="cardCol">Card</th>'+
+    '</tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="6" class="none">No names match.</td></tr>';
+  rows.forEach(function(r){
+    var card=r.free
+      ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
+      :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
+    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+esc(r.name)+'</td><td class="tk">'+esc(r.ticker)+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
+      '<td class="num">'+(r.years===null?'–':esc(String(Math.round(r.years))))+'</td>'+
+      '<td class="num">'+fmtMoney(r.price)+'</td><td class="num">'+fmtMoney(r.div)+'</td>'+
+      '<td class="cardCol">'+card+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<footer class="foot"><span>Model output, not investment advice.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
+     '<span>'+(lastUpdated?'Live · updated '+esc(lastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})):'Live')+
+     ' <button type="button" class="linkbtn" id="refresh">Refresh</button></span></footer>';
+  var hadFocus=document.activeElement&&document.activeElement.id==='q';
+  var caret=hadFocus?document.activeElement.selectionStart:null;
+  sheet.innerHTML=h;
+  wire();
+  if(hadFocus){var qi=$('#q');qi.focus();try{qi.setSelectionRange(caret,caret);}catch(e){}}
+}
+function wire(){
+  Array.prototype.forEach.call(document.querySelectorAll('.sortBtn'),function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-key');
+      if(STATE.sort===k)STATE.dir=-STATE.dir;
+      else{STATE.sort=k;STATE.dir=(k==='name'||k==='ticker')?1:-1;}
+      render();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){
+    b.addEventListener('click',function(){STATE.kind=b.getAttribute('data-kind');render();});
+  });
+  $('#q').addEventListener('input',function(e){STATE.q=e.target.value;render();});
+  $('#long25').addEventListener('change',function(e){STATE.long25=e.target.checked;render();});
+  $('#refresh').addEventListener('click',load);
+}
+function load(){
+  return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    DATA=buildRows(res.lines,res.tags);
+    lastUpdated=new Date();
+    render();
+  }).catch(function(){
+    if(!DATA.stocks.length&&!DATA.reits.length)$('#sheet').innerHTML='<div class="empty">Couldn’t reach the data just now. Try Refresh in a minute.</div>';
+  });
+}
+render();
+load();
+setInterval(load,15*60*1000);
+
+})();
+</script>
+</body>
+</html>

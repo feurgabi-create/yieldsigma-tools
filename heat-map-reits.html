@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sigma Heat Map — REITs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+    --paper:#0F1B13;
+  }
+}
+:root[data-theme="dark"]{
+  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  --paper:#0F1B13;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:100vh}
+body.public-mode .app{grid-template-columns:1fr;min-height:0}
+body.public-mode .side{display:none}
+body.public-mode .stage{padding:0}
+
+.side{background:var(--panel);border-right:1px solid var(--rule);padding:22px 20px 40px;position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}
+.side h1{font:600 20px/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 4px}
+.side .tag{color:var(--muted);margin:0 0 18px;font-size:13px}
+.side h2{font:600 12.5px/1 var(--mono);letter-spacing:.02em;color:var(--muted);margin:20px 0 8px;text-transform:uppercase}
+.side h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:11px;margin-left:4px}
+textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--rule);border-radius:8px;background:var(--field);font:12.5px/1.5 var(--mono);resize:vertical;margin-top:10px}
+.btnrow{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--field);cursor:pointer;font-weight:600;font-size:13px}
+.btn.primary{background:var(--jade);border-color:var(--jade);color:#fff}
+.linkbtn{background:none;border:0;padding:0;color:var(--jade);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
+.field{display:block;margin-top:14px}
+.field>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.dataType{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dataType>span{margin-bottom:0}
+.radioOpt{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer}
+.radioOpt input{margin:0}
+.field input[type=url]{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:8px;background:var(--field);color:inherit;font:12.5px var(--mono)}
+.status{min-height:32px;margin-top:12px;font-size:12.5px;color:var(--muted);white-space:pre-line}
+.status.err{color:var(--rust)}
+
+.stage{padding:32px;min-width:0}
+.sheet{width:100%;max-width:1040px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;font-family:var(--mono);
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28);}
+.empty{padding:100px 10px;text-align:center;color:var(--muted);font:16px/1.6 var(--serif)}
+
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:28px}
+.pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.pageHead .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pageHead .asof{font-size:11.5px;color:var(--muted);text-align:right}
+
+.legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-size:11.5px;color:var(--muted)}
+.legend .li{display:inline-flex;align-items:center;gap:6px}
+.legend .sq{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .sq.under{background:var(--jade-soft);border:1px solid color-mix(in srgb, var(--jade) 35%, transparent)}
+.legend .sq.normal{background:var(--field);border:1px solid var(--rule)}
+.legend .sq.over{background:var(--rust-soft);border:1px solid color-mix(in srgb, var(--rust) 35%, transparent)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.tile{position:relative;border-radius:8px;padding:9px 6px;text-align:center;border:1px solid transparent;cursor:pointer;display:block;color:inherit;text-decoration:none}
+.tile:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.tile.under{background:var(--jade-soft);border-color:color-mix(in srgb, var(--jade) 35%, transparent)}
+.tile.normal{background:var(--field);border-color:var(--rule)}
+.tile.over{background:var(--rust-soft);border-color:color-mix(in srgb, var(--rust) 35%, transparent)}
+.tile .tk{font-weight:700;font-size:13px;letter-spacing:.02em}
+.tile.under .tk{color:var(--jade)}
+.tile.over .tk{color:var(--rust)}
+.tile .sg{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+
+.tile .wash{position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%) translateY(4px);
+  background:var(--ink);color:var(--paper);font-size:11px;line-height:1.5;padding:9px 11px;border-radius:7px;
+  white-space:nowrap;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);opacity:0;pointer-events:none;
+  transition:opacity .12s ease,transform .12s ease;z-index:5;text-align:left}
+.tile .wash::after{content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+.tile .wash b{font-weight:700}
+.tile:hover .wash,.tile:focus-within .wash{opacity:1;transform:translateX(-50%) translateY(0)}
+.tile:hover,.tile:focus-within{box-shadow:0 2px 10px -2px rgba(0,0,0,.18)}
+
+.matrixWrap{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
+.matrixWrap h3{font:600 14px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px}
+.matrixWrap .desc{font-size:12px;color:var(--muted);margin:0 0 16px;max-width:60ch}
+table.matrix{width:100%;border-collapse:collapse;font-size:13px}
+table.matrix th,table.matrix td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--rule)}
+table.matrix th:first-child,table.matrix td:first-child{text-align:left;color:var(--muted);font-weight:500}
+table.matrix thead th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--rule)}
+table.matrix thead th.under{color:var(--jade)}
+table.matrix thead th.over{color:var(--rust)}
+table.matrix td{font-variant-numeric:tabular-nums;font-weight:600}
+table.matrix tr.moreToggle td{padding:0;border-bottom:none}
+table.matrix .moreBtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:10px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--jade);text-align:left}
+table.matrix .moreBtn:hover{text-decoration:underline}
+table.matrix .moreBtn:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+table.matrix tbody.moreRows[hidden]{display:none}
+table.matrix tr.secHead td{font:600 11px var(--mono);letter-spacing:.03em;color:var(--muted);padding-top:18px;border-bottom:2px solid var(--rule)}
+table.matrix tr.secHead td:first-child{text-transform:uppercase;font-weight:600}
+table.matrix thead th .zr{display:block;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
+table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
+/* Zone column headings lightly tinted like their tiles (headings only). */
+table.matrix thead th:nth-child(3){background:color-mix(in srgb, var(rust-soft) 40%, transparent)}
+table.matrix thead th:nth-child(5){background:color-mix(in srgb, var(--jade-soft) 40%, transparent)}
+.matrixWrap .desc.zoneDef{margin-top:-10px}
+table.matrix td .n{display:block;font-size:10px;font-weight:500;color:var(--muted);margin-top:1px}
+
+.foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.pubFootLive{display:none}
+body.public-mode .pubFootLive{display:inline}
+.foot .pubLive{font-size:11.5px;color:var(--muted)}
+.foot .linkbtn{font-size:11.5px;margin-left:8px}
+
+@media(max-width:880px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule)}
+  .stage{padding:14px}
+  .sheet{padding:26px 18px 20px}
+  .tiles{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+  table.matrix{font-size:11.5px}
+}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.labsBy a:hover{text-decoration:underline}
+.foot .footLinks{flex-basis:100%}
+.foot a,.foot a:visited{color:var(--jade,#1F7A52)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <h1>Sigma Heat Map — REITs</h1>
+    <p class="tag">Paste or fetch the full REITs universe. Automatically ranks every complete row by sigma, caps the map at the most extreme ~60 names, and rolls up averages across the whole set underneath.</p>
+
+    <textarea id="raw" placeholder="Paste rows here (tab-separated, one company per line), or use Fetch REITs below to pull from your GitHub Gist."></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="btnRender">Build map</button>
+    </div>
+
+    <h2>Live source <span class="hint">optional</span></h2>
+    <p class="tag">Tether this to your GitHub Gist CSV file so the map can be refreshed from current data any time. Leave blank to work off a one-time paste instead.</p>
+    <label class="field"><span>REITs CSV URL</span>
+      <input type="url" id="urlReits" placeholder="https://gist.githubusercontent.com/…/raw/reits.csv" autocomplete="off">
+    </label>
+    <div class="btnrow">
+      <button class="btn" id="btnFetchReits">Fetch REITs</button>
+    </div>
+
+    <h2>Names on the map</h2>
+    <p class="tag">Pick which zones show and how many tiles they get. Each zone's names are taken either most extreme first, or spread evenly from its most to its least extreme name. The aggregate stats underneath always use the whole universe.</p>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="checkbox" id="mzOver" checked>Overvalued</label>
+      <label class="radioOpt"><input type="checkbox" id="mzNormal" checked>Normal</label>
+      <label class="radioOpt"><input type="checkbox" id="mzUnder" checked>Undervalued</label>
+    </div>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="radio" name="mapMode" id="mmEqual" checked>Same number per zone</label>
+      <label class="radioOpt"><input type="radio" name="mapMode" id="mmProp">In proportion to zone size</label>
+    </div>
+    <label class="field"><span id="mapNLabel">Tiles per zone</span>
+      <input type="number" id="mapN" min="1" max="300" step="1" value="20">
+    </label>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="radio" name="mapSpread" id="msExtreme" checked>Most extreme first</label>
+      <label class="radioOpt"><input type="radio" name="mapSpread" id="msEven">Spread evenly across the zone</label>
+    </div>
+    <div class="status" id="mapStatus"></div>
+
+    <h2>Look</h2>
+    <div class="btnrow">
+      <button class="btn" id="btnDark">Dark ledger</button>
+      <button class="btn" id="btnLight">Light ledger</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <h2>Publish</h2>
+    <p class="tag">Builds the sidebar-free page for whatever's currently loaded, and copies it — paste into your website's embed block. With a live source above, the published page re-fetches the sheet itself every ~15 minutes, refreshing values and re-ranking zones for this exact set of names; otherwise it's a one-time snapshot.</p>
+    <div class="btnrow">
+      <button class="btn primary" id="btnPublish">Copy website code</button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <article class="sheet" id="sheet"></article>
+  </main>
+</div>
+
+<div class="modalOverlay" id="publishModal" hidden>
+  <div class="modalBox">
+    <h3>Website code</h3>
+    <p id="publishMsg">Copied to your clipboard — go to your website's embed block and paste (Ctrl/⌘+V).</p>
+    <p class="modalHint">If the paste comes up empty, click inside the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.</p>
+    <textarea id="publishOutput" readonly spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="publishCopyAgain">Copy again</button>
+      <button class="btn" id="publishClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.modalOverlay{position:fixed;inset:0;background:rgba(10,20,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.modalOverlay[hidden]{display:none}
+.modalBox{background:var(--field);border-radius:12px;padding:22px;max-width:560px;width:100%;box-shadow:0 20px 60px -12px rgba(0,0,0,.4)}
+.modalBox h3{margin:0 0 8px;font:600 17px var(--serif)}
+.modalBox p{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5}
+.modalBox .modalHint{font-size:12px}
+.modalBox textarea{height:140px;font-size:10.5px}
+</style>
+
+<script>
+/* ===== EDIT LINKS HERE =====
+   Every page link used by this tool. If a page moves, change it here only. */
+var LINKS={
+  card:        "https://tools.stardustcapital.net/card.html?ticker=",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
+};
+</script>
+<script>
+(function(){
+'use strict';
+
+/* Set to true for the published, sidebar-free output — same pattern as
+   the sigma card tool, built by the same regen-template script. */
+var PUBLIC_MODE=true;
+
+/* ------------------------------------------------------------------ *
+ * Schema, parsing and sigma math — copied verbatim from
+ * sigma-yield-card.html so the two tools always agree on what a given
+ * row's sigma/yield/etc. actually is. If that file's schema or sigma
+ * math changes, mirror the change here too.
+ * ------------------------------------------------------------------ */
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num'},
+ {k:'par', label:'Par (yield-parity price)', type:'money'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'5y CAGR (dividend)', type:'pct'},
+ {k:'cagr10y', label:'10y CAGR (dividend)', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200 dma', type:'money'},
+ {k:'ma200diff', label:'200 dma, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct'},
+ {k:'divGrowth3y', label:'Div growth, past 3y', type:'pct'}
+];
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio','divGrowth3y'];
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtBps(v){if(v===null)return '\u2013';var b=Math.round(v*100);return (b>=0?'+':'')+b+'bps';}
+
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/);
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' columns found, expected '+schema.length+'.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+/* Sigma sign convention (matches the sigma card exactly): negative =
+   "rich"/overvalued (yield abnormally low vs its own 10y average),
+   positive = "cheap"/undervalued (yield abnormally high). */
+function analyzeRow(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.ticker=rec.ticker||ne.tick||'\u2013';
+  var sigma=rec.sigma;
+  var sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigma=sigma!==null?sigma:sigmaComputed;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  return a;
+}
+
+/* Company-name abbreviation — same dictionary as the sigma card, used
+   only for the hover preview's full-name line. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',COMPANY:'Co',CO:'Co',INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',INTERNATIONAL:'Intl',HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',ASSOCIATES:'Assoc',MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',RESIDENTIAL:'Res',DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * CSV parsing + live fetch — same as the sigma card.
+ * ------------------------------------------------------------------ */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+function fetchLiveRows(stocksUrl,reitsUrl){
+  var sources=[];
+  if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
+  if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
+  if(!sources.length)return Promise.resolve(null);
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url,{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    });
+  })).then(function(texts){
+    var lines=[],tags=[];
+    texts.forEach(function(t,i){
+      var these=csvTextToLines(t);
+      lines=lines.concat(these);
+      these.forEach(function(){tags.push(sources[i].kind);});
+    });
+    return {lines:lines,tags:tags};
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Zoning, ranking and aggregation
+ * ------------------------------------------------------------------ */
+var ZONE_UNDER_MIN=1.5; // sigma above this = undervalued
+var ZONE_OVER_MAX=0;    // sigma below this = overvalued; normal is in between
+function zone3(sigma){
+  if(sigma===null||sigma===undefined||!isFinite(sigma))return null;
+  if(sigma>ZONE_UNDER_MIN)return 'under';
+  if(sigma<ZONE_OVER_MAX)return 'over';
+  return 'normal';
+}
+/* Map selection settings. The editor reads them from the sidebar; the
+   published page gets them baked in at publish time (MAP_SETTINGS_RAW).
+   mode: 'equal' = n tiles per zone; 'prop' = n tiles in total, split by
+   each zone's share of the universe. spread: 'extreme' = most extreme
+   first; 'even' = evenly spaced from most to least extreme. */
+var MAP_SET={n:20,mode:'equal',spread:'extreme',under:true,normal:true,over:true};
+var LAST_SEL=null;
+function cleanMapSet(s){
+  var n=parseInt(s&&s.n,10);
+  return {
+    n:(isFinite(n)&&n>=1)?Math.min(n,300):20,
+    mode:(s&&s.mode==='prop')?'prop':'equal',
+    spread:(s&&s.spread==='even')?'even':'extreme',
+    under:!(s&&s.under===false),
+    normal:!(s&&s.normal===false),
+    over:!(s&&s.over===false)
+  };
+}
+function sampleList(list,k){
+  if(!(k>0))return [];
+  if(k>=list.length)return list.slice();
+  if(MAP_SET.spread!=='even'||k===1)return list.slice(0,k);
+  var out=[];
+  for(var i=0;i<k;i++)out.push(list[Math.round(i*(list.length-1)/(k-1))]);
+  return out;
+}
+function zoneCounts(sizes){
+  /* sizes: {under,normal,over} full zone sizes. Returns tiles per zone. */
+  var keys=['under','normal','over'].filter(function(k){return MAP_SET[k];});
+  var res={under:0,normal:0,over:0};
+  if(!keys.length)return res;
+  if(MAP_SET.mode!=='prop'){
+    keys.forEach(function(k){res[k]=Math.min(MAP_SET.n,sizes[k]);});
+    return res;
+  }
+  var tot=keys.reduce(function(s,k){return s+sizes[k];},0);
+  if(!tot)return res;
+  var want=Math.min(MAP_SET.n,tot),used=0,rem=[];
+  keys.forEach(function(k){var exact=want*sizes[k]/tot;res[k]=Math.floor(exact);used+=res[k];rem.push({k:k,r:exact-res[k]});});
+  rem.sort(function(p,q){return q.r-p.r;});
+  for(var i=0;used<want&&i<rem.length;i++){res[rem[i].k]++;used++;}
+  return res;
+}
+/* Pick up to `cap` names from a list already sorted most-extreme-first,
+   but reserve slots for stocks and REITs in proportion to each kind's
+   share of that zone's full population (minimum 1 each, if present) —
+   so a type with a narrower sigma range (usually REITs) can't get
+   crowded out entirely by a wider one just because its values are less
+   extreme. `cmp` re-sorts the combined pick back into extreme-first
+   order for display. */
+function proportionalPick(sortedList,cap,cmp){
+  if(!(cap>0))return [];
+  var stocksList=sortedList.filter(function(x){return x.kind!=='reits';});
+  var reitsList=sortedList.filter(function(x){return x.kind==='reits';});
+  if(!stocksList.length||!reitsList.length)return sampleList(sortedList,cap).sort(cmp);
+  var total=sortedList.length;
+  var reitsShare=Math.round(cap*reitsList.length/total);
+  reitsShare=Math.max(1,Math.min(reitsShare,cap-1));
+  var stocksShare=cap-reitsShare;
+  var picked=sampleList(stocksList,stocksShare).concat(sampleList(reitsList,reitsShare));
+  picked.sort(cmp);
+  return picked;
+}
+function buildSelection(items){
+  /* items: [{rec,a}], already filtered to complete (a.sigma!==null) */
+  var under=[],normal=[],over=[];
+  items.forEach(function(x){
+    var z=zone3(x.a.sigma);
+    if(z==='under')under.push(x);
+    else if(z==='over')over.push(x);
+    else if(z==='normal')normal.push(x);
+  });
+  var descSigma=function(p,q){return q.a.sigma-p.a.sigma;};
+  var ascSigma=function(p,q){return p.a.sigma-q.a.sigma;};
+  under.sort(descSigma);
+  over.sort(ascSigma);
+  var cnt=zoneCounts({under:under.length,normal:normal.length,over:over.length});
+  var mapNormal;
+  if(MAP_SET.spread==='even'){
+    /* Even spread: sample the whole Normal band from top to bottom. */
+    mapNormal=proportionalPick(normal.slice().sort(descSigma),cnt.normal,descSigma);
+  }else{
+    /* Normal zone is 0–1.5σ (never negative now). Show the names closest
+       to each edge of that band — nearest the undervalued cutoff, and
+       nearest the overvalued cutoff — split half and half. */
+    var halfHigh=Math.ceil(cnt.normal/2),halfLow=cnt.normal-halfHigh;
+    var normalHigh=proportionalPick(normal.slice().sort(descSigma),halfHigh,descSigma);
+    var normalHighSet={};
+    normalHigh.forEach(function(x){normalHighSet[x.a.ticker]=true;});
+    var normalLow=proportionalPick(
+      normal.slice().sort(ascSigma).filter(function(x){return !normalHighSet[x.a.ticker];}),
+      halfLow,ascSigma);
+    mapNormal=normalHigh.concat(normalLow);
+  }
+  mapNormal.sort(descSigma);
+  var mapUnder=proportionalPick(under,cnt.under,descSigma);
+  /* Overvalued is selected most-extreme-first by the ascending sort above,
+     then re-sorted for DISPLAY so the whole grid reads as one continuous
+     line (display order is set where the tiles are built). */
+  var mapOver=proportionalPick(over,cnt.over,descSigma);
+  LAST_SEL={under:[mapUnder.length,under.length],normal:[mapNormal.length,normal.length],over:[mapOver.length,over.length]};
+  return {
+    all:{under:under,normal:normal,over:over},
+    map:{under:mapUnder,normal:mapNormal,over:mapOver}
+  };
+}
+var METRICS=[
+  {k:'yield',label:'Yield',type:'pct',get:function(rec,a){return rec.yield;}},
+  {k:'sigma',label:'Sigma',type:'sigma',get:function(rec,a){return a.sigma;}},
+  {k:'ma200diff',label:'200 dma, % diff',type:'pct',get:function(rec,a){return rec.ma200diff;}},
+  {k:'pAffo',label:'P/AFFO',type:'num',get:function(rec,a){return rec.pAffo;}},
+  {k:'payoutRatio',label:'Payout ratio',type:'pct',get:function(rec,a){return rec.payoutRatio;}},
+  {k:'divGrowth10y',label:'Div growth, past 10y',type:'pct',get:function(rec,a){return rec.divGrowth10y;}},
+  {k:'divGrowth3y',label:'Dividend growth recent trend',type:'pct',get:function(rec,a){return div3InBand(rec)?rec.divGrowth3y:null;}},
+  {k:'tnxSpread',label:'Spread to 10Y Treasury vs 10y avg',type:'bps',get:function(rec,a){return a.tnx?tnxDiffSign(a.tnx.diff):null;}}
+];
+/* Extra rows shown under "More stats" (collapsed by default).
+   The REIT sheet has no Direction or DDM columns, so only Volatility. */
+/* 3-yr dividend growth counts only inside 0%–20%: values outside are data
+   artifacts (special dividends, conversions), since cutters leave the list. */
+function div3InBand(rec){var v=rec.divGrowth3y;return v!==null&&v!==undefined&&isFinite(v)&&v>=0&&v<=20;}
+var MORE_METRICS=[
+  {k:'volatility',label:'Volatility (yield gap/\u03c3 ratio)',type:'pct',get:function(rec,a){return rec.volatility;}},
+  {k:'parDiff',label:'Price vs Par (yield-parity price)',type:'pct',get:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.par!==null&&rec.par!==undefined&&rec.par>0)?(rec.price-rec.par)/rec.par*100:null;}},
+  {k:'divGrowthYears',label:'Years of dividend growth',type:'yrs',get:function(rec,a){return rec.divGrowthYears;}}
+];
+/* "Number of names" section: each test returns true/false (null = no data). */
+var COUNT_METRICS=[
+  {k:'payoutOver100',label:'Payout ratio above 100%',test:function(rec,a){return (rec.payoutRatio!==null&&rec.payoutRatio!==undefined&&isFinite(rec.payoutRatio))?rec.payoutRatio>100:null;}},
+  {k:'slowingCount',label:'Slowing div growth',test:function(rec,a){if(!div3InBand(rec)||rec.divGrowth10y===null||rec.divGrowth10y===undefined||!isFinite(rec.divGrowth10y))return null;return rec.divGrowth3y-rec.divGrowth10y<-1;}},
+  {k:'near52Low',label:'Priced within 10% of 52-week low',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.low52w!==null&&rec.low52w!==undefined&&rec.low52w>0)?((rec.price-rec.low52w)/rec.low52w*100<=10):null;}}
+];
+var MORE_OPEN=true;
+function avgOf(list,getter){
+  var vals=[];
+  list.forEach(function(x){var v=getter(x.rec,x.a);if(v!==null&&v!==undefined&&isFinite(v))vals.push(v);});
+  if(!vals.length)return {avg:null,n:0};
+  var sum=vals.reduce(function(s,v){return s+v;},0);
+  return {avg:sum/vals.length,n:vals.length};
+}
+function fmtMetric(type,v){
+  if(v===null||v===undefined)return '\u2013';
+  if(type==='pct')return fmtPct(v);
+  if(type==='bps')return fmtBps(v);
+  if(type==='signed')return (v>0?'+':'')+trimZ(v.toFixed(2));
+  if(type==='yrs')return trimZ(v.toFixed(1));
+  if(type==='sigma')return fmtNum(v,2)+'\u03c3';
+  return fmtNum(v,2);
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering
+ * ------------------------------------------------------------------ */
+var ROWS=[]; // [{rec,a,kind}]
+var RAW_LINES=[]; // raw text lines as loaded, for publish embedding
+var RAW_TAGS=[];
+var FETCHED={stocks:null,reits:null}; // {lines:[...]} per kind, from the two live-fetch buttons
+
+function currentDataTypeKind(){return 'reits';}
+function schemaForKind(k){return k==='reits'?SCHEMA_REITS:SCHEMA_STOCKS;}
+
+/* Fetch one feed (stocks or REITs) on its own and merge it with whatever
+   was already fetched for the other kind — so pulling one never wipes
+   out the other, and you don't have to re-fetch both every time. */
+function fetchOneLive(kind){
+  var label=kind==='reits'?'REITs':'Stocks';
+  var urlField=kind==='reits'?$('#urlReits'):$('#urlStocks');
+  var url=((urlField&&urlField.value)||'').trim();
+  if(!url){setStatus('Add a '+label+' CSV URL first.',true);return;}
+  saveLiveUrls();
+  setStatus('Fetching '+label+'…');
+  fetch(url,{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.text();
+  }).then(function(text){
+    var lines=csvTextToLines(text);
+    if(!lines.length){setStatus('Fetched '+label+' OK but found no rows — check the sheet has data.',true);return;}
+    FETCHED[kind]={lines:lines};
+    rebuildFromFetched();
+  }).catch(function(err){
+    setStatus('Could not fetch '+label+' — make sure the URL is a CSV raw link. ('+((err&&err.message)||err)+')',true);
+  });
+}
+function rebuildFromFetched(){
+  var lines=[],tags=[];
+  ['stocks','reits'].forEach(function(kind){
+    var f=FETCHED[kind];
+    if(!f)return;
+    lines=lines.concat(f.lines);
+    f.lines.forEach(function(){tags.push(kind);});
+  });
+  var finalText=lines.join('\n');
+  var ta=$('#raw');if(ta)ta.value=finalText;
+  handleRaw(finalText,tags);
+}
+
+function handleRaw(text,schemaTags){
+  var lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  if(!lines.length){setStatus('Paste at least one data row, or fetch a live source.',true);return;}
+  RAW_LINES=lines;
+  var tags;
+  if(Array.isArray(schemaTags))tags=schemaTags;
+  else{var kind=schemaTags||currentDataTypeKind();tags=lines.map(function(){return kind;});}
+  RAW_TAGS=tags;
+  var all=lines.map(function(l,i){
+    var kind=tags[i];
+    var parsed=parseRow(l,schemaForKind(kind));
+    var a=analyzeRow(parsed.rec);
+    return {rec:parsed.rec,a:a,kind:kind,issues:parsed.issues};
+  });
+  var complete=all.filter(function(x){return x.a.sigma!==null&&isFinite(x.a.sigma);});
+  ROWS=all;
+  var incomplete=all.length-complete.length;
+  setStatus(all.length+' row'+(all.length===1?'':'s')+' loaded, '+complete.length+' complete (usable)'+(incomplete?', '+incomplete+' skipped (no sigma — missing yield/average/SD or sigma column)':'')+'.');
+  render(complete);
+}
+
+function setStatus(msg,isErr){
+  var el=$('#status');if(!el)return;
+  el.textContent=msg;
+  el.className='status'+(isErr?' err':'');
+}
+
+/* Clicking a tile opens that ticker's single-stock card on the tools
+   subdomain in a new tab (that card build pulls the full live universe,
+   so any ticker shown here resolves). */
+var CARD_URL=LINKS.card;
+function tileHtml(x,zoneClass){
+  var rec=x.rec,a=x.a;
+  var name=shortCompanyName(a.name)||a.ticker;
+  var full=esc(a.name||a.ticker);
+  var href=CARD_URL+encodeURIComponent(a.ticker||'');
+  return '<a class="tile '+zoneClass+'" href="'+esc(href)+'" target="_blank" rel="noopener" aria-label="Open the '+esc(a.ticker)+' sigma card">'+
+    '<div class="tk">'+esc(a.ticker)+'</div>'+
+    '<div class="sg">'+fmtNum(a.sigma,2)+'\u03c3</div>'+
+    '<div class="wash">'+
+      '<b>'+full+'</b><br>'+
+      'Price: '+fmtMoney(rec.price)+'<br>'+
+      'Yield: '+fmtPct(rec.yield)+'<br>'+
+      'Payout: '+fmtPct(rec.payoutRatio)+'<br>'+
+      '200 dma: '+fmtPct(rec.ma200diff)+
+    '</div>'+
+  '</a>';
+}
+function legendHtml(sel){
+  return '<div class="legend">'+
+    '<span class="li"><span class="sq over"></span>Overvalued</span>'+
+    '<span class="li"><span class="sq normal"></span>Normal</span>'+
+    '<span class="li"><span class="sq under"></span>Undervalued</span>'+
+  '</div>';
+}
+function matrixHtml(sel){
+  var cols=[
+    {key:'all',label:'All',range:'',items:sel.all.under.concat(sel.all.normal,sel.all.over)},
+    {key:'over',label:'Overvalued',range:'below 0σ',cls:'over',items:sel.all.over},
+    {key:'normal',label:'Normal',range:'0σ to +1.5σ',items:sel.all.normal},
+    {key:'under',label:'Undervalued',range:'above +1.5σ',cls:'under',items:sel.all.under}
+  ];
+  var ncol=cols.length+1;
+  var allItems=sel.all.under.concat(sel.all.normal,sel.all.over);
+  var allN=allItems.length;
+  /* Column headings carry each group's name, sigma range and size. */
+  var thead='<tr><th>Metric</th>'+cols.map(function(c){
+    var n=c.items.length,pct=allN?Math.round(n/allN*100):0;
+    var size=c.key==='all'?n+' names':n+' names ('+pct+'%)';
+    return '<th class="'+(c.cls||'')+'">'+c.label+'<span class="zr">'+(c.range?esc(c.range):'&nbsp;')+'</span><span class="zr zn">'+esc(size)+'</span></th>';
+  }).join('')+'</tr>';
+  function avgRow(m){
+    return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){return '<td>'+fmtMetric(m.type,avgOf(c.items,m.get).avg)+'</td>';}).join('')+'</tr>';
+  }
+  /* Section heading row; each zone cell shows its number of names and share. */
+  function secRow(label){return '<tr class="secHead"><td colspan="'+ncol+'">'+esc(label)+'</td></tr>';}
+  var avgRows=secRow('Averages per group')+METRICS.map(avgRow).join('');
+  var moreRows=MORE_METRICS.map(avgRow).join('');
+  var moreHtml='<tbody><tr class="moreToggle"><td colspan="'+ncol+'"><button type="button" class="moreBtn" aria-expanded="'+(MORE_OPEN?'true':'false')+'">'+(MORE_OPEN?'Fewer stats ▴':'More stats ▾')+'</button></td></tr></tbody>'+
+    '<tbody class="moreRows"'+(MORE_OPEN?'':' hidden')+'>'+moreRows+'</tbody>';
+  /* Number of names: counts, with each zone's share in brackets. The
+     "In zone" row gives the total each count is read against. */
+  var zoneRow='<tr><td>In zone</td>'+cols.map(function(c){
+    var pct=allN?Math.round(c.items.length/allN*100):0;
+    return '<td>'+c.items.length+'/'+pct+'%</td>';
+  }).join('')+'</tr>';
+  var countRows=COUNT_METRICS.map(function(m){
+    return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){
+      var n=0;c.items.forEach(function(x){if(m.test(x.rec,x.a)===true)n++;});
+      var pct=c.items.length?Math.round(n/c.items.length*100):0;
+      return '<td>'+n+' ('+pct+'%)</td>';
+    }).join('')+'</tr>';
+  }).join('');
+  var countHtml='<tbody>'+secRow('Number of names / % of names per group')+countRows+'</tbody>';
+  var noun='REITs';
+  return '<div class="matrixWrap"><h3>Aggregate average stats</h3>'+
+    '<table class="matrix"><thead>'+thead+'</thead><tbody>'+avgRows+'</tbody>'+moreHtml+countHtml+'</table></div>';
+}
+function wireMoreStats(){
+  var btn=document.querySelector('#sheet .moreBtn');
+  if(!btn)return;
+  btn.addEventListener('click',function(){
+    MORE_OPEN=!MORE_OPEN;
+    var body=document.querySelector('#sheet tbody.moreRows');
+    if(body)body.hidden=!MORE_OPEN;
+    btn.setAttribute('aria-expanded',MORE_OPEN?'true':'false');
+    btn.textContent=MORE_OPEN?'Fewer stats ▴':'More stats ▾';
+  });
+}
+function render(complete){
+  var sheet=$('#sheet');
+  if(!complete.length){
+    sheet.innerHTML='<div class="empty">Paste data or fetch a live source to build the map.</div>';
+    return;
+  }
+  LAST_COMPLETE=complete;
+  var sel=buildSelection(complete);
+  var shown=sel.map.under.length+sel.map.normal.length+sel.map.over.length;
+  var sub=shown+' representative REITs from the dividend-growers universe of '+complete.length+'+.';
+  var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — REITs</h2><div class="sub">'+esc(sub)+'</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
+  h+=legendHtml(sel);
+  /* Display order: most overvalued through Normal to most undervalued,
+     low sigma to high sigma; colFlowTiles lays it out column by column. */
+  var ascS=function(p,q){return p.a.sigma-q.a.sigma;};
+  var allTiles=sel.map.over.slice().sort(ascS).map(function(x){return tileHtml(x,' over');})
+    .concat(sel.map.normal.slice().sort(ascS).map(function(x){return tileHtml(x,' normal');}))
+    .concat(sel.map.under.slice().sort(ascS).map(function(x){return tileHtml(x,' under');}))
+    .join('');
+  h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
+  h+=matrixHtml(sel);
+  h+='<footer class="foot"><span>Model output, not investment advice \u2014 each name\u2019s own dividend safety and payout ratio deserve their own check.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
+     '<span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+
+     '<span class="pubFootLive"><span class="pubLive" id="pubLiveStamp" hidden></span><button type="button" class="linkbtn" id="pubRefresh" hidden>Refresh</button></span></span></footer>';
+  sheet.innerHTML=h;
+  colFlowTiles();
+  mapStatusText();
+  wirePubFooter();
+  wireMoreStats();
+}
+
+/* Column flow: keep the same grid shape, but fill it column by column so
+   the reds sit in the left columns, Normal in the middle, greens on the right. */
+function colFlowTiles(){
+  var t=document.querySelector('.tiles'); if(!t)return;
+  var n=t.querySelectorAll('.tile').length; if(!n)return;
+  t.style.gridAutoFlow='';t.style.gridTemplateRows='';
+  var cols=getComputedStyle(t).gridTemplateColumns.split(' ').filter(Boolean).length||1;
+  t.style.gridTemplateRows='repeat('+Math.ceil(n/cols)+',auto)';
+  t.style.gridAutoFlow='column';
+}
+window.addEventListener('resize',function(){clearTimeout(colFlowTiles._t);colFlowTiles._t=setTimeout(colFlowTiles,120);});
+
+/* ------------------------------------------------------------------ *
+ * Live refresh — same locked-"universe" model as the sigma card: the
+ * set of tickers currently loaded stays fixed between publishes, but
+ * their VALUES refresh live, which naturally reclassifies a name's
+ * zone (and whether it clears the top-20 cutoff) as its sigma moves.
+ * ------------------------------------------------------------------ */
+var liveLastUpdated=null;
+var liveStale=false;
+function setLiveStamp(stale){
+  liveStale=stale;
+  var el=$('#pubLiveStamp');if(!el)return;
+  el.hidden=false;
+  if(stale&&liveLastUpdated){
+    el.textContent=' \u00b7 Live \u00b7 showing data from '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' (couldn\u2019t reach the sheet just now)';
+  }else if(liveLastUpdated){
+    el.textContent=' \u00b7 Live \u00b7 updated '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  }else{
+    el.textContent=' \u00b7 Live \u00b7 connecting\u2026';
+  }
+}
+function updatePubBarVisibility(){
+  var stamp=$('#pubLiveStamp'),refresh=$('#pubRefresh');
+  var showLive=!!(LIVE_URL_STOCKS||LIVE_URL_REITS);
+  if(stamp&&!showLive)stamp.hidden=true;
+  if(refresh)refresh.hidden=!showLive;
+}
+function wirePubFooter(){
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS)setLiveStamp(liveStale);
+  var r=$('#pubRefresh');
+  if(r)r.addEventListener('click',function(){refreshLiveData();});
+}
+function refreshLiveData(){
+  if(!(LIVE_URL_STOCKS||LIVE_URL_REITS))return Promise.resolve();
+  if(!ROWS.length)return Promise.resolve();
+  return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    var byTicker={};
+    res.lines.forEach(function(line,i){
+      var tag=res.tags[i];
+      var t=parseRow(line,schemaForKind(tag)).rec.ticker;
+      if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
+    });
+    var newLines=[],newTags=[];
+    ROWS.forEach(function(r){
+      var t=r.rec.ticker;
+      var hit=t&&byTicker[t.trim().toUpperCase()];
+      if(hit){newLines.push(hit.line);newTags.push(hit.tag);}
+    });
+    if(!newLines.length)throw new Error('no matching tickers in live feed');
+    handleRaw(newLines.join('\n'),newTags);
+    liveLastUpdated=new Date();
+    setLiveStamp(false);
+  }).catch(function(){
+    setLiveStamp(true);
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Live source persistence + baked-in defaults (same pattern as the
+ * sigma card tool) \u2014 so a fresh download still starts pre-filled.
+ * ------------------------------------------------------------------ */
+var LIVE_URL_STOCKS="";
+var LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var DEFAULT_LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var DEFAULT_LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var MAP_SETTINGS_RAW="{\"n\":20,\"mode\":\"equal\",\"spread\":\"extreme\",\"under\":true,\"normal\":true,\"over\":true}";
+var MAP_STORE_KEY="sigmaHeatMapSettings2_reits";
+var SAMPLE_TAGS="[\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\",\"reits\"]";
+var SAMPLE="NEXPOINT RESIDENTIAL TRUST, INC. (XNYS:NXRT)	 $     18.03 	 $     17.62 	2.12	11.76%	4.04%	2.84%	12	2.71	NXRT	190.76%	 $     52.42 	70.34%		$3.74 	20.72%	36.52%	-2.71%	25.91	-30%	3.88	4.80%	1.79%	144.83%	37.35%	 $     44.14 	 $     37.41 	 $     30.67 	Now: 6.83% | 10Y: 1.14% | Diff: +5.69%	9	$3.20 	5.63	66.25%	7.97\nEQUITY LIFESTYLE PROPERTIES, INC. (XNYS:ELS)	 $     59.03 	 $     57.46 	2.17	3.68%	2.42%	0.56%	10.21	2.25	ELS	52.21%	 $     89.85 	23.17%		$3.53 	5.98%	9.72%	5.38%	63.52	-7%	2.27	2.73%	0.42%	34.48%	15.19%	 $     79.38 	 $     70.41 		Now: -1.25% | 10Y: -0.48% | Diff: -0.77%	21	$3.08 	19.17	70.45%	8.59\nMID-AMERICA APARTMENT COMMUNITIES, INC. (XNYS:MAA)	 $  117.21 	 $  113.95 	6.12	5.22%	3.53%	0.78%	7	2.16	MAA	47.83%	 $  173.28 	22.19%		$8.58 	7.32%	10.27%	3.83%	129.10	-9%	1.65	4.16%	0.64%	25.38%	15.38%	 $  146.95 	 $  128.92 	 $  110.89 	Now: 0.29% | 10Y: 0.63% | Diff: -0.34%	15	$7.61 	15.40	80.42%	4.39\nUDR, INC. (XNYS:UDR)	 $     35.52 	 $     32.94 	1.74	4.90%	3.63%	0.65%	4.48	1.94	UDR	35.06%	 $     47.97 	18.05%		$2.17 	6.10%	7.59%	4.15%	36.78	-3%	0.83	4.28%	0.75%	14.58%	17.52%	 $     40.70 	 $     34.48 	 $     28.25 	Now: -0.03% | 10Y: 0.73% | Diff: -0.76%	15	$2.23 	15.93	78.03%	2.97\nREXFORD INDUSTRIAL REALTY, INC. (XNYS:REXR)	 $     38.22 	 $     32.14 	1.74	4.55%	2.54%	1.06%	12.6	1.89	REXR	78.96%	 $     68.40 	41.80%		$3.15 	8.24%	14.92%	4.50%	36.40	5%	1.09	3.16%	1.28%	44.24%	40.42%	 $     55.13 	 $     39.68 	 $     24.23 	Now: -0.38% | 10Y: -0.36% | Diff: -0.02%	12	$2.23 	17.14	78.03%	8.09\nAMERICOLD REALTY TRUST, INC. (XNYS:COLD)	 $     14.37 	 $     10.10 	0.92	6.40%	3.30%	1.69%	1.6	1.83	COLD	93.80%	 $     27.85 	51.28%		$1.00 	6.93%	7.50%	2.65%	13.79	4%	n/a								Now: 1.47% | 10Y: 0.40% | Diff: +1.07%	8	$1.43 	10.05	64.34%	1.33\nGLADSTONE LAND CORPORATION (XNAS:LAND)	 $       7.41 	 $       7.33 	0.56	7.56%	4.24%	1.47%	1.46	2.26	LAND	78.06%	 $     13.19 	34.59%		$0.60 	8.13%	8.74%	1.49%	9.65	-23%	2.35	4.94%	1.12%	53.10%	22.64%	 $     11.34 	 $       9.67 	 $       7.99 	Now: 2.63% | 10Y: 1.34% | Diff: +1.28%	11	$0.39 	19.00	143.59%	0.29\nGETTY REALTY CORP. (XNYS:GTY)	 $     28.00 	 $     26.91 	1.94	6.93%	5.35%	0.89%	8.16	1.77	GTY	29.47%	 $     36.25 	16.65%		$2.87 	10.26%	15.18%	2.12%	32.14	-13%	0.65	6.22%	1.10%	11.42%	17.66%	 $     31.20 	 $     26.25 	 $     21.31 	Now: 2.00% | 10Y: 2.45% | Diff: -0.45%	12	$2.43 	11.52	79.84%	4.35\nAMERICAN TOWER CORPORATION (XNYS:AMT)	 $  187.78 	 $  160.06 	7.16	3.81%	2.42%	0.80%	14	1.75	AMT	57.66%	 $  296.06 	32.88%		$13.79 	7.34%	14.14%	5.24%	177.41	6%	1.05	2.87%	0.90%	32.86%	31.36%	 $  249.48 	 $  190.59 	 $  131.70 	Now: -1.12% | 10Y: -0.48% | Diff: -0.63%	13	$10.76 	17.45	66.54%	5.28\nALEXANDRIA REAL ESTATE EQUITIES, INC. (XNYS:ARE)	 $     40.20 	 $     38.34 	2.88	7.16%	3.47%	2.00%	6.07	1.84	ARE	106.59%	 $     83.05 	57.78%		$3.87 	9.62%	12.91%	1.89%	49.55	-19%	0.69	5.04%	3.07%	42.07%	60.78%	 $     57.11 	 $     32.68 	 $       8.24 	Now: 2.24% | 10Y: 0.57% | Diff: +1.67%		$9.01 	4.46	31.96%	-16.34\nVICI PROPERTIES INC. (XNYS:VICI)	 $     24.46 	 $     22.43 	1.8	7.36%	4.95%	1.51%	7	1.60	VICI	48.70%	 $     36.37 	30.41%		$2.52 	10.32%	14.48%	1.69%	26.96	-9%	0.64	6.31%	1.64%	16.66%	25.95%	 $     28.54 	 $     22.19 	 $     15.84 	Now: 2.43% | 10Y: 2.05% | Diff: +0.38%	7	$2.38 	10.28	75.63%	5.04\nAGREE REALTY CORPORATION (XNYS:ADC)	 $     67.07 	 $     64.34 	3.204	4.78%	4.06%	0.45%	5.62	1.61	ADC	17.78%	 $     78.99 	11.03%		$4.21 	6.28%	8.25%	4.27%	74.52	-10%	0.42	4.59%	0.46%	4.18%	10.06%	 $     69.87 	 $     63.12 	 $     56.38 	Now: -0.15% | 10Y: 1.16% | Diff: -1.31%	13	$4.33 	15.49	74.00%	3.52\nINFRACAP REIT PREFERRED ETF (ARCX:PFFR)	 $     16.13 	 $     16.11 	1.46	9.05%	7.33%	1.02%	0	1.69	PFFR	23.54%	 $     19.93 	13.95%		$1.46 	9.05%	9.05%	0.00%	17.54	-8%	0.32	8.31%	2.36%	8.99%	28.39%	 $     17.58 			Now: 4.12% | 10Y: 4.43% | Diff: -0.30%					0.39\nCUBESMART (XNYS:CUBE)	 $     42.74 	 $     35.09 	2.12	4.96%	4.02%	0.73%	13	1.29	CUBE	23.42%	 $     52.75 	18.12%		$3.91 	9.14%	16.84%	4.09%	39.59	8%	0.02	4.94%	0.89%	0.37%	17.94%	 $     42.90 	 $     35.23 	 $     27.56 	Now: 0.03% | 10Y: 1.12% | Diff: -1.09%	14	$2.58 	16.57	82.17%	3.93\nNNN REIT, INC. (XNYS:NNN)	 $     41.00 	 $     38.90 	2.48	6.05%	4.85%	0.76%	3.31	1.58	NNN	24.60%	 $     51.09 	15.60%		$2.92 	7.12%	8.38%	3.00%	44.29	-7%	0.46	5.59%	1.01%	8.19%	18.00%	 $     44.36 	 $     36.98 	 $     29.60 	Now: 1.12% | 10Y: 1.95% | Diff: -0.83%	36	$3.44 	11.92	72.09%	3.81\nCOMMUNITY HEALTHCARE TRUST INCORPORATED (XNYS:CHCT)	 $     13.06 	 $     12.58 	1.32	10.11%	6.34%	2.59%	2.29	1.45	CHCT	59.40%	 $     20.82 	40.84%		$1.48 	11.32%	12.68%	-1.06%	16.39	-20%	0.64	8.12%	3.11%	24.53%	38.37%	 $     16.26 	 $     11.25 	 $       6.24 	Now: 5.18% | 10Y: 3.44% | Diff: +1.74%	10	$2.15 	6.07	61.40%	-10.15\nREALTY INCOME CORPORATION (XNYS:O)	 $     56.93 	 $     53.15 	3.258	5.72%	4.60%	0.77%	3.96	1.46	O	24.30%	 $     70.77 	16.64%		$3.96 	6.95%	8.44%	3.33%	61.63	-8%	0.46	5.34%	0.83%	7.26%	15.64%	 $     61.06 	 $     52.16 	 $     43.26 	Now: 0.79% | 10Y: 1.70% | Diff: -0.91%	31	$4.28 	13.30	76.12%	2.4\nVIVMARK RESIDENTIAL (XNYS:VMRK)	 $     61.90 	 $     57.57 	2.81	4.54%	3.74%	0.58%	2.82	1.37	VMRK	21.38%	 $     75.13 	15.57%		$3.23 	5.22%	6.00%	4.51%	64.00	-3%	n/a								Now: -0.39% | 10Y: 0.84% | Diff: -1.23%	4	$4.14 	14.95	67.87%	4.92\nAMERICAN HOMES 4 RENT (XNYS:AMH)	 $     31.60 	 $     27.22 	1.32	4.18%	2.95%	1.00%	15	1.22	AMH	41.54%	 $     44.73 	33.99%		$2.65 	8.40%	16.90%	4.87%	31.61	0%	n/a								Now: -0.75% | 10Y: 0.05% | Diff: -0.80%	6	$1.69 	18.70	78.11%	14.56\nPROLOGIS, INC. (XNYS:PLD)	 $  127.98 	 $  121.40 	4.28	3.34%	2.79%	0.48%	9.76	1.15	PLD	19.89%	 $  153.43 	17.32%		$6.82 	5.33%	8.49%	5.71%	137.85	-7%	-0.17	3.42%	0.46%	-2.24%	13.41%	 $  125.11 			Now: -1.58% | 10Y: -0.11% | Diff: -1.47%	12	$4.53 	28.25	94.48%	8.93\nUMH PROPERTIES, INC. (XNYS:UMH)	 $     15.15 	 $     13.93 	0.9	5.94%	5.06%	0.78%	4.28	1.13	UMH	17.49%	 $     17.80 	15.48%		$1.11 	7.33%	9.03%	3.11%	15.47	-2%	-0.26	6.18%	0.91%	-3.85%	14.67%	 $     14.57 	 $     12.34 	 $     10.12 	Now: 1.01% | 10Y: 2.16% | Diff: -1.14%	5	$0.90 	16.83	100.00%	3.34\nESSEX PROPERTY TRUST, INC. (XNYS:ESS)	 $  264.18 	 $  238.46 	10.28	3.89%	3.21%	0.51%	5.96	1.34	ESS	21.39%	 $  320.69 	15.96%		$13.73 	5.20%	6.94%	5.16%	269.76	-2%	0.19	3.78%	0.60%	3.04%	15.79%	 $  272.22 	 $  230.51 	 $  188.81 	Now: -1.04% | 10Y: 0.31% | Diff: -1.34%	30	$15.98 	16.53	64.33%	4.58\nESSENTIAL PROPERTIES REALTY TRUST, INC. (XNYS:EPRT)	 $     26.75 	 $     24.62 	1.28	4.79%	4.19%	0.62%	5.25	0.96	EPRT	14.19%	 $     30.54 	14.83%		$1.65 	6.18%	7.98%	4.27%	30.45	-12%	-0.23	5.34%	2.40%	-10.34%	45.02%	 $     23.99 	 $     11.94 	-$       0.10 	Now: -0.14% | 10Y: 1.29% | Diff: -1.43%	7	$5.14 	5.20	24.90%	10.25\nEASTGROUP PROPERTIES, INC. (XNYS:EGP)	 $  198.85 	 $  172.17 	6.2	3.12%	2.68%	0.43%	9.96	1.03	EGP	16.51%	 $  231.67 	16.05%		$9.97 	5.01%	8.06%	5.93%	198.18	0%									Now: -1.81% | 10Y: -0.22% | Diff: -1.59%	14	$8.98 	22.14	69.04%	8.19\nCOLTERPOINT NET LEASE REAL ESTAT ETF (ARCX:NETL)	 $     23.87 	 $     23.24 	1.26	5.28%	4.65%	0.72%	3	0.86	NETL	13.42%	 $     27.07 	15.55%		$1.46 	6.12%	7.09%	3.77%	25.88	-8%	n/a								Now: 0.35% | 10Y: 1.75% | Diff: -1.40%	2				3.22\nFEDERAL REALTY INVESTMENT TRUST (XNYS:FRT)	 $  110.19 	 $     90.03 	4.64	4.21%	3.78%	0.74%	2.62	0.58	FRT	11.37%	 $  122.72 	19.65%		$5.28 	4.79%	5.45%	4.84%	113.04	-3%	-0.22	4.44%	1.05%	-5.18%	23.60%	 $  104.48 	 $     78.48 	 $     52.47 	Now: -0.72% | 10Y: 0.88% | Diff: -1.60%	58	$7.22 	15.26	64.27%	2.29\nCLEARWAY ENERGY, INC. (XNYS:CWEN)	 $     32.03 	 $     28.57 	1.87	5.84%	5.35%	1.00%	7.57	0.48	CWEN	9.06%	 $     34.93 	18.73%		$2.69 	8.41%	12.11%	3.21%	35.61	-10%	-0.48	6.57%	1.52%	-11.11%	23.12%	 $     28.47 			Now: 0.91% | 10Y: 2.45% | Diff: -1.54%	6				7.27\nCROWN CASTLE INC. (XNYS:CCI)	 $     88.69 	 $     65.32 	4.25	4.79%	4.20%	1.15%	8.81	0.51	CCI	14.04%	 $  101.14 	27.35%		$6.48 	7.31%	11.15%	4.26%	82.28	8%									Now: -0.14% | 10Y: 1.30% | Diff: -1.44%		$4.36 	20.34	97.48%	-12.17\nBROADSTONE NET LEASE, INC. (XNYS:BNL)	 $     17.10 	 $     16.70 	1.17	6.84%	5.99%	1.52%	4.06	0.57	BNL	14.31%	 $     19.55 	25.32%		$1.43 	8.35%	10.19%	2.21%	#N/A	#N/A	n/a								Now: 1.91% | 10Y: 3.09% | Diff: -1.17%	4	$1.49 	11.48	78.52%	2.05\nEQUINIX, INC. (XNAS:EQIX)	 $   1,013.70 	 $  720.62 	20.64	2.04%	2.06%	0.74%	11.09	-0.03	EQIX	-1.23%	 $   1,001.23 	36.11%		$34.92 	3.44%	5.83%	7.02%	1010.73	0%									Now: -2.89% | 10Y: -0.84% | Diff: -2.05%	10				16.34\nCAMDEN PROPERTY TRUST (XNYS:CPT)	 $  100.69 	 $     95.30 	4.24	4.21%	4.05%	1.60%	3.8	0.10	CPT	3.88%	 $  104.60 	39.44%		$5.11 	5.07%	6.11%	4.84%	105.95	-5%	-0.38	5.04%	2.17%	-16.39%	43.03%	 $     84.19 	 $     40.87 	-$       2.46 	Now: -0.72% | 10Y: 1.15% | Diff: -1.87%	4	$6.77 	14.87	62.63%	2.91\nKIMCO REALTY CORPORATION. (XNYS:KIM)	 $     24.52 	 $     19.76 	1.12	4.57%	5.09%	1.54%	9.4	-0.34	KIM	-10.26%	 $     22.00 	30.28%		$1.76 	7.16%	11.22%	4.48%	23.53	4%									Now: -0.36% | 10Y: 2.19% | Diff: -2.55%	5	$1.47 	16.68	76.19%	7.36\nKITE REALTY GROUP TRUST (XNYS:KRG)	 $     25.07 	 $     21.51 	1.16	4.63%	5.41%	1.98%	14	-0.40	KRG	-14.54%	 $     21.42 	36.63%		$2.23 	8.91%	17.15%	4.42%	26.10	-4%									Now: -0.30% | 10Y: 2.51% | Diff: -2.82%	6	$1.56 	16.07	74.36%	8.21\nCARETRUST REIT, INC. (XNYS:CTRE)	 $     36.39 	 $     34.28 	1.56	4.29%	4.59%	0.62%	8.19	-0.49	CTRE	-6.52%	 $     34.02 	13.43%		$2.31 	6.35%	9.42%	4.76%	39.01	-7%	-0.74	5.76%	1.99%	-25.59%	34.51%	 $     27.08 	 $     14.52 		Now: -0.64% | 10Y: 1.69% | Diff: -2.33%	11				11.94\nTanger Inc. (XNYS:SKT)	 $     36.76 	 $     31.13 	1.25	3.40%	5.88%	4.54%	-0.3	-0.55	SKT	-42.15%	 $     21.26 	77.31%		$1.23 	3.35%	3.30%	5.65%	36.68	0%									Now: -1.53% | 10Y: 2.98% | Diff: -4.51%	4	$2.33 	15.78	53.65%	11.43\nSTAG INDUSTRIAL, INC. (XNYS:STAG)	 $     36.86 	 $     35.14 	1.55	4.21%	4.63%	0.68%	1	-0.63	STAG	-9.20%	 $     33.47 	14.64%		$1.63 	4.42%	4.65%	4.85%	37.88	-3%	-1.24	5.54%	1.08%	-24.13%	19.48%	 $     27.96 	 $     20.79 	 $     13.61 	Now: -0.72% | 10Y: 1.73% | Diff: -2.46%	14				1.82\nWELLTOWER INC. (XNYS:WELL)	 $  234.60 	 $  179.24 	3.4	1.45%	3.38%	1.81%	-1.3	-1.06	WELL	-57.08%	 $  100.69 	53.63%		$3.18 	1.36%	1.27%	7.60%	218.48	7%	n/a								Now: -3.48% | 10Y: 0.48% | Diff: -3.96%	2	$2.68 	87.54	126.87%	22.7\nDIGITAL REALTY TRUST, INC. (XNYS:DLR)	 $  180.70 	 $  146.23 	4.88	2.70%	3.37%	0.46%	3.41	-1.44	DLR	-19.82%	 $  144.88 	13.74%		$5.77 	3.19%	3.78%	6.35%	183.32	-1%									Now: -2.23% | 10Y: 0.47% | Diff: -2.70%		$6.55 	27.59	74.50%	-0.51\nBRIXMOR PROPERTY GROUP INC. (XNYS:BRX)	 $     29.14 	 $     24.66 							BRX																				6				–\nEXTRA SPACE STORAGE INC. (XNYS:EXR)	 $  151.32 	 $  125.71 							EXR																								–\nFOUR CORNERS PROPERTY TRUST, INC. (XNYS:FCPT)	 $     22.47 	 $     20.86 							FCPT																								–\nFIRST INDUSTRIAL REALTY TRUST, INC. (XNYS:FR)	 $     54.41 	 $     54.16 							FR																								–\nGaming and Leisure Properties, Inc. (XNAS:GLPI)	 $     38.98 	 $     37.33 							GLPI					.																			–\nINNOVATIVE INDUSTRIAL PROPERTIES, INC. (XNYS:IIPR)	 $     52.04 	 $     44.58 							IIPR																								–\nINVITATION HOMES INC. (XNYS:INVH)	 $     26.56 	 $     24.25 							INVH					.														Now: -4.93% | 10Y: -2.90% | Diff: -2.03%					–\nLAMAR ADVERTISING COMPANY (XNAS:LAMR)	 $  157.53 	 $  117.15 							LAMR																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	6				–\nNETSTREIT CORP. (XNYS:NTST)	 $     17.52 	 $     16.18 							NTST																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	9				–\nPHILLIPS EDISON & COMPANY, INC. (XNAS:PECO)	 $     38.83 	 $     33.10 							PECO																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	9				–\nALPINE INCOME PROPERTY TRUST, INC. (XNYS:PINE)	 $     16.39 	 $     14.35 							PINE																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	6				–\nPOSTAL REALTY TRUST, INC. (XNYS:PSTL)	 $     21.58 	 $     14.42 							PSTL					.														Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	5				–\nREGENCY CENTERS CORPORATION (XNAS:REG)	 $     74.59 	 $     66.86 							REG																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	5				–\nSBA COMMUNICATIONS CORPORATION (XNAS:SBAC)	 $  187.15 	 $  156.60 							SBAC																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	6				–\nSIMON PROPERTY GROUP, INC. (XNYS:SPG)	 $  217.75 	 $  173.80 							SPG																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	6				–\nSUN COMMUNITIES, INC. (XNYS:SUI)	 $  113.26 	 $  109.77 							SUI					.														Now: -4.93% | 10Y: -2.90% | Diff: -2.03%					–\nTERRENO REALTY CORPORATION (XNYS:TRNO)	 $     65.56 	 $     56.09 							TRNO																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	7				–\nUNIVERSAL HEALTH REALTY INCOME TRUST (XNYS:UHT)	 $     38.25 	 $     36.07 							UHT																			Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	6				–\nVANGUARD REAL ESTATE ETF (ARCX:VNQ)	 $     93.94 	 $     86.84 	3.47	3.69%					VNQ					.														Now: -1.24% | 10Y: -2.90% | Diff: +1.66%	9				–";
+var PUBLIC_TEMPLATE_B64="";
+
+function saveLiveUrls(){
+  try{
+    localStorage.setItem('sigmaHeatMapLiveUrls',JSON.stringify({reits:($('#urlReits')&&$('#urlReits').value)||''}));
+  }catch(e){/* private window or storage disabled — fine, just don't persist */}
+}
+function loadLiveUrls(){
+  var stocks=DEFAULT_LIVE_URL_STOCKS,reits=DEFAULT_LIVE_URL_REITS;
+  try{
+    var raw=localStorage.getItem('sigmaHeatMapLiveUrls');
+    if(raw){
+      var o=JSON.parse(raw);
+      if(o&&o.stocks)stocks=o.stocks;
+      if(o&&o.reits)reits=o.reits;
+    }
+  }catch(e){/* ignore */}
+  var us=$('#urlStocks'),ur=$('#urlReits');
+  if(us)us.value=stocks;
+  if(ur)ur.value=reits;
+}
+
+function b64DecodeUtf8(b64){return decodeURIComponent(escape(atob(b64)));}
+function jsStrEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');}
+function buildPublishedCode(){
+  if(!RAW_LINES.length){setStatus('Build a map first, then copy the website code.',true);return null;}
+  var escaped=RAW_LINES.map(function(rowText){return jsStrEscape(rowText);}).join('\\n');
+  var stocksUrl='';
+  var reitsUrl=jsStrEscape((($('#urlReits')&&$('#urlReits').value)||'').trim());
+  var tagsJson=jsStrEscape(JSON.stringify(RAW_TAGS));
+  var base=b64DecodeUtf8(PUBLIC_TEMPLATE_B64);
+  return base
+    .replace('%%SAMPLE_DATA%%',function(){return escaped;})
+    .replace('%%STOCKS_URL%%',function(){return stocksUrl;})
+    .replace('%%REITS_URL%%',function(){return reitsUrl;})
+    .replace('%%SAMPLE_TAGS%%',function(){return tagsJson;})
+    .replace('%%MAP_SETTINGS%%',function(){return jsStrEscape(JSON.stringify(MAP_SET));});
+}
+function tryCopyToClipboard(text){
+  var msg=$('#publishMsg'),ta=$('#publishOutput');
+  function ok(){msg.textContent='Copied to your clipboard — go to your website’s embed block and paste (Ctrl/⌘+V).';}
+  function fail(){
+    msg.textContent='Couldn’t copy automatically — click in the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.';
+    ta.focus();ta.select();
+  }
+  function legacyFallback(){
+    ta.focus();ta.select();
+    try{if(document.execCommand('copy'))ok();else fail();}catch(e){fail();}
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(legacyFallback);
+  }else legacyFallback();
+}
+
+/* ------------------------------------------------------------------ *
+ * Wiring
+ * ------------------------------------------------------------------ */
+var LAST_COMPLETE=[];
+function readMapInputs(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('mapN'))return;
+  MAP_SET=cleanMapSet({n:g('mapN').value,mode:g('mmProp').checked?'prop':'equal',spread:g('msEven').checked?'even':'extreme',under:g('mzUnder').checked,normal:g('mzNormal').checked,over:g('mzOver').checked});
+}
+function writeMapInputs(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('mapN'))return;
+  g('mapN').value=MAP_SET.n;
+  g('mmProp').checked=MAP_SET.mode==='prop';g('mmEqual').checked=MAP_SET.mode!=='prop';
+  g('msEven').checked=MAP_SET.spread==='even';g('msExtreme').checked=MAP_SET.spread!=='even';
+  g('mzUnder').checked=MAP_SET.under;g('mzNormal').checked=MAP_SET.normal;g('mzOver').checked=MAP_SET.over;
+  if(g('mapNLabel'))g('mapNLabel').textContent=MAP_SET.mode==='prop'?'Total tiles':'Tiles per zone';
+}
+function saveMapSet(){try{localStorage.setItem(MAP_STORE_KEY,JSON.stringify(MAP_SET));}catch(e){}}
+function loadMapSet(){try{var r=localStorage.getItem(MAP_STORE_KEY);if(r)MAP_SET=cleanMapSet(JSON.parse(r));}catch(e){}}
+function mapStatusText(){
+  var el=document.getElementById('mapStatus');if(!el)return;
+  if(!MAP_SET.under&&!MAP_SET.normal&&!MAP_SET.over){el.textContent='No zones selected \u2014 the map will be empty.';return;}
+  if(!LAST_SEL){el.textContent='';return;}
+  var parts=[];
+  [['over','Overvalued'],['normal','Normal'],['under','Undervalued']].forEach(function(z){
+    if(MAP_SET[z[0]])parts.push(z[1]+' '+LAST_SEL[z[0]][0]+' of '+LAST_SEL[z[0]][1]);
+  });
+  el.textContent='Showing: '+parts.join(' \u00b7 ')+'.';
+}
+function onMapChange(){
+  readMapInputs();saveMapSet();writeMapInputs();
+  if(LAST_COMPLETE.length)render(LAST_COMPLETE);
+  mapStatusText();
+}
+function wire(){
+  var mn=document.getElementById('mapN');if(mn)mn.addEventListener('input',onMapChange);
+  ['mzUnder','mzNormal','mzOver','mmEqual','mmProp','msExtreme','msEven'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',onMapChange);});
+  $('#btnRender').addEventListener('click',function(){handleRaw($('#raw').value);});
+  $('#raw').addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){handleRaw($('#raw').value);}});
+  $('#btnDark').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','dark');});
+  $('#btnLight').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','light');});
+  $('#btnFetchReits').addEventListener('click',function(){fetchOneLive('reits');});
+  $('#btnPublish').addEventListener('click',function(){
+    saveLiveUrls();
+    var code=buildPublishedCode();
+    if(!code)return;
+    $('#publishOutput').value=code;
+    $('#publishModal').hidden=false;
+    tryCopyToClipboard(code);
+  });
+  $('#publishCopyAgain').addEventListener('click',function(){tryCopyToClipboard($('#publishOutput').value);});
+  $('#publishClose').addEventListener('click',function(){$('#publishModal').hidden=true;});
+}
+
+if(PUBLIC_MODE)document.body.classList.add('public-mode');
+if(PUBLIC_MODE){try{MAP_SET=cleanMapSet(JSON.parse(MAP_SETTINGS_RAW));}catch(e){}}
+else loadMapSet();
+writeMapInputs();
+wire();
+if(SAMPLE){
+  $('#raw').value=SAMPLE;
+  var bootTags=null;
+  if(SAMPLE_TAGS){try{bootTags=JSON.parse(SAMPLE_TAGS);}catch(e){bootTags=null;}}
+  handleRaw(SAMPLE,bootTags);
+}else{
+  render([]);
+}
+
+if(PUBLIC_MODE){
+  if(LIVE_URL_STOCKS)$('#urlStocks').value=LIVE_URL_STOCKS;
+  if(LIVE_URL_REITS)$('#urlReits').value=LIVE_URL_REITS;
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS){
+    refreshLiveData();
+    setInterval(refreshLiveData,15*60*1000);
+  }
+}else{
+  loadLiveUrls();
+}
+
+})();
+</script>
+</body>
+</html>

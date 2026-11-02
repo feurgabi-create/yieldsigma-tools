@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sigma Yield Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  }
+}
+:root[data-theme="dark"]{
+  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:100vh}
+body.public-mode .app{grid-template-columns:1fr;min-height:0}
+body.public-mode .side{display:none}
+body.public-mode .stage{padding:0}
+.pubFootLive{display:none}
+body.public-mode .pubFootLive{display:inline}
+.foot .pubLive{font-size:11.5px;color:var(--c-muted)}
+.foot .backlink{margin-left:10px;color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.foot .backlink:hover{text-decoration:underline}
+.foot .linkbtn{font-size:11.5px;margin-left:8px}
+.modalOverlay{position:fixed;inset:0;background:rgba(10,20,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.modalOverlay[hidden]{display:none}
+.modalBox{background:var(--field);border-radius:12px;padding:22px;max-width:560px;width:100%;box-shadow:0 20px 60px -12px rgba(0,0,0,.4)}
+.modalBox h3{margin:0 0 8px;font:600 17px var(--serif)}
+.modalBox p{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5}
+.modalBox .modalHint{font-size:12px}
+.modalBox textarea{height:140px;font-size:10.5px}
+.side{background:var(--panel);border-right:1px solid var(--rule);padding:22px 20px 40px;position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}
+.side h1{font:600 20px/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 4px}
+.side .tag{color:var(--muted);margin:0 0 18px;font-size:13px}
+.side h2{font:600 12.5px/1 var(--mono);letter-spacing:.02em;color:var(--muted);margin:20px 0 8px;text-transform:uppercase}
+textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--rule);border-radius:8px;background:var(--field);font:12.5px/1.5 var(--mono);resize:vertical;margin-top:10px}
+.btnrow{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--field);cursor:pointer;font-weight:600;font-size:13px}
+.btn.primary{background:var(--jade);border-color:var(--jade);color:#fff}
+.linkbtn{background:none;border:0;padding:0;color:var(--jade);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
+.field{display:block;margin-top:14px}
+.field>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.dataType{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dataType>span{margin-bottom:0}
+.radioOpt{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer}
+.radioOpt input{margin:0}
+select{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:8px;background:var(--field)}
+.field input[type=url],.field input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:8px;background:var(--field);color:inherit;font:12.5px var(--mono)}
+h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:11px;margin-left:4px}
+.status{min-height:32px;margin-top:12px;font-size:12.5px;color:var(--muted);white-space:pre-line}
+.status.err{color:var(--rust)}
+.schema{margin-top:16px;border-top:1px solid var(--rule);padding-top:12px}
+.schema summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+.schema ol{margin:10px 0 0;padding-left:20px;font-size:11.5px;line-height:1.65;color:var(--muted)}
+.actions{display:flex;gap:8px;margin-top:18px}
+
+.stage{padding:32px;display:flex;justify-content:center;align-items:flex-start;min-width:0}
+.card{width:100%;max-width:900px;background:var(--c-paper);color:var(--c-ink);padding:48px 48px 30px;font-family:var(--mono);
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28);}
+.empty{padding:100px 10px;text-align:center;color:var(--c-muted);font:16px/1.6 var(--serif)}
+
+.backBar{display:flex;justify-content:flex-start;margin-bottom:14px}
+.backBar a{font:600 12.5px var(--mono,inherit);color:var(--jade,#1F7A52);text-decoration:underline;text-underline-offset:3px;letter-spacing:.01em}
+.backBar a:hover{text-decoration-thickness:2px}
+.mast .labsBy{font-size:12px;color:var(--c-muted);margin-top:3px}
+.mast .labsBy a,.mast .labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.mast .labsBy a:hover{text-decoration:underline}
+.foot .footLinks{flex-basis:100%}
+.foot .footLinks a,.foot .footLinks a:visited{color:var(--jade,#1F7A52)}
+.mast{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--c-rule);padding-bottom:18px}
+.mast .name{font:500 clamp(24px,3.4vw,34px)/1.1 var(--serif);letter-spacing:-.01em;margin:0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+.mast .exch{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-muted);margin-top:4px}
+.mast .exch .sep{width:4px;height:4px;border-radius:50%;background:var(--c-muted);flex:none}
+.streakBadge{display:inline-flex;align-items:center;gap:7px;margin-top:9px;font:italic 600 13.5px var(--serif);color:var(--c-muted)}
+.streakBadge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.streakBadge.tiered{color:var(--c-gold);font-weight:700}
+.tick{display:inline-flex;align-items:center;gap:6px;font:700 15px var(--mono);letter-spacing:.03em;background:var(--c-ink);color:var(--c-paper);padding:5px 12px;border-radius:20px;box-shadow:0 2px 0 rgba(0,0,0,.12);position:relative}
+.tick .dot{width:7px;height:7px;border-radius:50%;background:var(--tick-acc,var(--c-jade));box-shadow:0 0 0 2px color-mix(in srgb, var(--tick-acc,var(--c-jade)) 35%, transparent)}
+/* When multiple rows are loaded, the ticker pill itself becomes the
+   picker (native <select> stripped of browser chrome) instead of a
+   separate dropdown bar above the card — same pill look, just
+   clickable, with a small caret standing in for the native arrow. */
+.tick select{appearance:none;-webkit-appearance:none;-moz-appearance:none;border:none;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;padding:0 15px 0 0;margin:0;cursor:pointer}
+.tick select:focus{outline:none}
+.tick.hasSelect{cursor:pointer}
+.tick.hasSelect:focus-within{box-shadow:0 2px 0 rgba(0,0,0,.12),0 0 0 2px var(--tick-acc,var(--c-jade))}
+.tick.hasSelect:after{content:'';position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.tick select option{color:#111;background:#fff;font-weight:600}
+.pricebox{text-align:right;padding-top:10px}
+.pricebox .px{font:600 clamp(26px,3.6vw,36px)/1.15 var(--serif);font-variant-numeric:tabular-nums;margin-top:8px}
+.pricebox .lbl{font-size:11.5px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.pxEdit{display:flex;align-items:baseline;justify-content:flex-end;gap:1px;margin-top:8px}
+.pxSign{font:600 clamp(22px,3vw,30px)/1.15 var(--serif);color:var(--c-ink)}
+.pxInput{font:600 clamp(26px,3.6vw,36px)/1.15 var(--serif);font-variant-numeric:tabular-nums;color:var(--c-ink);background:transparent;border:0;border-bottom:1.5px dashed var(--c-rule);text-align:right;width:6.5ch;padding:0 1px 1px;-moz-appearance:textfield}
+.pxInput::-webkit-outer-spin-button,.pxInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pxInput:hover,.pxInput:focus{border-bottom-color:var(--c-jade);outline:none}
+.pxAdj{font-style:italic;font-weight:500;text-transform:none;letter-spacing:0;color:var(--c-jade)}
+.pxHint{display:block;font-size:10px;text-transform:none;letter-spacing:0;color:var(--c-muted);opacity:.75;margin-top:3px;font-style:italic}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{font-size:12px;padding:5px 10px;border-radius:20px;border:1px solid var(--c-rule);color:var(--c-muted)}
+.chip.warn{border-color:var(--c-rust);color:var(--c-rust);background:var(--c-rust-soft)}
+.chip.good{border-color:var(--c-jade);color:var(--c-jade);background:var(--c-jade-soft)}
+.chip.pe{border:1.5px solid var(--c-gold);color:var(--c-gold);background:color-mix(in srgb, var(--c-gold) 14%, var(--c-paper));font-weight:800;font-size:13px}
+.chip.signal-up{border-color:var(--c-jade);color:var(--c-jade);background:var(--c-jade-soft)}
+.chip.signal-down{border-color:var(--c-rust);color:var(--c-rust);background:var(--c-rust-soft)}
+.chip small{font-weight:500;opacity:.7;margin-left:2px}
+/* Lowercase sigma sits at x-height in most fonts, so next to the chip's
+   digits (cap/lining height) it reads visibly shorter — scale it up and
+   nudge the baseline so it matches the numerals' height instead. */
+.chip .sigmaSym{font-size:1.35em;line-height:1;vertical-align:-0.02em;display:inline-block}
+
+.hero{margin-top:34px;text-align:center}
+.hero .eyebrow{font-size:13px;color:var(--c-ink);opacity:.78;letter-spacing:.02em;font-weight:600;margin-bottom:14px}
+.hero .sig{font:700 clamp(70px,13vw,128px)/1 var(--serif);letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  color:transparent;background-image:repeating-linear-gradient(135deg, var(--sig-acc) 0 3px, color-mix(in srgb, var(--sig-acc) 62%, transparent) 3px 6px);
+  -webkit-background-clip:text;background-clip:text}
+.bellWrap{position:relative;max-width:820px;margin:6px auto 0}
+.bellWrap svg{width:100%;height:auto;display:block}
+.bellProbe{position:absolute;top:0;bottom:0;left:50%;width:0;pointer-events:none}
+.bellProbe .line{position:absolute;top:0;bottom:12%;left:0;width:1px;background:var(--c-muted);opacity:.6}
+.bellProbe .dot{position:absolute;left:0;top:0;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;background:var(--c-ink);border:2px solid var(--c-paper);box-shadow:0 0 0 1px var(--c-ink)}
+.bellProbe .bubble{position:absolute;left:0;top:0;transform:translate(-50%,-100%);margin-top:-10px;background:var(--c-ink);color:var(--c-paper);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums;display:grid;align-items:baseline;justify-items:start;text-align:left;column-gap:12px;row-gap:3px}
+.bellProbe .bubble .bp{grid-column:1;grid-row:1 / span 2;align-self:center;padding-right:2px}
+.bellProbe .bubble .bs{grid-column:2;grid-row:1}.bellProbe .bubble .binc{grid-column:2;grid-row:2}
+.bellProbe .bubble .by{grid-column:3;grid-row:1}.bellProbe .bubble .bedge{grid-column:3;grid-row:2}
+.bellProbe .bubble .bedge{font-weight:500;font-style:italic;opacity:.7}
+@media(max-width:560px){.bellProbe .bubble{width:max-content;font-size:11px;padding:5px 8px;column-gap:8px}.bellProbe .bubble .bp{font-size:13px}.bellProbe .bubble .binc{white-space:normal;max-width:165px}}
+.bellProbe .bubble::after{content:'';position:absolute;left:calc(50% - var(--shift,0px));top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--c-ink)}
+.bellProbe .bubble .bp{font-family:var(--serif);font-size:15px;font-weight:700}
+.bellProbe .bubble .bs{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.bellProbe .bubble .bs .d{width:7px;height:7px;border-radius:50%;flex:none}
+.bellProbe .bubble .by{font-weight:500;opacity:.9}
+.bellProbe .bubble .binc{font-weight:500;font-style:italic;opacity:.7}
+.sigSlider{width:100%;max-width:600px;margin:16px auto 0;display:block;accent-color:var(--c-jade)}
+.hero .cap{font:italic 17px/1.55 var(--serif);max-width:56ch;margin:16px auto 0;color:var(--c-ink)}
+.hero .cap b{font-weight:600}
+.hero .sub{font-size:12.5px;color:var(--c-muted);margin-top:8px}
+.zoneTag{display:inline-block;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--sig-acc);background:color-mix(in srgb, var(--sig-acc) 14%, transparent);border:1.5px solid var(--sig-acc);
+  padding:6px 16px;border-radius:20px;margin-top:8px}
+
+.sec{margin-top:36px;display:block}
+.sec summary{cursor:pointer;list-style:revert;margin-bottom:4px}
+.sec summary::marker{color:var(--c-muted);font-size:12px}
+.sec summary h3{display:inline}
+.sec h3{font:600 15px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--c-muted);margin:0 0 4px}
+.sec .desc{font-size:12.5px;color:var(--c-muted);margin:8px 0 18px;max-width:60ch}
+
+.ladder{position:relative;height:calc(30px + 34px + var(--rows,0) * 34px);margin:0 6px}
+.ladder .track{position:absolute;left:0;right:0;top:30px;height:2px;background:var(--c-rule)}
+.lmark{position:absolute;top:0;width:0;text-align:center;transform:translateX(-50%)}
+.lmark .dot{width:11px;height:11px;border-radius:50%;margin:20px auto 0;border:2px solid var(--c-paper)}
+.lmark .v{font-size:12px;font-weight:600;white-space:nowrap;margin-top:calc(4px + var(--row,0) * 34px)}
+.lmark .l{font-size:10.5px;color:var(--c-muted);white-space:nowrap;margin-top:1px}
+/* "now" has no dot of its own — the arrow marks the spot instead, so it
+   doesn't compete/overlap with a neighboring anchor's dot (e.g. price
+   sitting right next to the 52-week low). The whole marker is a flex
+   column pinned bottom-first to exactly the track's y-position (height:
+   30px, same offset as .track's top, justify-content:flex-end), so the
+   arrow tip always lands exactly on the track regardless of how tall the
+   label/value text above it happens to render — no pixel-guessing. Label
+   and value overflow upward into the section description's own bottom
+   margin above the ladder; nothing else in the ladder shifts. */
+.lmark.now{height:30px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start}
+.lmark.now .nowCallout{display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap}
+.lmark.now .l{line-height:1.2;margin:0}
+.lmark.now .v{font-weight:700;line-height:1.2;margin:1px 0 0}
+.lmark.now .nowArrow{flex:none;width:13px;height:9px;margin:3px 0 0 0;background:var(--c-ink);
+  clip-path:polygon(0 0,100% 0,50% 100%);position:relative}
+.lmark.now .nowArrow::before{content:'';position:absolute;left:50%;top:-4px;width:2px;height:4px;background:var(--c-ink);transform:translateX(-50%)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.fanBlock .sub{font-size:12.5px;color:var(--c-muted);margin:8px 0 18px;max-width:none}
+.fanBlock .panelLabel{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--c-muted);margin:0 0 6px}
+#stairPanel svg,#fanPanel svg{width:100%;height:auto;display:block}
+.yearControl{display:flex;align-items:center;gap:16px;margin:18px 0 4px;flex-wrap:wrap}
+.yearControl input[type=range]{flex:1;min-width:160px;max-width:320px;accent-color:var(--c-jade)}
+.yearReadout{font-size:13px;font-weight:700;white-space:nowrap}
+.rateInput{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--c-muted);white-space:nowrap}
+.rateBox{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--c-rule);border-radius:7px;padding:4px 6px 4px 8px;background:var(--c-paper);color:var(--c-ink);font-weight:700}
+.rateBox input[type=number]{width:3.4em;border:0;background:transparent;font:inherit;font-weight:700;color:var(--c-ink);text-align:right;padding:0;-moz-appearance:textfield}
+.rateBox input[type=number]::-webkit-outer-spin-button,.rateBox input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rateStepGrp{display:inline-flex;flex-direction:column;line-height:0;margin-left:2px}
+.rateStep{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:var(--c-muted);cursor:pointer;padding:1px 2px;font-size:8px;line-height:1}
+.rateStep:hover{color:var(--c-ink)}
+.rateStep:active{color:var(--c-jade)}
+.dispersion{font-size:12px;line-height:1.6;color:var(--c-muted);margin:0 0 12px;max-width:52ch}
+.discl{margin-top:16px;padding:12px 16px;border:1px dashed var(--c-rule);border-radius:8px;font-size:12px;line-height:1.6;color:var(--c-muted);font-style:italic}
+.stat{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--c-rule);font-size:13.5px}
+.statBlock{border-bottom:1px solid var(--c-rule);padding:9px 0}
+.statBlock .stat.noBorder{border-bottom:0;padding:0}
+.stat:last-child{border-bottom:0}
+.stat .l{color:var(--c-muted)}
+.stat .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.tnx{display:flex;gap:0;margin-top:6px;border:1px solid var(--c-rule);border-radius:8px;overflow:hidden}
+.tnx div{flex:1;padding:14px 12px 16px;text-align:center;border-left:1px solid var(--c-rule)}
+.tnx div:first-child{border-left:0}
+.tnx .l{font-size:10.5px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.03em}
+.tnx .v{font-size:16px;font-weight:700;margin-top:3px}
+.tnx .cap{font-size:10px;line-height:1.3;color:var(--c-muted);opacity:.75;margin-top:5px}
+.bpsNote{font-size:11px;color:var(--c-muted);opacity:.75;margin:4px 0 0}
+.statNote{font-size:11px;color:var(--c-muted);opacity:.75;margin:5px 0 0}
+
+.foot{margin-top:44px;padding-top:14px;border-top:1px solid var(--c-rule);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--c-muted)}
+
+@media(max-width:880px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule)}
+  .stage{padding:14px}
+  .card{padding:26px 18px 20px}
+  .grid2{grid-template-columns:1fr;gap:8px}
+  .ladder{height:auto}
+  .ladder .track{display:none}
+  .lmark{position:static;transform:none;display:flex;align-items:center;gap:8px;margin-bottom:8px;text-align:left}
+  .lmark .dot{margin:0}
+  .lmark .v,.lmark .l{margin:0}
+  .lmark.now{height:auto;flex-direction:row;justify-content:flex-start}
+  .lmark.now .nowCallout{flex-direction:row;align-items:baseline;gap:6px;white-space:normal}
+  .lmark.now .nowArrow{display:none}
+}
+@media print{
+  @page{margin:10mm}
+  .side{display:none} .app{display:block} .stage{padding:0}
+  .card{box-shadow:none;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <h1>Sigma Yield Card</h1>
+    <p class="tag">Paste or upload your dividend/sigma model — tab-separated, in your sheet's column order — and get a single-stock valuation card. Multiple rows are fine; pick which stock to show below.</p>
+
+    <h2>Data</h2>
+    <div class="field dataType">
+      <span>Data type</span>
+      <label class="radioOpt"><input type="radio" name="dataType" id="dtStocks" value="stocks" checked>Stocks</label>
+      <label class="radioOpt"><input type="radio" name="dataType" id="dtReits" value="reits">REITs</label>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="btnUpload">Upload file (.csv/.tsv/.txt)</button>
+      <input type="file" id="fileUpload" accept=".csv,.tsv,.txt" hidden>
+    </div>
+    <textarea id="raw" spellcheck="false" placeholder="…or paste rows here (copy straight from Excel/Sheets)"></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="btnRender">Render card</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <div class="field" id="pickWrap" hidden>
+      <span>Multiple rows found — showing</span>
+      <select id="pick"></select>
+    </div>
+
+    <details class="schema">
+      <summary id="schemaSummary">Expected column order (34 columns)</summary>
+      <ol id="schemaList"></ol>
+    </details>
+
+    <h2>Live source <span class="hint">optional</span></h2>
+    <p class="tag">Tether the published page to your GitHub Gist CSV files so it never goes stale. Pre-filled with your Gist's evergreen raw URLs below — leave both blank to publish a one-time snapshot instead.</p>
+    <label class="field"><span>Stocks CSV URL</span>
+      <input type="url" id="urlStocks" placeholder="https://gist.githubusercontent.com/…/raw/stocks.csv" autocomplete="off">
+    </label>
+    <label class="field"><span>REITs CSV URL</span>
+      <input type="url" id="urlReits" placeholder="https://gist.githubusercontent.com/…/raw/reits.csv" autocomplete="off">
+    </label>
+    <div class="btnrow">
+      <button class="btn" id="btnFetchLive">Fetch &amp; preview now</button>
+    </div>
+
+    <h2>Look</h2>
+    <div class="btnrow">
+      <button class="btn" id="btnDark">Dark ledger</button>
+      <button class="btn" id="btnLight">Light ledger</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="btnPng">Save as PNG</button>
+      <button class="btn" id="btnPrint">Print / PDF</button>
+    </div>
+
+    <h2>Publish</h2>
+    <p class="tag">Builds the sidebar-free page for every row currently loaded, and copies it. With a live source above, the published page re-fetches the sheet itself every ~15 minutes; otherwise it's a one-time snapshot of what's loaded now.</p>
+    <label class="radioOpt" style="display:flex;margin-bottom:10px">
+      <input type="checkbox" id="chkStandalone">
+      <span>Standalone share link (hides the ticker dropdown, adds a "← Back to Yield Sigma / Directory" link) — check this only for the GitHub single-ticker card. Leave unchecked for your normal website embed (keeps the dropdown, no back-link).</span>
+    </label>
+    <div class="btnrow">
+      <button class="btn primary" id="btnPublish">Copy website code</button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <label for="pubPick" id="pubPickLabel" hidden>Viewing</label>
+    <select id="pubPick" hidden></select>
+    <article class="card" id="card"></article>
+  </main>
+</div>
+
+<div class="modalOverlay" id="publishModal" hidden>
+  <div class="modalBox">
+    <h3>Website code</h3>
+    <p id="publishMsg">Copied to your clipboard — go to your website's embed block and paste (Ctrl/⌘+V).</p>
+    <p class="modalHint">If the paste comes up empty, click inside the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.</p>
+    <textarea id="publishOutput" readonly spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="publishCopyAgain">Copy again</button>
+      <button class="btn" id="publishClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+/* ===== EDIT LINKS HERE =====
+   Every page link used by the card. If a page moves, change it here only. */
+var LINKS={
+  back:        "https://www.yieldsigma.com/directory",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
+};
+</script>
+<script>
+(function(){
+'use strict';
+
+/* Set to true to hide the paste/upload sidebar entirely and show just the
+   card, full-width — for pasting this file into a public page (e.g. as
+   Google Sites "Embed code"). Leave false for your own working copy, where
+   you build/pick the card before publishing. */
+var PUBLIC_MODE=true;
+
+/* ------------------------------------------------------------------ *
+ * Fixed column schema, in the order the user's model exports them.
+ * Each entry: key, short display label, type, and (for the long,
+ * explanatory headers) the original header text kept as a tooltip
+ * rather than lost.
+ * ------------------------------------------------------------------ */
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num', note:'DDM discount model (column L): 10y Treasury + 4% risk spread + dividend growth gives the required compounded return; discounting the dividend at that rate over 10 years gives a consensus-style fair value, similar to what pension allocators use.'},
+ {k:'par', label:'Par (yield-parity price)', type:'money', note:'Price at which the yield would exactly equal its 10-year average — i.e. Div $ / 10y average yield.'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct', note:'Current yield deviation divided by its standard deviation. Lower = lower volatility = faster reversion to the mean. The ratio is what matters, not the raw percent.'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'Projected yield on cost, 5y', type:'pct'},
+ {k:'cagr10y', label:'Projected yield on cost, 10y', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200 dma', type:'money'},
+ {k:'ma200diff', label:'200 dma, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct', note:'Dividend divided by EPS, where EPS is derived as Price / P/E. Not a substitute for a true trailing-twelve-month payout ratio, but a good proxy from data already on the sheet.'},
+ {k:'divGrowth3y', label:'Div growth, past 3y', type:'pct', note:'3-year dividend growth per year (column AJ on Stocks, AH on REITs). The card compares it with the 10-year rate to show the Recent div growth trend (slowing / steady / advancing, 1-point bands) and fades the 10-year projections toward it.'}
+];
+
+/* REITs tab has a genuinely different column layout than Stocks —
+   confirmed against Gabe's actual sheet: Par/Volatility/Notes come
+   right after column K, DDM's REIT equivalent ($5yrFV) lands after
+   Notes instead of before Par, and Yield premium / Projected dividend
+   10y / Dividend check 10y / PV don't exist on the REIT tab at all.
+   Two positions also hold different DATA than their Stocks counterpart,
+   not just a different order: column K is a yield-difference calc, not
+   the arrow-based Direction signal Stocks has, and REITs don't carry a
+   true P/E — so those two get their own REIT-only keys (yieldDiffK,
+   pffr) instead of reusing 'direction'/'pe', which keeps the P/E and
+   Direction chips (buildCard) from ever rendering on a REIT card.
+   Built from SCHEMA_STOCKS by key so shared fields' labels/notes/types
+   stay in sync — only the column ORDER (and which fields exist) differs. */
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used on card)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used on card)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio','divGrowth3y'];
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+/* Union of every key either schema can produce — see parseRow's null-init. */
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+/* Card header shows a short form of the company name (so switching
+   between a short-named and long-named company via the ticker picker
+   doesn't reflow the header/price box) — the full legal name still
+   shows on hover (title attr) and in the narrative sentence below.
+   Common corporate suffixes get abbreviated first (Corporation->Corp,
+   Company->Co, etc.), then names still over 3 words drop a leading
+   "THE" (doesn't help identify the company) and keep the first 3
+   remaining words. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',
+  COMPANY:'Co',CO:'Co',
+  INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',
+  INTERNATIONAL:'Intl',
+  HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',
+  ASSOCIATES:'Assoc',
+  MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',
+  GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',
+  PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',
+  RESIDENTIAL:'Res',
+  DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs',
+  /* only for the two names too long to sit beside the price box
+     (CTSH, BIP); written in caps to match those names */
+  TECHNOLOGY:'TECH',INFRASTRUCTUR:'INFRA'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * Value parsing
+ * ------------------------------------------------------------------ */
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  var hasSign=/%/.test(t);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v; // stored as a plain percent number, e.g. 4.54 means 4.54%
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtSignedPct(v){return (v>=0?'+':'')+v.toFixed(2)+'%';}
+
+/* ------------------------------------------------------------------ *
+ * Row parsing
+ * ------------------------------------------------------------------ */
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/); // fallback if tabs got collapsed to spaces
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  /* Default every field from EITHER schema to null first. A schema that
+     omits a key (Stocks has no 'pAffo'/'affo'/'fv5yr'/etc, REITs has no
+     real 'pe'/'direction') would otherwise leave rec[k] as undefined on
+     that side, and undefined!==null, so a downstream "!==null" guard
+     (chip rendering, etc.) would still fire with garbage instead of
+     skipping cleanly. Union of both schemas keeps this safe regardless
+     of which one adds a new field later. */
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' column'+(cells.length===1?'':'s')+' found, expected '+schema.length+'. Fields may be shifted — check against the column order below.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+
+/* ------------------------------------------------------------------ *
+ * Derived values and narrative
+ * ------------------------------------------------------------------ */
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function normPdf(y,mean,sd){
+  var z=(y-mean)/sd;
+  return Math.exp(-0.5*z*z)/(sd*Math.sqrt(2*Math.PI));
+}
+
+/* ------------------------------------------------------------------ *
+ * 10-year dividend growth path (illustrative projection, not a
+ * forecast). Compounds this stock's own trailing 10y dividend CAGR
+ * forward, year by year, in real dividend dollars. For whichever year
+ * is selected, the terminal panel turns that year's dividend into a
+ * price fan using this stock's own 10y average yield and 1 SD \u2014 a
+ * bell curve rotated 90\u00b0, bulging right at the mean (Par) and
+ * tapering toward \u00b11\u03c3 at top and bottom. Wide yield swings (high
+ * volatility) naturally spread into a wide, flat fan; tight yield
+ * history collapses into a tall, narrow one.
+ * ------------------------------------------------------------------ */
+function growthPath(rec,rateOverride){
+  var rate=(rateOverride!==null&&rateOverride!==undefined&&isFinite(rateOverride))?rateOverride:rec.cagr10y;
+  if(rec.divDollar===null||rate===null||rate===undefined||!isFinite(rate)||rec.avg10y===null||!rec.oneSD||rec.avg10y<=0)return null;
+  var g=1+rate/100;
+  var years=[];
+  for(var i=0;i<=10;i++){
+    var div=rec.divDollar*Math.pow(g,i);
+    years.push({year:i,div:div,par:div/(rec.avg10y/100)});
+  }
+  return years;
+}
+function priceFromYield(div,yieldPct){return div/(yieldPct/100);}
+function yearYieldFan(rec,yearDiv,samples){
+  samples=samples||90;
+  var sd=rec.oneSD,mean=rec.avg10y;
+  // The sampling window is a FIXED baseline (2.75 percentage points either
+  // side of the mean) unless this stock's own spread needs more room to
+  // avoid clipping. A low-SD stock's density falls off fast within that
+  // fixed window, so it reads as a tall, narrow spike; a high-SD stock's
+  // density stays broad within its (necessarily wider) window, so it reads
+  // as flat and wide. Same frame, different shape \u2014 driven only by SD.
+  var FIXED_BASE=2.75;
+  var span=Math.max(FIXED_BASE,2.75*sd);
+  // Keep the window symmetric around the mean so both tails taper the same
+  // way. A floor only on the low-yield side (to stop price=div/yield from
+  // blowing toward infinity) would cut that tail short while the high-yield
+  // side kept its full span — reads as a bell missing one tail. Instead,
+  // shrink the SAME span on both sides whenever the low side would breach
+  // the floor.
+  var maxSpanBeforeFloor=mean-Math.max(mean*0.3,0.05);
+  if(maxSpanBeforeFloor>0)span=Math.min(span,maxSpanBeforeFloor);
+  var yLo=mean-span,yHi=mean+span;
+  if(yHi<=yLo)return null;
+  var pts=[];
+  for(var i=0;i<samples;i++){
+    var y=yLo+(yHi-yLo)*i/(samples-1);
+    pts.push({p:priceFromYield(yearDiv,y),w:normPdf(y,mean,sd),y:y});
+  }
+  // Points are already yield-ascending from the loop above \u2014 that order
+  // is what we plot against (yield is the symmetric, genuinely bell-shaped
+  // quantity here; price is only ever shown as a label, never as the axis,
+  // since price = div/yield is a reciprocal and skews badly for a volatile
+  // stock if it's used to position the curve itself).
+  var maxW=Math.max.apply(null,pts.map(function(pt){return pt.w;}));
+  pts.forEach(function(pt){pt.w=pt.w/maxW;});
+  var topY=Math.max(yLo,mean-sd),botY=Math.min(yHi,mean+sd);
+  var inner=pts.filter(function(pt){return pt.y>=topY-1e-9&&pt.y<=botY+1e-9;});
+  return {
+    points:pts,
+    inner:inner,
+    sd:sd,
+    top:{yield:topY,price:priceFromYield(yearDiv,topY)},
+    mean:{yield:mean,price:priceFromYield(yearDiv,mean)},
+    bottom:{yield:botY,price:priceFromYield(yearDiv,botY)}
+  };
+}
+
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function pctToBps(s){
+  var v=parseFloat(String(s).replace('%',''));
+  if(!isFinite(v))return s;
+  var bps=Math.round(v*100);
+  return (bps>=0?'+':'')+bps+'bps';
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+
+function divStreakBadge(years){
+  if(years===null||years===undefined||!isFinite(years))return null;
+  var y=Math.floor(years);
+  var tier=null;
+  if(y>=50)tier='Dividend King';
+  else if(y>=25)tier='Dividend Aristocrat';
+  else if(y>=10)tier='Dividend Achiever';
+  else if(y>=5)tier='Dividend Challenger';
+  return {years:y,tier:tier,text:tier?(tier+' · '+y+' yrs'):(y+' yrs of dividend growth')};
+}
+function analyze(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.exch=ne.exch; a.ticker=rec.ticker||ne.tick||'\u2013';
+  a.sigma=rec.sigma;
+  a.sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)a.sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigmaCheck=(a.sigma!==null&&a.sigmaComputed!==null&&Math.abs(a.sigma-a.sigmaComputed)>0.15);
+  var s=a.sigma!==null?a.sigma:a.sigmaComputed;
+  a.sigmaAbs=s===null?null:Math.abs(s);
+  a.rich=s!==null&&s<0;
+  a.pctile=s===null?null:normCdf(s)*100;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  a.streak=divStreakBadge(rec.divGrowthYears);
+  return a;
+}
+
+function zoneWord(sAbs,rich){
+  if(sAbs<1)return 'normal';
+  if(sAbs<2)return rich?'low':'high';
+  return rich?'abnormally low':'abnormally high';
+}
+function tailIncidence(s){
+  return s>=0?(100-normCdf(s)*100):(normCdf(s)*100);
+}
+function sigmaCaption(rec,a){
+  if(a.sigma===null)return 'No sigma value found in this row \u2014 check the column order.';
+  var name=a.name||'This stock';
+  var dir=a.rich?'below':'above';
+  var word=zoneWord(Math.abs(a.sigma),a.rich);
+  var tailPctText='';
+  if(a.pctile!==null){
+    var tail=tailIncidence(a.sigma);
+    tailPctText=' A value at this level will occur '+trimZ(tail.toFixed(tail<1?2:1))+'% of the time';
+  }
+  return '<b>'+esc(name)+'</b>\u2019s yield sits <b>'+fmtNum(Math.abs(a.sigma),2)+' standard deviations '+dir+'</b> its 10-year average \u2014 statistically <b>'+word+'</b> relative to its own history.'+tailPctText+(tailPctText?edgeSentence(rec,a.sigma)+(edgeSentence(rec,a.sigma)?'':'.'):'');
+}
+/* Closing words for the caption: the income edge at today's sigma, in
+ * the same words as the tooltip. */
+function edgeSentence(rec,s){
+  var y=yieldAtSigma(rec,s),v=incomeEdgeYears(rec,y);
+  if(v===null||Math.abs(v)<0.05)return '';
+  var yrs=Math.abs(v).toFixed(1);
+  return ', and it represents <b>'+(v>0?'':'\u2212')+yrs+' years of income edge</b>: '+(v>0?'a 0\u03c3 buyer would only reach this yearly income level after '+yrs+' years of holding as the dividend grows.':'a buyer at this level would only reach a 0\u03c3 buyer\u2019s yearly income level after '+yrs+' years of holding as the dividend grows.');
+}
+
+/* ------------------------------------------------------------------ *
+ * Visuals
+ * ------------------------------------------------------------------ */
+var BELL={W:820,H:280};
+function bellGeom(a){
+  var W=BELL.W,H=BELL.H,cx=W/2,base=H-34;
+  var range=Math.max(3.2,(a.maxAbs||0)+0.6);
+  var X=function(z){return cx+(z/range)*(W/2-30);};
+  var amp=170;
+  var Y=function(z){return base-amp*Math.exp(-(z*z)/2);};
+  return {W:W,H:H,cx:cx,base:base,range:range,amp:amp,X:X,Y:Y};
+}
+function bellSVG(rec,a,T){
+  var g=bellGeom(a),W=g.W,H=g.H,base=g.base,range=g.range,X=g.X,Y=g.Y;
+  var pts=[];for(var z=-range;z<=range+0.001;z+=range*2/160)pts.push(X(z).toFixed(1)+','+Y(z).toFixed(1));
+  var color=a.rich?T.rust:T.jade;
+  var s=(a.sigma!==null?a.sigma:a.sigmaComputed);
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Normal distribution of yield with current sigma marked" xmlns="http://www.w3.org/2000/svg">';
+  svg+='<line x1="30" y1="'+base+'" x2="'+(W-30)+'" y2="'+base+'" stroke="'+T.rule+'" stroke-width="1"/>';
+  [-3,-2,-1,0,1,2,3].forEach(function(z){
+    if(Math.abs(z)>range)return;
+    svg+='<line x1="'+X(z).toFixed(1)+'" y1="'+(base+4)+'" x2="'+X(z).toFixed(1)+'" y2="'+(base-4)+'" stroke="'+T.rule+'"/>';
+    svg+='<text x="'+X(z).toFixed(1)+'" y="'+(base+20)+'" font-family="'+T.mono+'" font-size="12.5" fill="'+T.muted+'" text-anchor="middle">'+(z>0?'+':'')+z+'\u03c3</text>';
+  });
+  svg+='<path d="M'+pts.join('L')+'" fill="none" stroke="'+T.ink+'" stroke-width="1.6" opacity="0.55"/>';
+  if(s!==null){
+    var clamped=Math.max(-range,Math.min(range,s));
+    var xs=X(clamped),ys=Y(clamped);
+    var zeroX=X(0);
+    var lo=Math.min(zeroX,xs),hi=Math.max(zeroX,xs);
+    var fillPts=[];for(var z2=(clamped<0?clamped:0);z2<=(clamped<0?0:clamped)+0.0001;z2+=range*2/160)fillPts.push(X(z2).toFixed(1)+','+Y(z2).toFixed(1));
+    svg+='<path d="M'+lo.toFixed(1)+','+base+'L'+fillPts.join('L')+'L'+hi.toFixed(1)+','+base+'Z" fill="'+color+'" opacity="0.16"/>';
+    svg+='<line x1="'+xs.toFixed(1)+'" y1="'+base+'" x2="'+xs.toFixed(1)+'" y2="'+ys.toFixed(1)+'" stroke="'+color+'" stroke-width="2"/>';
+    svg+='<circle cx="'+xs.toFixed(1)+'" cy="'+ys.toFixed(1)+'" r="6.5" fill="'+color+'"/>';
+    svg+='<text x="'+xs.toFixed(1)+'" y="'+(ys-14).toFixed(1)+'" font-family="'+T.mono+'" font-size="12.5" font-weight="700" fill="'+color+'" text-anchor="'+(clamped>range*0.6?'end':(clamped<-range*0.6?'start':'middle'))+'">Now</text>';
+  }
+  svg+='</svg>';
+  return svg;
+}
+
+/* Price implied at a given sigma, by linear interpolation between whatever
+   price/sigma anchor points the row actually provides. Sigma is a decreasing
+   function of price (higher sigma = cheaper), so anchors are sorted and
+   interpolated on that basis; outside the known range the nearest segment's
+   slope is extended rather than inventing new data. */
+/* Price and yield at any hypothetical sigma, from the regular (10-year
+   average) sigma system only: yield = 10y average + sigma * 1 SD, and
+   price = Div$ / yield. One consistent formula, always monotonic, and
+   deliberately independent of the separate max-yield model. */
+function yieldAtSigma(rec,s){
+  if(rec.avg10y===null||!rec.oneSD)return null;
+  return rec.avg10y+s*rec.oneSD;
+}
+function priceAtSigma(rec,s){
+  var y=yieldAtSigma(rec,s);
+  if(y===null||y<=0||rec.divDollar===null)return null;
+  return rec.divDollar/(y/100);
+}
+
+function ladder(points,T){
+  points=points.filter(function(p){return p.v!==null&&p.v!==undefined;});
+  if(points.length<2)return '';
+  var vals=points.map(function(p){return p.v;});
+  var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+  var pad=(hi-lo)*0.12||1;lo-=pad;hi+=pad;
+  var pct=function(v){return ((v-lo)/(hi-lo))*100;};
+  // Stagger labels that would otherwise collide. Greedy interval scheduling:
+  // walk points left to right and drop each into the first row whose last
+  // occupant is far enough away, opening a new row only when every existing
+  // row is still too close. Handles clusters of any size, not just pairs.
+  // "now" (today's price) never takes part: it renders ABOVE the track
+  // instead of stacking below with everyone else, so it can't collide with
+  // a neighboring anchor (e.g. price sitting right next to the 52-week low)
+  // and doesn't cost a below-row either.
+  var GAP=15;
+  var belowIdx=[];
+  points.forEach(function(p,i){if(!p.now)belowIdx.push(i);});
+  var order=belowIdx.map(function(i){return {i:i,pct:pct(points[i].v)};}).sort(function(a,b){return a.pct-b.pct;});
+  var rows=new Array(points.length).fill(0);
+  var rowLast=[];
+  order.forEach(function(o){
+    var placed=false;
+    for(var r=0;r<rowLast.length;r++){
+      if(o.pct-rowLast[r]>=GAP){rows[o.i]=r;rowLast[r]=o.pct;placed=true;break;}
+    }
+    if(!placed){rows[o.i]=rowLast.length;rowLast.push(o.pct);}
+  });
+  var maxRow=rowLast.length?rowLast.length-1:0;
+  return '<div class="ladder" style="--rows:'+maxRow+'">'+
+    '<div class="track"></div>'+
+    points.map(function(p,i){
+      if(p.now){
+        return '<div class="lmark now" style="left:'+pct(p.v).toFixed(1)+'%">'+
+          '<div class="nowCallout">'+
+            '<div class="l">'+esc(p.label)+'</div>'+
+            '<div class="v">'+fmtMoney(p.v)+'</div>'+
+            (p.diffLabel?'<div class="nowDiff">'+esc(p.diffLabel)+'</div>':'')+
+          '</div>'+
+          '<div class="nowArrow"></div>'+
+        '</div>';
+      }
+      return '<div class="lmark" style="left:'+pct(p.v).toFixed(1)+'%;--row:'+rows[i]+'">'+
+        '<div class="dot" style="background:'+(p.color||T.muted)+'"></div>'+
+        '<div class="v">'+fmtMoney(p.v)+'</div>'+
+        '<div class="l">'+esc(p.label)+'</div></div>';
+    }).join('')+
+  '</div>';
+}
+
+var FAN_H=290,FAN_TP=38,FAN_B=26;
+
+function staircaseBarsSVG(path,selYear,T,maxDivOverride){
+  // Bottom axis stays where it always was (B=34). Only the top margin
+  // changed — a bigger, fixed Tp so the tallest bar (plus its value label,
+  // drawn above it) sits well clear of the panel's own top edge.
+  var W=360,H=290,L=44,R=14,Tp=70,B=34;
+  var barCeil=Tp;
+  // Use a fixed scale (the tallest bar the growth-rate slider could ever
+  // produce, i.e. at 20%) when one is supplied, rather than rescaling to
+  // this path's own max every time the rate changes. Otherwise raising the
+  // rate visually shrinks year 0 (it didn't change) while lowering it makes
+  // year 0 look like it grew — backwards. With a fixed scale, 0% growth
+  // shows a flat, low row of equal bars, and only the right side grows as
+  // the rate goes up.
+  var maxDiv=maxDivOverride||(Math.max.apply(null,path.map(function(p){return p.div;}))*1.15);
+  var slot=(W-L-R)/11;
+  var barW=slot*0.6;
+  var X=function(yr){return L+slot*yr+slot/2;};
+  var Y=function(v){return (H-B)-(v/maxDiv)*((H-B)-barCeil);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Dividend per share, year by year" xmlns="http://www.w3.org/2000/svg">';
+  s+='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="'+T.rule+'" stroke-width="1"/>';
+  path.forEach(function(p){
+    var isSel=p.year===selYear;
+    var x=X(p.year)-barW/2,y=Y(p.div),h=(H-B)-y;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="'+(isSel?T.jade:T.rule)+'" opacity="'+(isSel?'1':'0.7')+'"/>';
+    if([0,2,4,6,8,10].indexOf(p.year)>=0){
+      s+='<text x="'+X(p.year).toFixed(1)+'" y="'+(H-B+16)+'" font-family="'+T.mono+'" font-size="10.5" fill="'+T.muted+'" text-anchor="middle">Yr '+p.year+'</text>';
+    }
+  });
+  var sel=path[selYear];
+  s+='<text x="'+X(selYear).toFixed(1)+'" y="'+(Y(sel.div)-8).toFixed(1)+'" font-family="'+T.mono+'" font-size="13" font-weight="700" fill="'+T.jade+'" text-anchor="middle">'+esc(fmtMoney(sel.div))+'</text>';
+  s+='</svg>';
+  return s;
+}
+
+function yearFanSVG(fan,T){
+  // Tp/B give the curve breathing room from the top and bottom of the
+  // panel — with the description text sitting directly above this SVG
+  // now, a small top inset let the -1σ dot/label crowd right up against
+  // it. A bigger inset keeps everything inside the curve's own frame.
+  var W=420,H=FAN_H,cx=56,Tp=FAN_TP,B=FAN_B,halfW=150;
+  var pts=fan.points;
+  // Plot YIELD on the vertical axis, not price. Yield is what the normal
+  // distribution is actually defined over, so this axis is genuinely
+  // symmetric and the curve reads as a real bell. Price only ever appears
+  // as a text label \u2014 as a reciprocal of yield it would skew the shape
+  // if used to position the curve itself.
+  var yLo=pts[0].y,yHi=pts[pts.length-1].y;
+  // Lower yield means a higher implied price, so it belongs at the TOP of
+  // the panel (matching the usual "higher price = higher on the chart"
+  // convention) — -1σ (below-average yield, above-average price) on top,
+  // +1σ (above-average yield, below-average price) on the bottom.
+  var Y=function(yv){return Tp+((yv-yLo)/(yHi-yLo))*((H-B)-Tp);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Bell curve of yield outcomes for this year\u2019s dividend, highlighting plus or minus one standard deviation" xmlns="http://www.w3.org/2000/svg">';
+
+  // full shape: a visible light shadow bell across the whole sampled range.
+  // (At the very faint opacity this used to render at, it was effectively
+  // invisible against the page background \u2014 leaving the spine line below
+  // looking like it stuck out past the top and bottom of the curve, when
+  // by construction it always ends exactly where the curve does.)
+  var topEdge=Y(pts[0].y),botEdge=Y(pts[pts.length-1].y);
+  var dFull='M'+cx+','+topEdge.toFixed(1);
+  pts.forEach(function(pt){dFull+='L'+(cx+pt.w*halfW).toFixed(1)+','+Y(pt.y).toFixed(1);});
+  dFull+='L'+cx+','+botEdge.toFixed(1)+'Z';
+  s+='<path d="'+dFull+'" fill="'+T.ink+'" opacity="0.1" stroke="'+T.ink+'" stroke-width="1.4" stroke-opacity="0.55"/>';
+
+  // highlighted band: the \u00b11\u03c3 "normal" slice, bold
+  var inner=fan.inner;
+  if(inner&&inner.length>1){
+    var dIn='M'+cx+','+Y(inner[0].y).toFixed(1);
+    inner.forEach(function(pt){dIn+='L'+(cx+pt.w*halfW).toFixed(1)+','+Y(pt.y).toFixed(1);});
+    dIn+='L'+cx+','+Y(inner[inner.length-1].y).toFixed(1)+'Z';
+    s+='<path d="'+dIn+'" fill="'+T.jade+'" opacity="0.3" stroke="'+T.jade+'" stroke-width="2.2" stroke-opacity="0.9"/>';
+  }
+  // The spine only ever needs to span the curve's own top-to-bottom extent
+  // \u2014 drawn from the same coordinates as the curve itself, not the panel's
+  // fixed margins, so it can never visually overshoot the shape.
+  s+='<line x1="'+cx+'" y1="'+topEdge.toFixed(1)+'" x2="'+cx+'" y2="'+botEdge.toFixed(1)+'" stroke="'+T.rule+'" stroke-width="1"/>';
+
+  function weightAtYield(yv){
+    var best=pts[0],bestD=Math.abs(pts[0].y-yv);
+    for(var i=1;i<pts.length;i++){
+      var d=Math.abs(pts[i].y-yv);
+      if(d<bestD){bestD=d;best=pts[i];}
+    }
+    return best.w;
+  }
+  // For a low-volatility stock, -1\u03c3/mean/+1\u03c3 sit close together in yield,
+  // so their true y-positions can land close enough that the two-line label
+  // blocks overlap. Keep each dot at its real data position, but push the
+  // label text apart with a minimum gap (anchored on the mean, since that's
+  // the fixed reference point), and draw a short leader line to the dot
+  // whenever a label had to move off its true position.
+  var LABEL_GAP=44;
+  var trueY={top:Y(fan.top.yield),mean:Y(fan.mean.yield),bottom:Y(fan.bottom.yield)};
+  var labelY={mean:trueY.mean};
+  labelY.top=Math.min(trueY.top,labelY.mean-LABEL_GAP);
+  labelY.bottom=Math.max(trueY.bottom,labelY.mean+LABEL_GAP);
+  // Never push a label past the curve's own top/bottom edge — capped
+  // there instead of floating above/below the frame the curve is drawn in.
+  var LABEL_MARGIN=14;
+  labelY.top=Math.max(labelY.top,Tp+LABEL_MARGIN);
+  labelY.bottom=Math.min(labelY.bottom,H-B-LABEL_MARGIN);
+  function marker(pt,color,label,bold,ly){
+    var wx=cx+weightAtYield(pt.yield)*halfW,y=Y(pt.yield);
+    var lx=cx+halfW+10;
+    var s2='';
+    if(Math.abs(ly-y)>1){
+      s2+='<line x1="'+wx.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(lx-4).toFixed(1)+'" y2="'+ly.toFixed(1)+'" stroke="'+color+'" stroke-width="1" stroke-opacity="0.45"/>';
+    }
+    s2+='<circle cx="'+wx.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="'+color+'"/>';
+    s2+='<text x="'+lx+'" y="'+(ly-5).toFixed(1)+'" font-family="'+T.mono+'" font-size="'+(bold?14:13)+'" font-weight="'+(bold?700:600)+'" fill="'+color+'">'+esc(label)+'</text>';
+    s2+='<text x="'+lx+'" y="'+(ly+13).toFixed(1)+'" font-family="'+T.mono+'" font-size="15" font-weight="700" fill="'+T.ink+'">'+esc(fmtMoney(pt.price))+'</text>';
+    return s2;
+  }
+  s+=marker(fan.top,T.rust,'Yield \u22121\u03c3 ('+fmtPct(fan.top.yield)+')',false,labelY.top);
+  s+=marker(fan.mean,T.ink,'Mean yield ('+fmtPct(fan.mean.yield)+') \u2014 Par',true,labelY.mean);
+  s+=marker(fan.bottom,T.jade,'Yield +1\u03c3 ('+fmtPct(fan.bottom.yield)+')',false,labelY.bottom);
+  s+='</svg>';
+  return s;
+}
+
+/* ------------------------------------------------------------------ *
+ * Card assembly
+ * ------------------------------------------------------------------ */
+var THEME_LIGHT={paper:'#FFFFFF',ink:'#132419',muted:'#5E6F63',rule:'#DDE4DC',jade:'#1F7A52',jadeSoft:'#E4F1E9',rust:'#B54A2C',rustSoft:'#F6E8E2',gold:'#A5791F',goldSoft:'#F3ECD9',mono:"'JetBrains Mono',monospace"};
+var THEME_DARK={paper:'#132419',ink:'#E7EEE7',muted:'#93A498',rule:'#28392D',jade:'#4FCB94',jadeSoft:'#12291D',rust:'#E77A57',rustSoft:'#2E1B14',gold:'#D9AE53',goldSoft:'#2A2413',mono:"'JetBrains Mono',monospace"};
+var curTheme=THEME_LIGHT;
+
+function parseDirection(raw){
+  if(!raw)return null;
+  // Covers every up/down glyph Excel/Sheets is likely to hand us: real arrow
+  // characters (\u2191\u2193 etc) AND the solid triangles a custom number
+  // format like "[Green]\u25b2 0.000;[Red]\u25bc 0.000" produces \u2014 that
+  // second style is common enough in Gabe's sheets that only matching arrow
+  // glyphs left some rows silently falling through to a mismatched-looking
+  // fallback chip instead of the normal "up"/"down" styling.
+  var up=/[\u21e7\u2b06\u2191\u25b2\u25b4\u2197]/.test(raw);
+  var down=/[\u21e9\u2b07\u2193\u25bc\u25be\u2198]/.test(raw);
+  var m=raw.match(/[-+]?\d*\.?\d+/);
+  var mag=m?parseFloat(m[0]):null;
+  // If no glyph matched but the number itself carries a sign, fall back to
+  // that \u2014 still no worse than showing nothing, and keeps the chip in
+  // the same up/down-styled format instead of a bare "Direction <raw>" dump.
+  if(!up&&!down&&mag!==null){
+    if(mag<0)down=true;
+    else if(mag>0)up=true;
+  }
+  if(!up&&!down&&mag===null)return null;
+  return {up:up,down:down,mag:mag};
+}
+
+function buildCard(rec,a){
+  var T=curTheme;
+  var chips=[];
+  if(rec.pe!==null)chips.push('<span class="chip pe">P/E '+fmtNum(rec.pe,1)+'</span>');
+  if(rec.pAffo!==null)chips.push('<span class="chip pe">P/AFFO '+fmtNum(rec.pAffo,1)+'</span>');
+  if(rec.ma200diff!==null){
+    var below=rec.ma200diff<0;
+    chips.push('<span class="chip'+(below&&rec.ma200diff<=-15?' warn':'')+'">'+fmtPct(Math.abs(rec.ma200diff))+' '+(below?'below':'above')+' 200 dma</span>');
+  }
+  if(rec.divGrowth10y!==null)chips.push('<span class="chip good">Div growth 10y '+fmtPct(rec.divGrowth10y)+'</span>');
+  if(rec.direction){
+    var d=parseDirection(rec.direction);
+    if(d){
+      var magTxt=d.mag!==null?trimZ(Math.abs(d.mag).toFixed(3)):'';
+      chips.push('<span class="chip '+(d.up?'signal-up':'signal-down')+'"><span class="sigmaSym">\u03c3</span> Trend '+(d.up?'\u2191':'\u2193')+' '+magTxt+' <small>short-term</small></span>');
+    }else{
+      // No arrow glyph and no parseable number \u2014 genuinely nothing to
+      // show direction-wise, so skip the chip rather than dumping raw text
+      // in a mismatched format.
+    }
+  }
+
+  var tickAcc=a.rich?T.rust:T.jade;
+  var tickHtml;
+  if(ROWS.length>1&&!(PUBLIC_MODE&&STANDALONE_CARD)){
+    var tickOpts=ROWS.map(function(r,i){return '<option value="'+i+'"'+(i===selectedIdx?' selected':'')+'>'+esc(r.rec.ticker||r.label)+'</option>';}).join('');
+    tickHtml='<div class="tick hasSelect" style="--tick-acc:'+tickAcc+'"><span class="dot"></span><select id="tickPick" aria-label="Switch company">'+tickOpts+'</select></div>';
+  }else{
+    tickHtml='<div class="tick" style="--tick-acc:'+tickAcc+'"><span class="dot"></span>'+esc(a.ticker)+'</div>';
+  }
+  var h=((PUBLIC_MODE&&STANDALONE_CARD)?'<div class="backBar"><a href="'+esc(BACK_URL)+'">\u2190 Back to Yield Sigma / Directory</a></div>':'');
+  h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch">Dividend Framework<span class="sep"></span>Yield Sigma™ valuation card</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
+    (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
+    '</div>'+
+    '<div class="pricebox">'+tickHtml+
+    '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
+    '<div class="lbl">Price'+(priceOverride!==null?' <span class="pxAdj">· adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
+    '</div></header>';
+  h+='<div class="chips">'+chips.join('')+'</div>';
+
+  var color=a.rich?T.rust:T.jade;
+  var g=bellGeom(a);
+  var zoneTag=a.sigma===null?'':zoneWord(Math.abs(a.sigma),a.rich).toUpperCase();
+  h+='<section class="hero"><div class="eyebrow">Current yield vs 10-year average, in standard deviations</div>'+
+     '<div class="sig" style="--sig-acc:'+color+'">'+(a.sigma===null?'\u2013':(a.rich?'\u2212':'')+fmtNum(Math.abs(a.sigma),2)+'\u03c3')+'</div>'+
+     (zoneTag?'<div class="zoneTag" style="--sig-acc:'+color+'">'+esc(zoneTag)+'</div>':'')+
+     '<div class="bellWrap" id="bellWrap">'+bellSVG(rec,a,T)+
+       '<div class="bellProbe" id="bellProbe" style="display:none">'+
+         '<div class="line"></div><div class="dot"></div><div class="bubble" id="bellBubble"></div>'+
+       '</div>'+
+     '</div>'+
+     '<input type="range" class="sigSlider" id="sigSlider" min="'+(-g.range).toFixed(2)+'" max="'+g.range.toFixed(2)+'" step="0.01" value="0" aria-label="Explore a hypothetical sigma">'+
+     '<p class="cap">'+sigmaCaption(rec,a)+'</p>'+
+     (a.sigmaCheck?'<div class="sub">Recomputing from yield, 10y average and 1 SD gives '+fmtNum(a.sigmaComputed,2)+'\u03c3 \u2014 worth a quick check against the source row.</div>':'')+
+     '</section>';
+
+  var l1=ladder([
+    {v:rec.par,label:'Par (yield parity)',color:T.gold},
+    {v:rec.ddm,label:'DDM fair value',color:T.jade},
+    {v:rec.ma200,label:'200 dma',color:T.muted},
+    {v:rec.low52w,label:'52-week low',color:T.muted},
+    /* diffLabel (distance from the 200-day average) intentionally left off
+       for now — positioning under review, see chat. Pass it here again
+       once settled: rec.ma200diff!==null?fmtPct(Math.abs(rec.ma200diff))+' '+(rec.ma200diff<0?'below':'above')+' 200-day average':null */
+    {v:rec.price,label:'Price now',color:T.ink,now:true}
+  ],T);
+  if(l1){
+    var anchorsDesc='Par is the price at which yield would match its 10-year average.'+
+      (rec.ddm!==null?' DDM fair value discounts the dividend at the 10-year Treasury plus a standard risk spread, compounded with its growth rate.':'');
+    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3></summary>'+
+       '<p class="desc" style="max-width:none">'+anchorsDesc+'</p>'+l1+'</details>';
+  }
+
+  var divStats=[
+    ['Dividend / share',fmtMoney(rec.divDollar)],
+    ['Current yield',fmtPct(rec.yield)],
+    ['10y average yield',fmtPct(rec.avg10y)],
+    ['Max yield',fmtPct(rec.avMaxY),'Max yield, 10 years average of its most extreme yields.'],
+    ['Div growth, past 10y',fmtPct(rec.divGrowth10y)],
+    ['Recent div growth trend',divTrend(rec)||'\u2013']
+  ].filter(function(p){return p[1]!=='\u2013';});
+
+  var histStats=[
+    ['Volatility (yield gap/\u03c3 ratio)',fmtPct(rec.volatility)],
+    ['P/E',rec.pe!==null?fmtNum(rec.pe,1):'\u2013'],
+    ['P/AFFO',rec.pAffo!==null?fmtNum(rec.pAffo,1):'\u2013'],
+    ['Payout ratio',fmtPct(rec.payoutRatio)],
+    ['Projected yield on cost, 10y',fmtPct(projYoc10(rec))]
+  ].filter(function(p){return p[1]!=='\u2013';});
+  if(a.streak)histStats.push(['Consecutive dividend growth',a.streak.years+' years'+(a.streak.tier?' — '+a.streak.tier:'')]);
+
+  function statRow(p){
+    if(p[0]==='Max yield'){
+      return '<div class="statBlock"><div class="stat noBorder"><span class="l">'+esc(p[0])+'</span><span class="v">'+esc(p[1])+'</span></div>'+
+        '<p class="statNote">10 years average of its most extreme yields.</p></div>';
+    }
+    return '<div class="stat"><span class="l">'+esc(p[0])+'</span><span class="v">'+esc(p[1])+'</span></div>';
+  }
+  if(divStats.length||histStats.length){
+    h+='<details class="sec" open><summary><h3>Dividend and sigma detail</h3></summary><div class="grid2">'+
+      '<div>'+divStats.map(statRow).join('')+'</div>'+
+      '<div>'+histStats.map(statRow).join('')+'</div>'+
+    '</div>'+
+    '</details>';
+  }
+
+  var path=growthPath(rec);
+  if(path){
+    var dispersion=null;
+    if(rec.volatility!==null){
+      if(rec.volatility<21)dispersion={label:'Tight dispersion',text:'At this level, the yield has historically stayed close to its mean, so outcomes cluster near normal levels and revert quickly.'};
+      else if(rec.volatility<40)dispersion={label:'Moderate dispersion',text:'At this level, the yield has historically moved moderately away from its mean, so outcomes spread moderately around normal levels and revert at a moderate pace.'};
+      else dispersion={label:'Wide dispersion',text:'At this level, the yield has historically moved far from its mean, so outcomes spread widely around normal levels and revert slowly.'};
+    }
+    var startRate=Math.max(0,Math.min(20,rec.divGrowth10y===null?0:rec.divGrowth10y));
+    h+='<details class="sec" open><summary><h3>10-year dividend growth path (illustrative)</h3></summary><div class="fanBlock">'+
+      '<p class="sub">Set a growth rate and drag the year: the staircase shows that year\u2019s real dividend at that rate. The curve on the right turns it into a price bell using this stock\u2019s own 10-year average yield and 1 SD, with the \u00b11\u03c3 \u201cnormal\u201d range highlighted \u2014 wider and flatter for a more volatile yield, tighter and taller for a steadier one.</p>'+
+      '<div class="grid2">'+
+        '<div><div class="panelLabel">Dividend per share, by year</div><div id="stairPanel"></div></div>'+
+        '<div><div class="panelLabel">Implied price range that year</div>'+
+          (dispersion?'<p class="dispersion"><b>'+esc(dispersion.label)+'</b> (Volatility '+esc(fmtPct(rec.volatility))+'): '+esc(dispersion.text)+'</p>':'')+
+          '<div id="fanPanel"></div></div>'+
+      '</div>'+
+      '<div class="yearControl">'+
+        '<label class="rateInput">Growth rate<span class="rateBox"><input type="number" id="rateInput" min="0" max="20" step="0.1" value="'+startRate.toFixed(1)+'" inputmode="decimal">%<span class="rateStepGrp"><button type="button" class="rateStep" id="rateUp" aria-label="Increase growth rate" tabindex="-1">▲</button><button type="button" class="rateStep" id="rateDown" aria-label="Decrease growth rate" tabindex="-1">▼</button></span></span></label>'+
+        '<input type="range" id="yearSlider" min="0" max="10" step="1" value="0" aria-label="Select a year">'+
+        '<span class="yearReadout" id="yearReadout"></span>'+
+      '</div>'+
+      '<div class="discl">This is not a forecast or a price target. It simply projects a chosen dividend growth rate forward and assumes yield eventually behaves the way it has historically \u2014 both are assumptions that may not hold. The rate defaults to this stock\u2019s dividend growth over the past 10 years; drag it anywhere from 0% to 20% to explore other scenarios. Treat it as an illustration of the framework, not investment guidance.</div>'+
+    '</div></details>';
+  }
+
+  if(a.tnx){
+    h+='<details class="sec" open><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
+       '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
+       '<div class="tnx">'+
+         '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
+         '<div><div class="l">10y average</div><div class="v">'+esc(pctToBps(a.tnx.ten))+'</div><div class="cap">that same spread, averaged over the past decade</div></div>'+
+         '<div><div class="l">Difference</div><div class="v">'+esc(pctToBps(a.tnx.diff))+'</div><div class="cap">now minus the 10y average</div></div>'+
+       '</div>'+
+       '<p class="desc" style="max-width:none">'+(tnxDiffSign(a.tnx.diff)>=0?
+         'A positive <i>Difference</i> means the stock is paying more over Treasuries than it typically has — cheaper relative to the risk-free alternative than its own history suggests.':
+         'A negative <i>Difference</i> means the stock is paying less over Treasuries than it typically has — richer relative to the risk-free alternative than its own history suggests.')+'</p>'+
+       '</details>';
+  }
+
+  h+='<footer class="foot"><span>Model output, not investment advice \u2014 dividend safety and payout ratio deserve their own check.</span><span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span><span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'<span class="pubFootLive"><span class="pubLive" id="pubLiveStamp" hidden></span><button type="button" class="linkbtn" id="pubRefresh" hidden>Refresh</button></span></span></footer>';
+  return h;
+}
+
+/* ------------------------------------------------------------------ *
+ * State + wiring
+ * ------------------------------------------------------------------ */
+var ROWS=[];
+var RAW_LINES=[];
+var priceOverride=null;
+var selectedIdx=0;
+
+/* A visitor-typed price recomputes what actually moves with price —
+   yield, sigma, the 200-day % diff, a linearly-scaled P/E, and the
+   Treasury-spread "Now"/"Diff" figures (shifted by the same amount the
+   yield moved) — and leaves everything price-independent alone: Par,
+   DDM fair value, the 52-week low, the 200-day average itself, the
+   Treasury spread's own "10Y" historical average, and the whole
+   10-year growth path (all fundamentals-driven, not today's-price-
+   driven). */
+function applyPriceOverride(rec,price){
+  if(price===null||!isFinite(price)||price<=0)return rec;
+  var rec2={};
+  for(var k in rec)rec2[k]=rec[k];
+  rec2.price=price;
+  if(rec.divDollar!==null&&price>0){
+    var newYield=rec.divDollar/price*100;
+    rec2.yield=newYield;
+    if(rec.avg10y!==null&&rec.oneSD)rec2.sigma=(newYield-rec.avg10y)/rec.oneSD;
+    if(rec.tnxSpread&&rec.yield!==null){
+      var origTnx=parseTnx(rec.tnxSpread);
+      if(origTnx){
+        var origNow=parsePct(origTnx.now),origTen=parsePct(origTnx.ten);
+        if(origNow!==null&&origTen!==null){
+          var deltaYield=newYield-rec.yield;
+          var newNow=origNow+deltaYield;
+          var newDiff=newNow-origTen;
+          rec2.tnxSpread='Now: '+fmtSignedPct(newNow)+' | 10Y: '+fmtSignedPct(origTen)+' | Diff: '+fmtSignedPct(newDiff);
+        }
+      }
+    }
+  }
+  if(rec.ma200!==null&&rec.ma200>0)rec2.ma200diff=(price-rec.ma200)/rec.ma200*100;
+  if(rec.pe!==null&&rec.price!==null&&rec.price>0)rec2.pe=rec.pe*(price/rec.price);
+  return rec2;
+}
+function applyThemeVars(){
+  var c=$('#card');
+  var T=curTheme;
+  c.style.setProperty('--c-paper',T.paper);c.style.setProperty('--c-ink',T.ink);c.style.setProperty('--c-muted',T.muted);
+  c.style.setProperty('--c-rule',T.rule);c.style.setProperty('--c-jade',T.jade);c.style.setProperty('--c-jade-soft',T.jadeSoft);
+  c.style.setProperty('--c-rust',T.rust);c.style.setProperty('--c-rust-soft',T.rustSoft);c.style.setProperty('--c-gold',T.gold);c.style.setProperty('--c-gold-soft',T.goldSoft);
+}
+/* Income edge: years of holding a sigma-0 buyer (10y average yield) needs
+ * before dividend growth lifts their income (yield on cost) to this
+ * yield. Uses this stock's own 10y dividend growth; no time frame.
+ * ln(y/avg) / ln(1+g). Negative below sigma 0. None if growth <= 0. */
+/* Recent dividend growth trend: 3-year growth vs the 10-year rate,
+   1-point bands. Non-steady trends fade the growth used for the 10-year
+   yield-on-cost projection and the income edge: year 1 runs at the
+   10-year rate, sliding in a straight line to the 3-year rate by year 10,
+   then holding there. Steady (or no 3-year data) keeps the 10-year rate. */
+function divTrend(rec){
+  if(rec.divGrowth3y===null||rec.divGrowth3y===undefined||!isFinite(rec.divGrowth3y)||rec.divGrowth10y===null||!isFinite(rec.divGrowth10y))return null;
+  var d=rec.divGrowth3y-rec.divGrowth10y;
+  return d<-1?'slowing':(d>1?'advancing':'steady');
+}
+function growthAtYear(rec,k){
+  var g10=rec.divGrowth10y,tr=divTrend(rec);
+  if(!tr||tr==='steady')return g10;
+  if(k>=10)return rec.divGrowth3y;
+  return g10+(rec.divGrowth3y-g10)*(k-1)/9;
+}
+function projYoc10(rec){
+  if(rec.yield===null||!isFinite(rec.yield))return rec.cagr10y;
+  if(rec.divGrowth10y===null||!isFinite(rec.divGrowth10y))return rec.cagr10y;
+  var mult=1;for(var k=1;k<=10;k++)mult*=1+growthAtYear(rec,k)/100;
+  return rec.yield*mult;
+}
+function yearsToGrow(rec,ratio){
+  var mult=1;
+  for(var k=1;k<=200;k++){
+    var g=growthAtYear(rec,k)/100;
+    if(k>=10&&!(g>0))return null;
+    var next=mult*(1+g);
+    if(next>=ratio)return (k-1)+(g>0?Math.log(ratio/mult)/Math.log(1+g):1);
+    mult=next;
+  }
+  return null;
+}
+function incomeEdgeYears(rec,y){
+  if(y===null||!isFinite(y)||!(y>0)||rec.avg10y===null||!(rec.avg10y>0)||rec.divGrowth10y===null||!isFinite(rec.divGrowth10y))return null;
+  var tr=divTrend(rec);
+  if((!tr||tr==='steady')&&!(rec.divGrowth10y>0))return null;
+  var r=y/rec.avg10y;
+  if(r>=1)return yearsToGrow(rec,r);
+  var v=yearsToGrow(rec,1/r);
+  return v===null?null:-v;
+}
+function fmtEdge(v){
+  var t=Math.abs(v).toFixed(1);
+  return (t==='0.0'?'':(v>0?'+':'\u2212'))+t+' yrs income edge';
+}
+function wireBell(rec,a){
+  var slider=$('#sigSlider'),probe=$('#bellProbe'),bubble=$('#bellBubble'),wrap=$('#bellWrap');
+  if(!slider||!wrap)return;
+  var g=bellGeom(a);
+  function update(s){
+    var clamped=Math.max(-g.range,Math.min(g.range,s));
+    var leftPct=(g.X(clamped)/g.W*100).toFixed(2);
+    var topPct=(g.Y(clamped)/g.H*100).toFixed(2);
+    probe.style.display='block';
+    probe.style.left=leftPct+'%';
+    probe.querySelector('.dot').style.top=topPct+'%';
+    bubble.style.top=topPct+'%';
+    var y=yieldAtSigma(rec,clamped);
+    var price=(y!==null&&y>0)?priceAtSigma(rec,clamped):null;
+    var incidence=tailIncidence(clamped);
+    var incTxt=Math.abs(clamped)<0.02?'~50% incidence \u2014 the historical average':'~'+trimZ(incidence.toFixed(incidence<1?2:1))+'% incidence';
+    var dotColor=clamped>=0?'#3DDC97':'#FF6B7A';
+    var html='';
+    if(price!==null)html+='<span class="bp">'+esc(fmtMoney(price))+'</span>';
+    html+='<span class="bs"><i class="d" style="background:'+dotColor+'"></i>\u03c3 '+(clamped>=0?'+':'\u2212')+Math.abs(clamped).toFixed(2)+'</span>';
+    if(y!==null&&y>0)html+='<span class="by">yield '+esc(fmtPct(y))+'</span>';
+    html+='<span class="binc">'+esc(incTxt)+'</span>';
+    var edge=incomeEdgeYears(rec,y);
+    if(y!==null&&y>0)html+='<span class="bedge">'+(edge===null?'':esc(fmtEdge(edge)))+'</span>';
+    bubble.innerHTML=html;
+    /* keep the box inside the chart near the tails; the pointer stays on the dot */
+    var ww=wrap.clientWidth,bw=bubble.offsetWidth,cx=g.X(clamped)/g.W*ww,shift=0;
+    if(bw<ww){shift=Math.max(0,bw/2-cx);shift=Math.min(shift,ww-cx-bw/2);}else shift=ww/2-cx;
+    shift=Math.max(-(bw/2-12),Math.min(bw/2-12,shift));
+    bubble.style.transform='translate(calc(-50% + '+shift.toFixed(1)+'px),-100%)';
+    bubble.style.setProperty('--shift',shift.toFixed(1)+'px');
+  }
+  var initial=(a.sigma!==null?a.sigma:(a.sigmaComputed!==null?a.sigmaComputed:0));
+  initial=Math.max(-g.range,Math.min(g.range,initial));
+  slider.value=initial.toFixed(2);
+  update(initial);
+  slider.addEventListener('input',function(){update(parseFloat(slider.value));});
+}
+function wireGrowthFan(rec){
+  var slider=$('#yearSlider'),readout=$('#yearReadout'),stairPanel=$('#stairPanel'),fanPanel=$('#fanPanel'),rateInput=$('#rateInput'),rateUp=$('#rateUp'),rateDown=$('#rateDown');
+  if(!slider||!stairPanel||!fanPanel)return;
+  // Start from the rate shown in the Growth rate box, so the first
+  // render matches the box (the box defaults to the 10y dividend growth
+  // column; growthPath's own default is a different column, the 10y CAGR).
+  var startV=rateInput?parseFloat(rateInput.value):NaN;
+  var path=growthPath(rec,isFinite(startV)?startV:null);
+  if(!path)return;
+  // Fixed reference scale for the staircase: sized for a realistic growth
+  // rate (this stock's own trailing CAGR, or 10% if that's lower), not the
+  // extreme 20% ceiling — most rates people actually try sit in the mid
+  // single digits, and reserving headroom for 20% left the bars looking
+  // squashed at the bottom of the panel. It only ever grows (never shrinks
+  // back down) if the rate input is pushed past that reference, so year 0
+  // still never moves for any rate in the normal range.
+  var refRate=Math.max(10,rec.divGrowth10y||0);
+  var refPath=growthPath(rec,refRate)||path;
+  var refMaxDiv=Math.max.apply(null,refPath.map(function(p){return p.div;}))*1.15;
+  function renderYear(year){
+    var yearDiv=path[year].div;
+    // Never below the fixed reference ceiling (so normal rates stay put
+    // and proportioned), but if the input is pushed past it, grow just
+    // for that render — and shrink back the moment the rate returns to
+    // the normal range, rather than staying permanently expanded.
+    var curMax=Math.max.apply(null,path.map(function(p){return p.div;}))*1.15;
+    var scaleMax=Math.max(refMaxDiv,curMax);
+    var fan=yearYieldFan(rec,yearDiv);
+    stairPanel.innerHTML=staircaseBarsSVG(path,year,curTheme,scaleMax);
+    fanPanel.innerHTML=fan?yearFanSVG(fan,curTheme):'<div class="empty" style="padding:30px 0">Not enough data for this year\u2019s range.</div>';
+    readout.textContent='Year '+year+' \u2014 dividend '+fmtMoney(yearDiv);
+  }
+  function currentYear(){return parseInt(slider.value,10);}
+  slider.value='0';
+  renderYear(0);
+  slider.addEventListener('input',function(){renderYear(currentYear());});
+  if(rateInput){
+    rateInput.addEventListener('input',function(){
+      var v=parseFloat(rateInput.value);
+      if(!isFinite(v))return;
+      v=Math.max(0,Math.min(20,v));
+      var newPath=growthPath(rec,v);
+      if(!newPath)return;
+      path=newPath;
+      renderYear(currentYear());
+    });
+    rateInput.addEventListener('blur',function(){
+      var v=parseFloat(rateInput.value);
+      if(!isFinite(v))v=0;
+      v=Math.max(0,Math.min(20,v));
+      rateInput.value=v.toFixed(1);
+    });
+    function step(delta){
+      var v=parseFloat(rateInput.value);
+      if(!isFinite(v))v=0;
+      v=Math.max(0,Math.min(20,Math.round((v+delta)*10)/10));
+      rateInput.value=v.toFixed(1);
+      rateInput.dispatchEvent(new Event('input'));
+    }
+    // Press-and-hold: step once immediately, then keep stepping while the
+    // button stays pressed (a short initial delay, then a faster repeat),
+    // instead of requiring a fresh click for every 0.1% increment.
+    var holdTimer=null,holdInterval=null;
+    function startHold(delta){
+      step(delta);
+      clearTimeout(holdTimer);clearInterval(holdInterval);
+      holdTimer=setTimeout(function(){
+        holdInterval=setInterval(function(){step(delta);},70);
+      },400);
+    }
+    function stopHold(){
+      clearTimeout(holdTimer);clearInterval(holdInterval);
+      holdTimer=null;holdInterval=null;
+    }
+    function wireHold(btn,delta){
+      if(!btn)return;
+      btn.addEventListener('pointerdown',function(e){e.preventDefault();startHold(delta);});
+      btn.addEventListener('pointerup',stopHold);
+      btn.addEventListener('pointerleave',stopHold);
+      btn.addEventListener('pointercancel',stopHold);
+    }
+    wireHold(rateUp,0.1);
+    wireHold(rateDown,-0.1);
+  }
+}
+/* Keeps the address bar's ?ticker= in sync with whatever is currently
+   shown, so a link copied straight from the bar always reproduces the
+   same card. Only on the published page (PUBLIC_MODE) — the editor
+   shouldn't rewrite its own URL while you're pasting/testing data. */
+function updateUrlTicker(ticker){
+  if(!PUBLIC_MODE||!ticker)return;
+  try{
+    var params=new URLSearchParams(window.location.search);
+    params.set('ticker',ticker.trim().toUpperCase());
+    var newUrl=window.location.pathname+'?'+params.toString()+window.location.hash;
+    window.history.replaceState(null,'',newUrl);
+  }catch(e){/* ignore */}
+}
+
+function renderCurrent(){
+  var card=$('#card');
+  applyThemeVars();
+  if(!ROWS.length){card.innerHTML='<div class="empty">Paste a data row on the left to build a card.</div>';return;}
+  var idx=Math.min(ROWS.length-1,Math.max(0,selectedIdx||0));
+  var parsed=ROWS[idx];
+  var rec=priceOverride!==null?applyPriceOverride(parsed.rec,priceOverride):parsed.rec;
+  var a=analyze(rec);
+  a.maxAbs=Math.max(Math.abs(rec.sigma||0),Math.abs(a.sigmaComputed||0));
+  card.innerHTML=buildCard(rec,a);
+  wireBell(rec,a);
+  wireGrowthFan(rec);
+  wirePriceInput();
+  wireTickPick();
+  wirePubFooter();
+  updateUrlTicker(rec.ticker);
+}
+function wirePubFooter(){
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS)setLiveStamp(liveStale);
+  var r=$('#pubRefresh');
+  if(r)r.addEventListener('click',function(){refreshLiveData();});
+}
+function wireTickPick(){
+  var sel=$('#tickPick');
+  if(!sel)return;
+  sel.addEventListener('change',function(){
+    selectedIdx=+(this.value||0);
+    priceOverride=null;
+    var p=$('#pick'),pp=$('#pubPick');
+    if(p)p.value=String(selectedIdx);
+    if(pp)pp.value=String(selectedIdx);
+    renderCurrent();
+  });
+}
+function wirePriceInput(){
+  var input=$('#priceInput');
+  if(!input)return;
+  function commit(){
+    var v=parseFloat(input.value);
+    priceOverride=(isFinite(v)&&v>0)?v:null;
+    renderCurrent();
+  }
+  input.addEventListener('change',commit);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter'){input.blur();}});
+}
+function setStatus(msg,isErr){var el=$('#status');el.textContent=msg||'';el.classList.toggle('err',!!isErr);}
+
+function schemaForKind(kind){return kind==='reits'?SCHEMA_REITS:SCHEMA_STOCKS;}
+function currentDataTypeKind(){var r=$('#dtReits');return (r&&r.checked)?'reits':'stocks';}
+
+/* schemaTags: optional. A single 'stocks'/'reits' string applies that
+   schema to every line (used for manual paste/upload, driven by the
+   Data type toggle). An array of per-line 'stocks'/'reits' tags is
+   used by the live-fetch path, since a single combined Stocks+REITs
+   fetch mixes rows that each need their OWN schema. Defaults to the
+   toggle's current value when omitted. */
+function handleRaw(text,schemaTags){
+  var lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  if(!lines.length){setStatus('Paste at least one data row.',true);return;}
+  priceOverride=null;
+  selectedIdx=0;
+  RAW_LINES=lines;
+  var tags;
+  if(Array.isArray(schemaTags))tags=schemaTags;
+  else{var kind=schemaTags||currentDataTypeKind();tags=lines.map(function(){return kind;});}
+  ROWS=lines.map(function(l,i){var r=parseRow(l,schemaForKind(tags[i]));r.kind=tags[i];return r;});
+  var optsHtml=ROWS.map(function(r,i){return '<option value="'+i+'">'+esc(r.label)+'</option>';}).join('');
+  var pick=$('#pick'),wrap=$('#pickWrap');
+  pick.innerHTML=optsHtml;
+  pick.value='0';
+  wrap.hidden=ROWS.length<2;
+  var pubPick=$('#pubPick');
+  if(pubPick){
+    pubPick.innerHTML=optsHtml;
+    pubPick.value='0';
+  }
+  updatePubBarVisibility();
+  var issues=ROWS[0].issues;
+  setStatus(issues.length?issues.join(' '):(ROWS.length+' row'+(ROWS.length>1?'s':'')+' parsed.'),issues.length>0);
+  renderCurrent();
+}
+
+/* Quote-aware CSV parser (handles commas and newlines inside quoted
+   fields, e.g. a Notes column full of commentary commas) — needed
+   because a naive comma-split would shred a free-text Notes column. */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){field+='"';i++;}
+        else inQuotes=false;
+      }else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){/* skip, \n handles the line break */}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+
+/* Shared by file-upload (.csv) and live-sheet fetch: quote-aware CSV
+   parse, rejoin as tab-separated lines, and drop a header row (Price
+   column not parseable as money). */
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+
+/* Upload flow: accepts a whole exported sheet (one row per stock).
+   .csv goes through the quote-aware parser above; .tsv/.txt are
+   assumed already tab-separated — either way it lands back through
+   the same handleRaw()/row-picker path as a manual paste, so nothing
+   downstream needs to know the difference. A header row (Price
+   column not parseable as money) is dropped automatically. */
+function loadUploadedText(text,filename){
+  var ext=(filename.split('.').pop()||'').toLowerCase();
+  var lines;
+  if(ext==='csv'){
+    lines=csvTextToLines(text);
+  }else{
+    lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+    if(lines.length>1){
+      var firstCells=splitRow(lines[0]);
+      if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+    }
+  }
+  if(!lines.length){setStatus('That file had no rows in it.',true);return;}
+  var finalText=lines.join('\n');
+  $('#raw').value=finalText;
+  handleRaw(finalText);
+}
+
+/* ------------------------------------------------------------------ *
+ * Live sheet tether: fetch one or two "Publish to web" CSV links
+ * (Google Sheets — File > Share > Publish to web > pick the tab >
+ * CSV) and feed the combined rows through the normal parse path.
+ * Used both by the admin "Fetch & preview now" button and by the
+ * published page's own auto-refresh loop.
+ * ------------------------------------------------------------------ */
+/* Returns {lines, tags} rather than a flat line array — a combined
+   Stocks+REITs fetch mixes rows from two different column layouts, so
+   each line is tagged with which schema it needs (see handleRaw). */
+function fetchLiveRows(stocksUrl,reitsUrl){
+  var sources=[];
+  if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
+  if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
+  if(!sources.length)return Promise.resolve(null);
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url,{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    });
+  })).then(function(texts){
+    var lines=[],tags=[];
+    texts.forEach(function(t,i){
+      var these=csvTextToLines(t);
+      lines=lines.concat(these);
+      these.forEach(function(){tags.push(sources[i].kind);});
+    });
+    return {lines:lines,tags:tags};
+  });
+}
+function saveLiveUrls(){
+  try{
+    localStorage.setItem('sigmaLiveUrls',JSON.stringify({stocks:$('#urlStocks').value||'',reits:$('#urlReits').value||''}));
+  }catch(e){/* private window or storage disabled — fine, just don't persist */}
+}
+function loadLiveUrls(){
+  var stocks=DEFAULT_LIVE_URL_STOCKS,reits=DEFAULT_LIVE_URL_REITS;
+  try{
+    var raw=localStorage.getItem('sigmaLiveUrls');
+    if(raw){
+      var o=JSON.parse(raw);
+      if(o&&o.stocks)stocks=o.stocks;
+      if(o&&o.reits)reits=o.reits;
+    }
+  }catch(e){/* ignore */}
+  var us=$('#urlStocks'),ur=$('#urlReits');
+  if(us)us.value=stocks;
+  if(ur)ur.value=reits;
+}
+
+var liveLastUpdated=null;
+var liveStale=false;
+function setLiveStamp(stale){
+  liveStale=stale;
+  var el=$('#pubLiveStamp');if(!el)return;
+  el.hidden=false;
+  if(stale&&liveLastUpdated){
+    el.textContent=' · Live · showing data from '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' (couldn’t reach the sheet just now)';
+  }else if(liveLastUpdated){
+    el.textContent=' · Live · updated '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  }else{
+    el.textContent=' · Live · connecting…';
+  }
+}
+function updatePubBarVisibility(){
+  /* The ticker pill on the card itself is the row picker (see
+     wireTickPick/buildCard) — #pubPick/#pubPickLabel stay hidden always.
+     The live-source "last updated" stamp and refresh button live in the
+     card's own footer now, next to "Rendered", and only show when a live
+     source is configured. */
+  var pick=$('#pubPick'),pickLabel=$('#pubPickLabel'),stamp=$('#pubLiveStamp'),refresh=$('#pubRefresh');
+  if(pick)pick.hidden=true;
+  if(pickLabel)pickLabel.hidden=true;
+  var showLive=!!(LIVE_URL_STOCKS||LIVE_URL_REITS);
+  if(stamp&&!showLive)stamp.hidden=true;
+  if(refresh)refresh.hidden=!showLive;
+}
+/* Refreshing does NOT replace whichever rows are currently loaded with
+   the full live feed — it keeps the exact same set of tickers (the
+   list that was loaded/pasted/published) and just pulls fresh values
+   for those specific tickers out of the newly-fetched full feed,
+   matching by ticker symbol (immune to row-order changes on the sheet,
+   same as the XLOOKUP-based Direction formula). A ticker that's been
+   removed from the live sheet since publish simply drops off; the rest
+   keep updating. This is what makes a published "Top 20" selection
+   stay exactly those 20 names forever, with live values, instead of
+   silently ballooning back out to the whole universe every ~15 min. */
+/* Automatic pick: a published Top-N / Bottom-N card re-selects its names
+   from the full live feed on every load and refresh, so the list always
+   matches today's readings. Empty = locked list (Keep one, or a hand pick). */
+var AUTO_PICK=null;try{var _ap="{\"low\":false,\"n\":1,\"kind\":\"stocks\",\"rotate\":[25,80,130]}";if(_ap&&_ap.charAt(0)==='{')AUTO_PICK=JSON.parse(_ap);}catch(e){AUTO_PICK=null;}
+function autoPickFrom(res){
+  var picks=[];
+  res.lines.forEach(function(line,i){
+    var tag=res.tags[i]; if(tag!==AUTO_PICK.kind)return;
+    var a=analyze(parseRow(line,schemaForKind(tag)).rec);
+    var sg=a.sigma!==null?a.sigma:a.sigmaComputed;
+    if(sg===null||!isFinite(sg))return;
+    picks.push({line:line,tag:tag,s:sg});
+  });
+  picks.sort(function(p,q){return AUTO_PICK.low?p.s-q.s:q.s-p.s;});
+  if(AUTO_PICK.rotate&&AUTO_PICK.rotate.length){
+    /* Stock of the day: places in the sigma ranking (sheet line numbers),
+       one per day in turn, e.g. line 25 (undervalued), 80 (normal band),
+       130 (overvalued). The day count uses the visitor's local date. */
+    var now=new Date(),day=Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/864e5);
+    var line=AUTO_PICK.rotate[day%AUTO_PICK.rotate.length],k=Math.min(Math.max(line-2,0),picks.length-1);
+    picks=picks.length?[picks[k]]:[];
+  }else picks=picks.slice(0,AUTO_PICK.n);
+  return {lines:picks.map(function(p){return p.line;}),tags:picks.map(function(p){return p.tag;})};
+}
+function refreshLiveData(){
+  if(!(LIVE_URL_STOCKS||LIVE_URL_REITS))return Promise.resolve();
+  if(!ROWS.length)return Promise.resolve();
+  return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    var byTicker={};
+    res.lines.forEach(function(line,i){
+      var tag=res.tags[i];
+      var t=parseRow(line,schemaForKind(tag)).rec.ticker;
+      if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
+    });
+    var newLines=[],newTags=[];
+    if(AUTO_PICK){var ap=autoPickFrom(res);newLines=ap.lines;newTags=ap.tags;}
+    else ROWS.forEach(function(r){
+      var t=r.rec.ticker;
+      var hit=t&&byTicker[t.trim().toUpperCase()];
+      if(hit){newLines.push(hit.line);newTags.push(hit.tag);}
+    });
+    if(!newLines.length)throw new Error('no matching tickers in live feed');
+    var prevTicker=(ROWS[selectedIdx]&&ROWS[selectedIdx].rec&&ROWS[selectedIdx].rec.ticker)||null;
+    handleRaw(newLines.join('\n'),newTags);
+    filterPickerByType();
+    if(prevTicker){
+      var newIdx=-1;
+      for(var i=0;i<ROWS.length;i++){if(ROWS[i].rec.ticker===prevTicker){newIdx=i;break;}}
+      if(newIdx>=0){
+        selectedIdx=newIdx;
+        var p=$('#pick'),pp=$('#pubPick');
+        if(p)p.value=String(newIdx);
+        if(pp)pp.value=String(newIdx);
+        renderCurrent();
+      }
+    }
+    liveLastUpdated=new Date();
+    setLiveStamp(false);
+  }).catch(function(){
+    setLiveStamp(true);
+  });
+}
+
+/* First load on a published page: refreshLiveData() only refreshes values
+   for tickers already in ROWS (a locked universe, by design for the heat
+   map). On boot, ROWS is just the single sample/placeholder row baked into
+   the page, so that locked-set logic can never pick up a ?ticker= name
+   that isn't the placeholder. This loads the FULL live feed in one shot
+   instead, then re-runs the deep-link selection against the complete set. */
+function initialFullFetch(){
+  if(!(LIVE_URL_STOCKS||LIVE_URL_REITS))return Promise.resolve();
+  return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    handleRaw(res.lines.join('\n'),res.tags);
+    filterPickerByType();
+    selectTickerFromUrl();
+    liveLastUpdated=new Date();
+    setLiveStamp(false);
+  }).catch(function(){
+    setLiveStamp(true);
+  });
+}
+
+var LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var BACK_URL=LINKS.back;
+/* Only the GitHub single-ticker share card should hide the dropdown and
+   show the back-link — the regular website embed (Google Sites) should
+   keep browsing all rows via the dropdown, with no back-link (it's
+   already on the site). Baked in at publish time by the Standalone
+   share link checkbox; false here is the editor/website-embed default. */
+var STANDALONE_CARD=false;
+/* Baked-in defaults for the admin tool's own Live Source boxes — so a
+   fresh download of this file (new browser, new machine, cleared
+   storage) still starts with the real Gist URLs pre-filled instead of
+   blank. Only used by loadLiveUrls() below, in the admin tool itself;
+   has nothing to do with LIVE_URL_STOCKS/LIVE_URL_REITS above, which
+   are only ever set on a PUBLISHED page at publish time. */
+var DEFAULT_LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var DEFAULT_LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var SAMPLE_DATA_TYPE="stocks";
+/* Per-row schema tags for the embedded sample/snapshot, as a JSON array
+   string ('["stocks","reits",...]') — null means "every row uses
+   SAMPLE_DATA_TYPE" (the old single-type behavior). A mixed Stocks+REIT
+   selection (e.g. a live fetch, or a Top-N pulled from both tabs) needs
+   each row parsed with its own schema, so the publish step fills this
+   in whenever the loaded rows aren't all one type. */
+var SAMPLE_TAGS="";
+var SAMPLE="Pepsico, Inc. (XNAS:PEP)	 $  137.34 	 $  123.47 	5.92	4.31%	3.04%	0.54%	7.73	2.35	PEP	  ⇣ .20	156.77	 $  194.97 	17.88%		6.25%	9.08%	17.3	145.99	-6%	0.85	3.39%	1.09%	27.32%	32.09%	 $  174.87 	 $   130.79 	 $     86.72 	41.96%	12.46	55.73	101.04	Now: -0.62% | 10Y: 0.14% | Diff: -0.75%	52	74.41%	7.89";
+
+/* Base64-encoded copy of this page with PUBLIC_MODE flipped on and the
+   sample row swapped for a %%SAMPLE_DATA%% placeholder — this is what
+   "Copy website code" fills in and hands you, so the public page you
+   paste into your site always matches whatever this admin copy can do,
+   without you ever touching the code by hand. */
+var PUBLIC_TEMPLATE_B64="";
+function b64DecodeUtf8(b64){return decodeURIComponent(escape(atob(b64)));}
+
+function jsStrEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');}
+function buildPublishedCode(){
+  if(!RAW_LINES.length){setStatus('Render a card first, then copy the website code.',true);return null;}
+  /* Embed every currently-loaded row as a static fallback/first-paint
+     snapshot, not just the one being previewed — the published page
+     gets its own row picker (shown when there's more than one row)
+     so visitors can switch between companies. If a live source URL
+     is set, the published page also re-fetches from it on load and
+     every ~15 minutes, falling back to this snapshot if that fails. */
+  var escaped=RAW_LINES.map(function(rowText){return jsStrEscape(rowText);}).join('\\n');
+  var stocksUrl=jsStrEscape(($('#urlStocks').value||'').trim());
+  var reitsUrl=jsStrEscape(($('#urlReits').value||'').trim());
+  var dataType=currentDataTypeKind();
+  /* Mixed Stocks+REIT selections (a live fetch, or a Top-N you pulled
+     from both tabs) need each embedded row tagged with its own schema,
+     not one single DATA_TYPE for everything — otherwise half the rows
+     would get parsed with the wrong column layout on first paint. */
+  var rowKinds=ROWS.map(function(r){return r.kind||dataType;});
+  var isMixed=rowKinds.some(function(k){return k!==rowKinds[0];});
+  var tagsJson=jsStrEscape(isMixed?JSON.stringify(rowKinds):'');
+  var standalone=($('#chkStandalone')&&$('#chkStandalone').checked)?'true':'false';
+  var base=b64DecodeUtf8(PUBLIC_TEMPLATE_B64);
+  return base
+    .replace('%%SAMPLE_DATA%%',function(){return escaped;})
+    .replace('%%STOCKS_URL%%',function(){return stocksUrl;})
+    .replace('%%REITS_URL%%',function(){return reitsUrl;})
+    .replace('%%STANDALONE%%',function(){return standalone;})
+    .replace('%%DATA_TYPE%%',function(){return dataType;})
+    .replace('%%SAMPLE_TAGS%%',function(){return tagsJson;});
+}
+
+function tryCopyToClipboard(text){
+  var msg=$('#publishMsg'),ta=$('#publishOutput');
+  function ok(){msg.textContent='Copied to your clipboard — go to your website’s embed block and paste (Ctrl/⌘+V).';}
+  function fail(){
+    msg.textContent='Couldn’t copy automatically — click in the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.';
+    ta.focus();ta.select();
+  }
+  function legacyFallback(){
+    try{ta.focus();ta.select();if(document.execCommand('copy'))ok();else fail();}catch(e){fail();}
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok,legacyFallback);
+  }else{
+    legacyFallback();
+  }
+}
+
+function renderSchemaList(){
+  var schema=schemaForKind(currentDataTypeKind());
+  $('#schemaList').innerHTML=schema.map(function(f){return '<li title="'+esc(f.note||'')+'">'+esc(f.label)+'</li>';}).join('');
+  var summary=$('#schemaSummary');
+  if(summary)summary.textContent='Expected column order ('+schema.length+' columns, '+(currentDataTypeKind()==='reits'?'REITs':'Stocks')+')';
+}
+/* When a live/mixed fetch has loaded both Stocks and REIT rows together,
+   the Stocks/REITs toggle doubles as a picker filter — switching it
+   narrows the dropdown to just that type instead of only controlling
+   the schema used for the next manual paste. A single-type load (plain
+   paste, upload, or a live fetch with only one URL filled in) is left
+   alone, since there's nothing to separate. */
+function filterPickerByType(){
+  var pick=$('#pick'),pubPick=$('#pubPick');
+  if(!pick||!ROWS.length)return;
+  var firstKind=null;
+  for(var i=0;i<ROWS.length;i++){if(ROWS[i].kind){firstKind=ROWS[i].kind;break;}}
+  var hasMixed=ROWS.some(function(r){return r.kind&&r.kind!==firstKind;});
+  if(!hasMixed)return;
+  var kind=currentDataTypeKind();
+  var optsHtml=ROWS.map(function(r,i){
+    if(r.kind&&r.kind!==kind)return '';
+    return '<option value="'+i+'">'+esc(r.label)+'</option>';
+  }).join('');
+  pick.innerHTML=optsHtml;
+  if(pubPick)pubPick.innerHTML=optsHtml;
+  var firstIdx=-1;
+  for(var j=0;j<ROWS.length;j++){if(!ROWS[j].kind||ROWS[j].kind===kind){firstIdx=j;break;}}
+  if(firstIdx<0)return;
+  var keepCurrent=ROWS[selectedIdx]&&(!ROWS[selectedIdx].kind||ROWS[selectedIdx].kind===kind);
+  selectedIdx=keepCurrent?selectedIdx:firstIdx;
+  pick.value=String(selectedIdx);
+  if(pubPick)pubPick.value=String(selectedIdx);
+  renderCurrent();
+}
+function wire(){
+  renderSchemaList();
+  $('#dtStocks').addEventListener('change',function(){renderSchemaList();filterPickerByType();});
+  $('#dtReits').addEventListener('change',function(){renderSchemaList();filterPickerByType();});
+  $('#btnRender').addEventListener('click',function(){handleRaw($('#raw').value);});
+  $('#btnUpload').addEventListener('click',function(){$('#fileUpload').click();});
+  $('#fileUpload').addEventListener('change',function(e){
+    var file=e.target.files&&e.target.files[0];
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(){loadUploadedText(String(reader.result),file.name);};
+    reader.onerror=function(){setStatus('Could not read that file.',true);};
+    reader.readAsText(file);
+    e.target.value='';
+  });
+  $('#pick').addEventListener('change',function(){selectedIdx=+(this.value||0);priceOverride=null;var pp=$('#pubPick');if(pp)pp.value=this.value;renderCurrent();});
+  var pubPickEl=$('#pubPick');
+  if(pubPickEl)pubPickEl.addEventListener('change',function(){selectedIdx=+(this.value||0);priceOverride=null;var p=$('#pick');if(p)p.value=this.value;renderCurrent();});
+  $('#btnDark').addEventListener('click',function(){curTheme=THEME_DARK;renderCurrent();});
+  $('#btnLight').addEventListener('click',function(){curTheme=THEME_LIGHT;renderCurrent();});
+  $('#btnPrint').addEventListener('click',function(){window.print();});
+  $('#btnPng').addEventListener('click',exportPng);
+  $('#btnPublish').addEventListener('click',function(){
+    saveLiveUrls();
+    var code=buildPublishedCode();
+    if(!code)return;
+    $('#publishOutput').value=code;
+    $('#publishModal').hidden=false;
+    tryCopyToClipboard(code);
+  });
+  $('#publishCopyAgain').addEventListener('click',function(){tryCopyToClipboard($('#publishOutput').value);});
+  $('#publishClose').addEventListener('click',function(){$('#publishModal').hidden=true;});
+  $('#raw').addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){handleRaw($('#raw').value);}});
+  $('#btnFetchLive').addEventListener('click',function(){
+    var us=($('#urlStocks').value||'').trim();
+    var ur=($('#urlReits').value||'').trim();
+    if(!us&&!ur){setStatus('Add at least one sheet CSV URL first.',true);return;}
+    saveLiveUrls();
+    setStatus('Fetching…');
+    fetchLiveRows(us,ur).then(function(res){
+      if(!res||!res.lines||!res.lines.length){setStatus('Fetched OK but found no rows — check the sheet has data and the URL ends in output=csv.',true);return;}
+      var finalText=res.lines.join('\n');
+      $('#raw').value=finalText;
+      handleRaw(finalText,res.tags);
+      filterPickerByType();
+    }).catch(function(err){
+      setStatus('Could not fetch — make sure each URL is a "Publish to web" CSV link for that tab. ('+((err&&err.message)||err)+')',true);
+    });
+  });
+}
+
+async function exportPng(){
+  var btn=$('#btnPng');
+  if(typeof html2canvas==='undefined'){setStatus('The image renderer did not load. Use Print / PDF instead.',true);return;}
+  if(!ROWS.length){setStatus('Nothing to export yet.',true);return;}
+  btn.disabled=true;
+  try{
+    var canvas=await html2canvas($('#card'),{scale:2,backgroundColor:curTheme.paper,logging:false});
+    var blob=await new Promise(function(res){canvas.toBlob(res,'image/png');});
+    var dl=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;
+    var idx=Math.min(ROWS.length-1,Math.max(0,selectedIdx||0));
+    var name=(ROWS[idx].label||'sigma-card').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'sigma-card';
+    if(dl&&blob){
+      try{await dl.save({filename:name+'.png',data:blob});setStatus('Image saved.');}
+      catch(err){setStatus(err&&err.code==='declined'?'Save cancelled.':'Saving is not available here. Use Print / PDF instead.',true);}
+    }else if(blob){
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'.png';document.body.appendChild(a);a.click();a.remove();
+      setStatus('Image downloaded.');
+    }
+  }catch(err){setStatus('Image export failed. Use Print / PDF instead.',true);}
+  finally{btn.disabled=false;}
+}
+
+/* Deep-link support: a link like thispage.html?ticker=NKE pre-selects
+   that ticker instead of defaulting to row 0. Used by the heat map tool
+   so clicking a tile lands straight on the right card. Silently does
+   nothing if the param is missing or no row matches. */
+/* Captured once, before anything on the page has a chance to rewrite the
+   address bar (renderCurrent() now does that live as you switch tickers —
+   see updateUrlTicker). Re-reading window.location.search inside this
+   function instead would pick up the page's OWN latest rewrite rather
+   than what the link actually asked for. */
+var INITIAL_TICKER_PARAM=(function(){
+  try{return new URLSearchParams(window.location.search).get('ticker')||'';}
+  catch(e){return '';}
+})();
+function selectTickerFromUrl(){
+  try{
+    var t=INITIAL_TICKER_PARAM.trim().toUpperCase();
+    if(!t)return;
+    for(var i=0;i<ROWS.length;i++){
+      if(ROWS[i].rec&&ROWS[i].rec.ticker&&ROWS[i].rec.ticker.trim().toUpperCase()===t){
+        selectedIdx=i;
+        var p=$('#pick'),pp=$('#pubPick');
+        if(p)p.value=String(i);
+        if(pp)pp.value=String(i);
+        renderCurrent();
+        break;
+      }
+    }
+  }catch(e){/* ignore */}
+}
+
+if(PUBLIC_MODE){
+  document.body.classList.add('public-mode');
+  /* Published embeds always render light, regardless of the visitor's
+     device dark-mode setting, so the tool matches the website around it. */
+  document.documentElement.setAttribute('data-theme','light');
+}
+if(SAMPLE_DATA_TYPE==='reits'){var dtr=$('#dtReits');if(dtr)dtr.checked=true;}
+wire();
+$('#raw').value=SAMPLE;
+var bootTags=null;
+if(SAMPLE_TAGS){try{bootTags=JSON.parse(SAMPLE_TAGS);}catch(e){bootTags=null;}}
+handleRaw(SAMPLE,bootTags||SAMPLE_DATA_TYPE);
+filterPickerByType();
+selectTickerFromUrl();
+
+if(PUBLIC_MODE){
+  if(LIVE_URL_STOCKS)$('#urlStocks').value=LIVE_URL_STOCKS;
+  if(LIVE_URL_REITS)$('#urlReits').value=LIVE_URL_REITS;
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS){
+    /* Only the standalone share card needs the full combined stocks+REITs
+       universe on first load (so any ?ticker= deep link can resolve).
+       The regular website embed must stay locked to whatever rows were
+       actually published (e.g. a REITs-only page) — pulling the full
+       feed there would silently balloon a REITs page's dropdown out to
+       include every stock too. */
+    if(STANDALONE_CARD){
+      initialFullFetch();
+    }else{
+      refreshLiveData();
+    }
+    setInterval(refreshLiveData,15*60*1000);
+  }
+}else{
+  loadLiveUrls();
+}
+
+window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:parseRow,analyze:analyze,buildCard:buildCard,SAMPLE:SAMPLE};
+})();
+</script>
+</body>
+</html>

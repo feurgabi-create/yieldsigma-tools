@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compound Growth Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --shell:#E4E9E4;--panel:#EEF2ED;--field:#FFFFFF;--ink:#132419;--muted:#5E6F63;--rule:#D2DBD1;
+  --jade:#1F7A52;--jade-soft:#DCEDE3;--jade-mid:#9CCBB2;--rust:#B54A2C;--gold:#A5791F;--paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--shell);color:var(--ink);font:14px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+.stage{padding:32px 16px}
+.sheet{max-width:1100px;margin:0 auto;background:var(--paper);border-radius:4px;padding:40px 40px 26px;box-shadow:0 24px 60px -30px rgba(19,36,25,.35)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:16px}
+.head h2{font:500 32px/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.head .sub{color:var(--muted);font-size:12.5px;margin-top:6px}
+.tabs{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.tab{border:0;background:var(--field);padding:9px 14px;font:600 12.5px var(--mono);color:var(--muted);cursor:pointer}
+.tab.on{background:var(--jade);color:#fff}
+.body{display:grid;grid-template-columns:350px minmax(0,1fr);gap:32px;margin-top:22px}
+.out,.inputs{min-width:0}
+.inputs h3,.out h3{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.inputs h3:first-child{margin-top:0}
+.f{display:grid;grid-template-columns:1fr 132px;align-items:center;gap:10px;margin:7px 0}
+.f.two{grid-template-columns:1fr 112px 112px;gap:8px}
+.f label{font-size:12.5px;color:var(--ink)}
+.f .unit{position:relative}
+.f input[type=number],.f select{width:100%;padding:7px 8px;border:1px solid var(--rule);border-radius:7px;background:var(--field);font:500 13px var(--mono);color:var(--ink);text-align:right}
+.f select{text-align:left;padding:7px 4px;font-size:12px}
+/* The browser's up/down arrows stay inside each box on the right; the unit
+   (%/yr, yrs) sits outside the box, so nothing ever overlaps the number. */
+.f .unit{display:flex;align-items:center;gap:5px}
+.f .unit input{flex:1 1 auto;min-width:0}
+.f .unit input:disabled{opacity:.45;cursor:not-allowed}
+.f .unit input.locked{background:transparent;color:var(--muted);border-style:dashed;cursor:not-allowed}
+.f div.lab{font-size:12.5px;color:var(--ink);padding-top:7px}
+.f div.lab small.wm{display:block;font:italic 400 10.5px/1.3 var(--mono);color:#A3B0A7;margin-top:2px;letter-spacing:.01em}
+.lockchk{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.lockchk input{accent-color:var(--jade);width:12px;height:12px;margin:0}
+.f .unit.post input{padding-right:4px}
+.f .unit.post span{flex:0 0 30px;font-size:11px;color:var(--muted);white-space:nowrap}
+.f .unit.pre span{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);pointer-events:none}
+.f .unit.pre input{padding-left:22px;padding-right:4px}
+.rateBox .f{margin:11px 0}
+.f.sub{align-items:start}
+.f.sub label{padding-top:7px}
+.f label small.wm{display:block;font:italic 400 10.5px/1.3 var(--mono);color:#A3B0A7;margin-top:2px;letter-spacing:.01em}
+.colhead{display:grid;grid-template-columns:1fr 112px 112px;gap:8px;font:600 11px var(--mono);margin:4px 0 -2px}
+.colhead b:nth-child(2){color:var(--jade);text-align:center}.colhead b:nth-child(3){color:var(--gold);text-align:center}
+.chk{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:9px 0;cursor:pointer}
+.chk input{accent-color:var(--jade);width:15px;height:15px}
+.rateBox{border-top:1px dashed var(--rule);padding-top:4px}
+.big{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:12px}
+.bigcard{background:var(--panel);border-radius:10px;padding:16px 18px}
+.bigcard .k{font-size:11.5px;color:var(--muted)}
+.bigcard .v{font:500 40px/1.05 var(--serif);letter-spacing:-.01em;margin:4px 0 2px}
+.bigcard.a .v{color:var(--jade)}.bigcard.b .v{color:var(--gold)}
+.bigcard .r{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;font:700 10.5px var(--mono);padding:2px 7px;border-radius:10px;margin-right:6px;vertical-align:2px}
+.tag.a{background:var(--jade);color:#fff}.tag.b{background:var(--gold);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:12px;border-top:1px solid var(--rule)}
+.stat{padding:10px 2px;border-bottom:1px solid var(--rule)}
+.stat .k{font-size:11.5px;color:var(--muted)}
+.stat small.wm{display:block;font:italic 400 10.5px/1.3 var(--mono);color:#A3B0A7;margin-top:2px}
+.stat .v{font:600 15px var(--mono);margin-top:2px}
+.stat .v .bv{color:var(--gold);font-weight:600;margin-left:8px}
+.chartWrap{position:relative;margin-top:6px}
+.chartWrap svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 10px;font-size:11.5px;line-height:1.5;white-space:nowrap;opacity:0;transition:opacity .1s}
+.tip b{font-weight:700}
+.tip span{white-space:pre}
+.tbl{max-height:300px;overflow:auto;border:1px solid var(--rule);border-radius:8px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:6px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th{position:sticky;top:0;background:var(--paper);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;box-shadow:inset 0 -1px 0 var(--rule)}
+th:first-child,td:first-child{text-align:left}
+td.bcol{color:var(--gold)}
+.pickRow{align-items:start}
+.pick{position:relative}
+.pick input{width:100%;padding:7px 8px;border:1px solid var(--rule);border-radius:7px;background:var(--field);font:600 12.5px var(--mono);color:var(--ink)}
+.pick input::placeholder{color:#9aa79e;font-weight:500}
+.pickList{position:absolute;z-index:20;top:100%;left:0;width:270px;max-height:280px;overflow:auto;background:var(--field);border:1px solid var(--rule);border-radius:8px;box-shadow:0 14px 30px -12px rgba(19,36,25,.35);margin-top:4px}
+.pickList.right{left:auto;right:0}
+.pickList[hidden]{display:none}
+.pickItem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;cursor:pointer;font-size:12px}
+.pickItem.on{background:var(--panel)}
+.pickItem b{font-weight:700;min-width:52px}
+.pickItem span{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pickItem small{color:var(--muted);font-size:10.5px}
+.pickItem.locked{cursor:default;opacity:.55}
+.pickItem.none{cursor:default;color:var(--muted)}
+.src{font-size:11.5px;color:var(--muted);margin:6px 0;line-height:1.45}
+.src b{color:var(--jade)}.src.b b{color:var(--gold)}
+.src button{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;padding:0 3px}
+.src button:hover{color:var(--rust)}
+.cross{margin-top:12px;padding:10px 14px;border-left:3px solid var(--gold);background:#FBF6EC;font-size:12.5px;line-height:1.6}
+.cross b{font-weight:700}
+.cross .nmA{color:var(--jade)}.cross .nmB{color:var(--gold)}
+.pick.withPrice{display:grid;grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:3px}
+/* price sits right after the $ sign; the arrows keep the space on the right */
+.pick.withPrice .price input{width:100%;padding:7px 1px 7px 13px;border:1px solid var(--rule);border-radius:7px;background:var(--field);font:600 11px var(--mono);color:var(--ink);text-align:left}
+.pick.withPrice .price span{left:5px}
+.pick.withPrice > input{padding-left:5px;padding-right:3px;font-size:11px}
+.foot{margin-top:22px;padding-top:12px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:860px){
+  .sheet{padding:24px 16px 18px}.stage{padding:16px 0}
+  .body{grid-template-columns:minmax(0,1fr);gap:20px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bigcard .v{font-size:32px}
+}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.labsBy a:hover{text-decoration:underline}
+.foot .footLinks{flex-basis:100%}
+.foot a,.foot a:visited{color:var(--jade,#1F7A52)}
+</style>
+</head>
+<body>
+<main class="stage"><article class="sheet" id="calc"></article></main>
+<script>
+/* ===== EDIT LINKS HERE =====
+   Every page link used by this tool. If a page moves, change it here only. */
+var LINKS={
+  card:        "https://tools.stardustcapital.net/card.html?ticker=",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
+};
+</script>
+<script>
+/* Live data reader: the same schema and parsing code as the sigma card,
+   heat maps and directory, so the picker reads the Gist exactly as they do. */
+(function(){
+'use strict';
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num'},
+ {k:'par', label:'Par (yield-parity price)', type:'money'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'5y CAGR (dividend)', type:'pct'},
+ {k:'cagr10y', label:'10y CAGR (dividend)', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200-day moving average', type:'money'},
+ {k:'ma200diff', label:'200-day MA, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct'}
+];
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio'];
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtBps(v){if(v===null)return '\u2013';var b=Math.round(v*100);return (b>=0?'+':'')+b+'bps';}
+
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/);
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' columns found, expected '+schema.length+'.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+/* Sigma sign convention (matches the sigma card exactly): negative =
+   "rich"/overvalued (yield abnormally low vs its own 10y average),
+   positive = "cheap"/undervalued (yield abnormally high). */
+function analyzeRow(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.ticker=rec.ticker||ne.tick||'\u2013';
+  var sigma=rec.sigma;
+  var sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigma=sigma!==null?sigma:sigmaComputed;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  return a;
+}
+
+/* Company-name abbreviation — same dictionary as the sigma card, used
+   only for the hover preview's full-name line. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',COMPANY:'Co',CO:'Co',INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',INTERNATIONAL:'Intl',HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',ASSOCIATES:'Assoc',MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',RESIDENTIAL:'Res',DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * CSV parsing + live fetch — same as the sigma card.
+ * ------------------------------------------------------------------ */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+function fetchLiveRows(stocksUrl,reitsUrl){
+  var sources=[];
+  if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
+  if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
+  if(!sources.length)return Promise.resolve(null);
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url,{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    });
+  })).then(function(texts){
+    var lines=[],tags=[];
+    texts.forEach(function(t,i){
+      var these=csvTextToLines(t);
+      lines=lines.concat(these);
+      these.forEach(function(){tags.push(sources[i].kind);});
+    });
+    return {lines:lines,tags:tags};
+  });
+}
+window.__sd={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:parseRow,analyzeRow:analyzeRow,fetchLiveRows:fetchLiveRows,abbreviateCompanyWord:abbreviateCompanyWord};
+})();
+</script>
+<script>
+(function(){
+'use strict';
+/* Opening values. The editor's "Copy website code" writes the values set in
+   its preview here, so the published calculator opens the way it was left. */
+var DEFAULTS={"mode":"div","start":10000,"monthly":0,"raise":3,"years":10,"infl":3,"compare":false,"fade":false,"revert":false,"revLock":true,"A":{"ret":7,"comp":12,"yield":3.5,"dgr":7,"pg":7,"reinvest":true,"lr":6,"fy":10,"ty":3,"ry":4,"ticker":null,"tname":null,"edited":false,"note":""},"B":{"ret":5,"comp":12,"yield":1.5,"dgr":10,"pg":10,"reinvest":true,"lr":6,"fy":10,"ty":3,"ry":4,"ticker":null,"tname":null,"edited":false,"note":""},"pick":{"scope":"all","band":25,"step":2,"cap":15}};
+
+var S=JSON.parse(JSON.stringify(DEFAULTS));
+function $(s){return document.querySelector(s);}
+
+/* ---------------- stock picker ----------------
+   Reads the live Gist (stocks + REITs) once on load. Picking a name fills
+   that column with its current yield and its actual past-10-year dividend
+   growth; price growth is set to the same rate. Pick scope "open" limits
+   picks to the names the directory opens (same bands and step). */
+var LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var U=[],dataState='loading',softTimer=null;
+function zoneOf(kind,s){
+  if(s===null||s===undefined||!isFinite(s))return null;
+  if(kind==='reits'){if(s>1.5)return 'under';if(s<0)return 'over';return 'normal';}
+  if(Math.abs(s)<1)return 'normal';
+  return s<0?'over':'under';
+}
+function markOpen(){
+  var p=S.pick||{scope:'all'};
+  U.forEach(function(u){u.open=(p.scope!=='open');});
+  if(p.scope!=='open')return;
+  var band=Math.max(1,Math.round(p.band||1)),step=Math.max(1,Math.round(p.step||1));
+  ['stocks','reits'].forEach(function(kind){
+    var rows=U.filter(function(u){return u.kind===kind;});
+    var under=rows.filter(function(r){return zoneOf(kind,r.sigma)==='under';}).sort(function(x,y){return y.sigma-x.sigma;});
+    var over=rows.filter(function(r){return zoneOf(kind,r.sigma)==='over';}).sort(function(x,y){return x.sigma-y.sigma;});
+    var normal=rows.filter(function(r){return zoneOf(kind,r.sigma)==='normal';}).sort(function(x,y){return Math.abs(x.sigma)-Math.abs(y.sigma);});
+    [under,over,normal].forEach(function(list){list.slice(0,band).forEach(function(r,i){if(i%step===0)r.open=true;});});
+  });
+}
+function loadUniverse(){
+  var sd=window.__sd;
+  return sd.fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    var seen={},list=[];
+    res.lines.forEach(function(line,i){
+      var kind=res.tags[i]==='reits'?'reits':'stocks';
+      var rec=sd.parseRow(line,kind==='reits'?sd.SCHEMA_REITS:sd.SCHEMA_STOCKS).rec;if(!rec)return;
+      var a=sd.analyzeRow(rec),t=String(a.ticker||'').trim().toUpperCase();
+      if(!t||t==='–'||seen[t]||rec.yield===null||!isFinite(rec.yield))return;
+      seen[t]=1;
+      var name=(String(a.name||'').trim().replace(/^THE\s+/i,'').split(/\s+/).map(sd.abbreviateCompanyWord).join(' ').replace(/,+$/,''))||t;
+      list.push({kind:kind,ticker:t,name:name,yield:rec.yield,
+        price:(rec.price!==null&&isFinite(rec.price)&&rec.price>0)?rec.price:null,
+        div:(rec.divDollar!==null&&isFinite(rec.divDollar)&&rec.divDollar>0)?rec.divDollar:null,
+        dgr:(rec.divGrowth10y!==null&&isFinite(rec.divGrowth10y))?rec.divGrowth10y:null,sigma:a.sigma,
+        avg10y:(rec.avg10y!==null&&isFinite(rec.avg10y)&&rec.avg10y>0)?rec.avg10y:null,
+        vol:(rec.volatility!==null&&isFinite(rec.volatility))?rec.volatility:null,open:true});
+    });
+    U=list;markOpen();dataState='ok';render();
+  }).catch(function(){dataState='error';render();});
+}
+function round2(v){return Math.round(v*100)/100;}
+function trimNum(v){return String(round2(v)).replace(/\.0+$/,'');}
+function applyPick(side,u){
+  if(!u||!u.open)return;
+  if(document.activeElement&&/^pick[AB]$/.test(document.activeElement.id))document.activeElement.blur();
+  var r=S[side];
+  r.yield=round2(u.yield);
+  var cap=(S.pick&&isFinite(S.pick.cap)&&S.pick.cap>0)?S.pick.cap:Infinity;
+  if(u.dgr!==null&&u.dgr>cap){r.dgr=round2(cap);r.pg=round2(cap);r.note='growth capped at '+trimNum(cap)+'% (its 10-year rate is '+trimNum(round2(u.dgr))+'%)';}
+  else if(u.dgr!==null){r.dgr=round2(u.dgr);r.pg=round2(u.dgr);r.note='';}
+  else r.note='no 10-year dividend growth on file; growth rates left as they were';
+  /* Reversion defaults: target = the stock's 10-yr average yield; years from its
+     Volatility (yield gap/σ ratio) tier: below 21% = 2 yrs, 21–40% = 4, 40%+ = 6. */
+  if(u.avg10y!==null)r.ty=round2(u.avg10y);
+  if(u.vol!==null)r.ry=u.vol<21?2:(u.vol<40?4:6);
+  r.ticker=u.ticker;r.tname=u.name;r.edited=false;
+  r.div=(u.div&&u.price)?u.div:null;r.price=r.div?round2(u.price):null;
+  render();
+}
+function matches(q){
+  q=q.trim().toUpperCase();if(!q)return [];
+  var starts=[],inName=[];
+  U.forEach(function(u){
+    if(u.ticker.indexOf(q)===0)starts.push(u);
+    else if(u.name.toUpperCase().indexOf(q)>=0)inName.push(u);
+  });
+  starts.sort(function(x,y){return x.ticker.length-y.ticker.length||(x.ticker<y.ticker?-1:1);});
+  return starts.concat(inName).slice(0,8);
+}
+/* Ticker names belong to the dividend tab only; Fixed return always says A and B. */
+function unlink(side){var r=S[side];r.ticker=null;r.tname=null;r.edited=false;r.note='';r.price=null;r.div=null;render();}
+/* Price box: shown once a stock with a dividend on file is picked. Price and
+   starting yield are tied together: yield = dividend / price. */
+function hasPrice(side){var r=S[side];return !!(r.ticker&&r.div>0&&r.price>0);}
+function sideLabel(side){return (S.mode==='div'&&S[side].ticker)||side;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v,d){var x=parseFloat(v);return isFinite(x)?x:d;}
+function money(v){if(!isFinite(v))return '–';var neg=v<0;v=Math.abs(v);return (neg?'−':'')+'$'+Math.round(v).toLocaleString('en-US');}
+function moneyShort(v){var a=Math.abs(v);if(a>=1e6)return '$'+(v/1e6).toFixed(a>=1e7?0:1).replace(/\.0$/,'')+'M';if(a>=1e3)return '$'+(v/1e3).toFixed(a>=1e4?0:1).replace(/\.0$/,'')+'k';return '$'+Math.round(v);}
+function pct(v,d){return isFinite(v)?v.toFixed(d===undefined?1:d)+'%':'–';}
+
+/* ---------------- model ----------------
+   Month by month. Contributions go in at the start of each month and rise
+   once a year by the "raise" rate.
+   Fixed return: interest is credited at the end of each compounding period.
+   Dividend growth: one share starts at $100 yielding the starting yield; the
+   price grows smoothly at the price-growth rate, the dividend per share is
+   raised once a year at the dividend-growth rate and paid quarterly, and is
+   either reinvested at that day's price or taken as cash. */
+/* Annualized return (IRR, money-weighted): the one monthly rate that, applied
+   to every dollar for exactly as long as it was invested, lands on the ending
+   balance; shown as a yearly rate. With no monthly additions it equals the
+   plain CAGR. Found by halving the search range until it settles. */
+function annualizedReturn(cf){
+  function npv(r){var v=0,d=1;for(var t=0;t<cf.length;t++){v+=cf[t]/d;d*=1+r;}return v;}
+  var hasIn=cf.some(function(x){return x<0;}),hasOut=cf.some(function(x){return x>0;});
+  if(!hasIn||!hasOut)return NaN;
+  var lo=-0.5,hi=0.5,flo=npv(lo),fhi=npv(hi);   /* monthly rates: about -100% to +13,000% a year */
+  if(!isFinite(flo)||!isFinite(fhi)||flo*fhi>0)return NaN;
+  for(var i=0;i<200;i++){var mid=(lo+hi)/2,fm=npv(mid);if(fm===0)break;if(fm*flo>0){lo=mid;flo=fm;}else hi=mid;}
+  return (Math.pow(1+(lo+hi)/2,12)-1)*100;
+}
+function simulate(sh,r,mode){
+  var Y=Math.max(1,Math.min(60,Math.round(sh.years)));
+  var m=sh.monthly,rows=[],contrib=sh.start;
+  /* month-by-month money in (negative) and out (positive), for the annualized return */
+  var cf=[];for(var ci=0;ci<=12*Y;ci++)cf.push(0);cf[0]-=sh.start;
+  rows.push({y:0,contrib:contrib,value:sh.start,flow:0,cash:0,inc:0});
+  if(mode==='fixed'){
+    var n=r.comp,bal=sh.start,rate=r.ret/100;
+    for(var y=1;y<=Y;y++){
+      var startBal=bal,added=0;
+      for(var mo=1;mo<=12;mo++){
+        bal+=m;contrib+=m;added+=m;cf[(y-1)*12+mo-1]-=m;
+        if(mo%(12/n)===0)bal*=1+rate/n;
+      }
+      rows.push({y:y,contrib:contrib,value:bal,flow:bal-startBal-added,cash:0,inc:0});
+      m*=1+sh.raise/100;
+    }
+  }else{
+    /* Fade (optional): both growth rates slide in a straight line from their
+       starting value to the long-run rate over "fy" years, then stay there. */
+    function rateIn(start,y){
+      if(!sh.fade)return start;
+      var fy=Math.max(1,Math.round(isFinite(r.fy)?r.fy:10)),lr=isFinite(r.lr)?r.lr:6;
+      if(start<=lr)return start;   /* fade only slows fast growers; slower ones keep their rate */
+      return start-(start-lr)*Math.min(y-1,fy)/fy;
+    }
+    /* Reversion (optional): the yield moves in a straight line from the starting
+       yield to the target over "ry" years, then stays there; the price is the
+       dividend divided by that yield, so it replaces the price growth input. */
+    var rev=!!sh.revert&&isFinite(r.ty)&&r.ty>0&&r.yield>0;
+    var ryM=12*Math.max(1,Math.round(isFinite(r.ry)?r.ry:4));
+    function yieldAt(mIdx){return r.yield+(r.ty-r.yield)*Math.min(mIdx,ryM)/ryM;}
+    var P=100,Pg=100,shares=sh.start/P,D=r.yield/100*P,cash=0,divCum=0;
+    for(var y2=1;y2<=Y;y2++){
+      if(y2>1)D*=1+rateIn(r.dgr,y2)/100;
+      var pm=Math.pow(1+rateIn(r.pg,y2)/100,1/12);
+      var inc=0;
+      for(var mo2=1;mo2<=12;mo2++){
+        /* Locked: price = dividend ÷ reverting yield. Unlocked: your own price
+           growth, plus the re-rating from the yield moving to its target. */
+        if(rev&&sh.revLock)P=D/(yieldAt((y2-1)*12+mo2)/100);
+        else{Pg*=pm;P=rev?Pg*(r.yield/yieldAt((y2-1)*12+mo2)):Pg;}
+        shares+=m/P;contrib+=m;cf[(y2-1)*12+mo2]-=m;
+        if(mo2%3===0){
+          var pay=shares*D/4;inc+=pay;divCum+=pay;
+          if(r.reinvest)shares+=pay/P;else{cash+=pay;cf[(y2-1)*12+mo2]+=pay;}
+        }
+      }
+      rows.push({y:y2,contrib:contrib,value:shares*P,flow:inc,cash:cash,inc:inc,divCum:divCum,g:rateIn(r.dgr,y2)});
+      m*=1+sh.raise/100;
+    }
+  }
+  rows.forEach(function(row){row.real=row.value/Math.pow(1+sh.infl/100,row.y);});
+  cf[12*Y]+=rows[rows.length-1].value;
+  rows.irr=annualizedReturn(cf);
+  return rows;
+}
+
+/* ---------------- inputs ---------------- */
+/* Hard floors: money and yield can't go below 0, years and fade length below 1.
+   The arrows stop there and typed values are pulled back up to it. */
+var MINS={start:0,monthly:0,years:1,yield:0,fy:1,ty:0.1,ry:1};
+function minAttr(key){return MINS.hasOwnProperty(key)?' min="'+MINS[key]+'"':'';}
+function floorOf(key,v){return (MINS.hasOwnProperty(key)&&v<MINS[key])?MINS[key]:v;}
+function field(label,id,val,unit,post,step){
+  return '<div class="f"><label for="'+id+'">'+label+'</label><div class="unit '+(post?'post':'pre')+'">'+
+    '<input type="number" id="'+id+'" value="'+esc(val)+'" step="'+(step||'any')+'"'+minAttr(id.replace('i_',''))+'><span>'+unit+'</span></div></div>';
+}
+function rateField(label,key,unit,step,sub,off){
+  var tag=(sub&&sub.indexOf('<input')>=0)?'div':'label';
+  var lab='<'+tag+(tag==='div'?' class="lab"':'')+'>'+label+(sub?'<small class="wm">'+sub+'</small>':'')+'</'+tag+'>',cls=sub?' sub':'';
+  var dis=off?' readonly tabindex="-1" class="locked"':'';
+  var a='<div class="unit post"><input type="number" data-side="A" data-key="'+key+'" value="'+esc(S.A[key])+'" step="'+(step||'any')+'"'+minAttr(key)+dis+'><span>'+unit+'</span></div>';
+  if(!S.compare)return '<div class="f'+cls+'">'+lab+a+'</div>';
+  var b='<div class="unit post"><input type="number" data-side="B" data-key="'+key+'" value="'+esc(S.B[key])+'" step="'+(step||'any')+'"'+minAttr(key)+dis+'><span>'+unit+'</span></div>';
+  return '<div class="f two'+cls+'">'+lab+a+b+'</div>';
+}
+function compSelect(side){
+  var v=S[side].comp;
+  return '<select data-side="'+side+'" data-key="comp">'+[[12,'Monthly'],[4,'Quarterly'],[1,'Yearly']].map(function(o){
+    return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
+}
+function pickBox(side){
+  var ph=dataState==='ok'?'Ticker or name':(dataState==='error'?'Unavailable':'Loading…');
+  var pr=hasPrice(side);
+  return '<div class="pick'+(pr?' withPrice':'')+'"><input type="text" id="pick'+side+'" placeholder="'+ph+'" autocomplete="off" spellcheck="false" value="'+esc(S[side].ticker||'')+'"'+(dataState==='ok'?'':' disabled')+'>'+
+    (pr?'<div class="unit pre price"><input type="number" id="price'+side+'" value="'+esc(S[side].price)+'" step="0.5" min="0" title="Price per share"><span>$</span></div>':'')+
+    '<div class="pickList'+(side==='B'?' right':'')+'" id="pickList'+side+'" hidden></div></div>';
+}
+function srcLine(side){
+  var r=S[side];if(!r.ticker)return '';
+  return '<div class="src '+side.toLowerCase()+'"><b>'+(S.compare?side+' ':'')+'</b>'+esc(r.tname)+' ('+esc(r.ticker)+') · live data'+(r.edited?', adjusted':'')+
+    (r.note?' · '+esc(r.note):'')+'<button type="button" data-clear="'+side+'" title="Unlink this stock (keeps the numbers)">×</button></div>';
+}
+function inputsHtml(){
+  var h='<h3>Your money</h3>'+
+    field('Starting amount','i_start',S.start,'$',false,100)+
+    field('Monthly contribution','i_monthly',S.monthly,'$',false,50)+
+    field('Raise contributions by','i_raise',S.raise,'%/yr',true,0.5)+
+    field('Years','i_years',S.years,'yrs',true,1)+
+    field('Inflation','i_infl',S.infl,'%/yr',true,0.25);
+  h+='<h3>'+(S.mode==='div'?'Dividend assumptions':'Return assumptions')+'</h3>';
+  h+='<label class="chk"><input type="checkbox" id="i_compare"'+(S.compare?' checked':'')+'> Compare a second scenario</label>';
+  h+='<div class="rateBox">';
+  if(S.compare)h+='<div class="colhead"><span></span><b>A</b><b>B</b></div>';
+  if(S.mode==='div'){
+    h+=S.compare
+      ?'<div class="f two pickRow"><label>Stock</label>'+pickBox('A')+pickBox('B')+'</div>'
+      :'<div class="f pickRow"><label>Stock</label>'+pickBox('A')+'</div>';
+    /* once a stock is picked, faint notes under the labels say where the numbers came from */
+    var live=S.A.ticker||(S.compare&&S.B.ticker);
+    h+=rateField('Starting yield','yield','%',0.1,live?'current':'')+rateField('Div growth','dgr','%/yr',0.5,live?'past 10 yrs':'')+rateField('Price growth','pg','%/yr',0.5,S.revert?'<label class="lockchk"><input type="checkbox" id="i_revlock"'+(S.revLock?' checked':'')+'>set by reversion</label>':'',S.revert&&S.revLock);
+    h+='<label class="chk"><input type="checkbox" id="i_fade"'+(S.fade?' checked':'')+'> Fade growth to a long-run rate</label>';
+    if(S.fade)h+=rateField('Long-run growth','lr','%/yr',0.25)+rateField('Fade over','fy','yrs',1);
+    h+='<label class="chk"><input type="checkbox" id="i_revert"'+(S.revert?' checked':'')+'> Revert yield to its 10-yr average (0σ)</label>';
+    if(S.revert)h+=rateField('Target yield','ty','%',0.1,live?'10-yr average':'')+rateField('Revert over','ry','yrs',1,live?'by volatility':'');
+    h+='<label class="chk"><input type="checkbox" data-side="A" data-key="reinvest"'+(S.A.reinvest?' checked':'')+'> Reinvest dividends'+(S.compare?' (A)':'')+'</label>';
+    if(S.compare)h+='<label class="chk"><input type="checkbox" data-side="B" data-key="reinvest"'+(S.B.reinvest?' checked':'')+'> Reinvest dividends (B)</label>';
+    h+=srcLine('A')+(S.compare?srcLine('B'):'');
+    if(dataState==='error')h+='<div class="src">Live data is unavailable right now; the rates can still be typed in.</div>';
+  }else{
+    h+=rateField('Annual return','ret','%',0.25);
+    h+=S.compare
+      ?'<div class="f two"><label>Compounding</label>'+compSelect('A')+compSelect('B')+'</div>'
+      :'<div class="f"><label>Compounding</label>'+compSelect('A')+'</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
+/* ---------------- charts ---------------- */
+var W=640,H=250,PL=58,PR=12,PT=12,PB=26;
+/* Axis top = 4 equal round steps (1, 1.5, 2, 2.5, 3, 4, 5, 6 or 8 x a power of ten), so every tick is a round number. */
+function niceMax(v){if(v<=0)return 4;var raw=v/4,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;var steps=[1,1.5,2,2.5,3,4,5,6,8,10],st=10;for(var i=0;i<steps.length;i++){if(f<=steps[i]+1e-9){st=steps[i];break;}}st*=p;return st*4;}
+function axes(max,Y){
+  var s='',ticks=4;
+  for(var i=0;i<=ticks;i++){
+    var v=max*i/ticks,y=PT+(H-PT-PB)*(1-i/ticks);
+    s+='<line x1="'+PL+'" x2="'+(W-PR)+'" y1="'+y+'" y2="'+y+'" stroke="var(--rule)" stroke-width="1"'+(i?' stroke-dasharray="2 4"':'')+'/>';
+    s+='<text x="'+(PL-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="var(--mono)">'+moneyShort(v)+'</text>';
+  }
+  var step=Y<=10?1:Y<=20?2:Y<=40?5:10;
+  for(var yr=0;yr<=Y;yr+=step){
+    s+='<text x="'+xAt(yr,Y)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="var(--mono)">'+(yr===0?'Now':'Yr '+yr)+'</text>';
+  }
+  return s;
+}
+function xAt(yr,Y){return PL+(W-PL-PR)*yr/Y;}
+function yAt(v,max){return PT+(H-PT-PB)*(1-v/max);}
+function crossMark(cs,Y){
+  return (cs||[]).map(function(c,i){return crossMark1(c,Y,c.text,i);}).join('');
+}
+function crossMark1(c,Y,label,i){
+  var x=xAt(c.y,Y).toFixed(1);
+  return '<line x1="'+x+'" x2="'+x+'" y1="'+PT+'" y2="'+(H-PB)+'" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="3 3"/>'+
+    '<text x="'+x+'" y="'+(PT+10+13*(i||0))+'" dx="'+(c.y>Y*0.7?-6:6)+'" text-anchor="'+(c.y>Y*0.7?'end':'start')+'" font-size="10.5" font-weight="700" fill="var(--gold)" font-family="var(--mono)">'+label+'</text>';
+}
+function growthChart(A,B,cx){
+  var Y=A.length-1,max=niceMax(Math.max.apply(null,A.map(function(r){return r.value;}).concat(B?B.map(function(r){return r.value;}):[])));
+  var top='',base='',line='';
+  A.forEach(function(r,i){top+=(i?'L':'M')+xAt(r.y,Y).toFixed(1)+' '+yAt(r.value,max).toFixed(1);});
+  var areaGrowth=top;for(var i=A.length-1;i>=0;i--)areaGrowth+='L'+xAt(A[i].y,Y).toFixed(1)+' '+yAt(Math.min(A[i].contrib,A[i].value),max).toFixed(1);
+  var areaContrib='';A.forEach(function(r,i){areaContrib+=(i?'L':'M')+xAt(r.y,Y).toFixed(1)+' '+yAt(Math.min(r.contrib,r.value),max).toFixed(1);});
+  areaContrib+='L'+xAt(Y,Y)+' '+yAt(0,max)+'L'+xAt(0,Y)+' '+yAt(0,max)+'Z';
+  if(B)B.forEach(function(r,i){line+=(i?'L':'M')+xAt(r.y,Y).toFixed(1)+' '+yAt(r.value,max).toFixed(1);});
+  return '<svg viewBox="0 0 '+W+' '+H+'" id="gChart" role="img" aria-label="Balance year by year">'+axes(max,Y)+
+    '<path d="'+areaGrowth+'Z" fill="var(--jade)" opacity=".85"/>'+
+    '<path d="'+areaContrib+'" fill="var(--jade-mid)" opacity=".55"/>'+
+    '<path d="'+top+'" fill="none" stroke="var(--jade)" stroke-width="2"/>'+
+    (B?'<path d="'+line+'" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-dasharray="6 4"/>':'')+crossMark(cx,Y)+
+    '<line id="gCross" x1="0" x2="0" y1="'+PT+'" y2="'+(H-PB)+'" stroke="var(--ink)" stroke-width="1" opacity="0"/>'+
+    '<rect x="'+PL+'" y="'+PT+'" width="'+(W-PL-PR)+'" height="'+(H-PT-PB)+'" fill="transparent" id="gHit"/></svg>';
+}
+function flowChart(A,B,cx){
+  var Y=A.length-1,vals=A.slice(1).map(function(r){return r.flow;}).concat(B?B.slice(1).map(function(r){return r.flow;}):[]);
+  /* One bar per year; with a comparison, A and B stand side by side in each year. */
+  var max=niceMax(Math.max.apply(null,vals.concat([1]))),slot=(W-PL-PR)/Y,bars='',line='';
+  var bw=B?Math.max(1.5,slot*0.36):Math.max(2,slot*0.62);
+  function bar(x,v,color){var y=yAt(Math.max(0,v),max);return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(yAt(0,max)-y).toFixed(1)+'" rx="1.5" fill="'+color+'" opacity=".85"/>';}
+  A.slice(1).forEach(function(r,i){var x=xAt(r.y,Y);
+    if(B){bars+=bar(x-bw-0.5,r.flow,'var(--jade)')+bar(x+0.5,B[i+1].flow,'var(--gold)');}
+    else bars+=bar(x-bw/2,r.flow,'var(--jade)');});
+  return '<svg viewBox="0 0 '+W+' '+H+'" id="fChart" role="img" aria-label="Per-year amounts">'+axes(max,Y)+bars+crossMark(cx,Y)+
+    '<line id="fCross" x1="0" x2="0" y1="'+PT+'" y2="'+(H-PB)+'" stroke="var(--ink)" stroke-width="1" opacity="0"/>'+
+    '<rect x="'+PL+'" y="'+PT+'" width="'+(W-PL-PR)+'" height="'+(H-PT-PB)+'" fill="transparent" id="fHit"/></svg>';
+}
+function wireHover(svgId,crossId,tipId,A,B,fmt){
+  var svg=document.getElementById(svgId),cross=document.getElementById(crossId),tip=document.getElementById(tipId);
+  if(!svg)return;var Y=A.length-1;
+  function move(ev){
+    var r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)/r.width*W;
+    var yr=Math.max(0,Math.min(Y,Math.round((sx-PL)/(W-PL-PR)*Y)));
+    var x=xAt(yr,Y);cross.setAttribute('x1',x);cross.setAttribute('x2',x);cross.setAttribute('opacity','.35');
+    tip.innerHTML=fmt(A[yr],B?B[yr]:null);tip.style.opacity=1;
+    var px=x/W*r.width,tw=tip.offsetWidth;tip.style.left=(px>r.width/2?px-tw-12:px+12)+'px';tip.style.top='4px';
+  }
+  function out(){cross.setAttribute('opacity','0');tip.style.opacity=0;}
+  svg.addEventListener('mousemove',move);svg.addEventListener('mouseleave',out);
+  svg.addEventListener('touchstart',function(e){move(e.touches[0]);},{passive:true});
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  clearTimeout(softTimer);   /* a full redraw makes any pending typing redraw unnecessary */
+  var sh={start:S.start,monthly:S.monthly,raise:S.raise,years:S.years,infl:S.infl,fade:!!S.fade,revert:!!S.revert,revLock:S.revLock!==false};
+  var A=simulate(sh,S.A,S.mode),B=S.compare?simulate(sh,S.B,S.mode):null;
+  var a=A[A.length-1],b=B?B[B.length-1]:null,div=S.mode==='div',Y=a.y;
+  /* First year the lead changes hands (year 1 sets who starts ahead). */
+  /* Every year the lead changes hands (year 1 sets who starts ahead). */
+  function crossover(key){
+    var out=[];if(!B)return out;var prev=null;
+    for(var y=1;y<A.length;y++){var dd=B[y][key]-A[y][key],sg=dd>0?1:dd<0?-1:0;if(!sg)continue;
+      if(prev!==null&&sg!==prev)out.push({y:y,lead:sg>0?'B':'A'});prev=sg;}
+    return out;
+  }
+  function leaderAt(key){return B&&b[key]>a[key]?'B':'A';}
+  var cxBal=crossover('value'),cxInc=div?crossover('flow'):null;
+  (cxBal||[]).concat(cxInc||[]).forEach(function(c){c.text=sideLabel(c.lead)+' ahead, yr '+c.y;});
+  var h='<header class="head"><div><h2>Compound Growth Calculator</h2>'+
+    '<div class="sub">Dividend Framework</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="tabs" role="tablist"><button type="button" class="tab'+(div?' on':'')+'" data-mode="div">Dividend growth</button>'+
+    '<button type="button" class="tab'+(!div?' on':'')+'" data-mode="fixed">Fixed return</button></div></header>';
+  h+='<div class="body"><div class="inputs" id="inputs">'+inputsHtml()+'</div><div class="out">';
+  function bigCard(side,row){
+    return '<div class="bigcard '+side.toLowerCase()+'"><div class="k">'+(S.compare?'<span class="tag '+side.toLowerCase()+'">'+side+'</span>':'')+(S[side].ticker&&div?esc(S[side].tname)+' ('+esc(S[side].ticker)+')':'Balance after '+Y+' years')+'</div>'+
+      '<div class="v">'+money(row.value)+'</div><div class="r">'+(S[side].ticker&&div?'after '+Y+' years \u00b7 ':'')+money(row.real)+' in today’s dollars</div></div>';
+  }
+  h+='<div class="big" style="--n:'+(S.compare?2:1)+'">'+bigCard('A',a)+(b?bigCard('B',b):'')+'</div>';
+  function st(k,fa,fb,note){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+fa+(b!==null&&fb!==undefined?'<span class="bv">'+fb+'</span>':'')+'</div>'+(note?'<small class="wm">'+note+'</small>':'')+'</div>';}
+  var stats=st('Contribution',money(a.contrib),b?money(b.contrib):undefined)+
+    st('Growth',money(a.value-a.contrib),b?money(b.value-b.contrib):undefined);
+  if(div){
+    var yocA=a.inc/a.contrib*100,yocB=b?b.inc/b.contrib*100:0;
+    stats+=st('Annualized return',pct(A.irr,2),b?pct(B.irr,2):undefined,'IRR · price + dividends')+
+      st('Per month, year '+Y,money(a.inc/12),b?money(b.inc/12):undefined)+
+      st('Yield on cost',pct(yocA),b?pct(yocB):undefined)+
+      st('Dividends received, total',money(a.divCum),b?money(b.divCum):undefined);
+    if(!S.A.reinvest||(b&&!S.B.reinvest))stats+=st('Taken as cash (not in balance)',money(a.cash),b?money(b.cash):undefined);
+  }else{
+    stats+=st('Growth in year '+Y,money(a.flow),b?money(b.flow):undefined)+
+      st('Growth share of balance',pct((a.value-a.contrib)/a.value*100,0),b?pct((b.value-b.contrib)/b.value*100,0):undefined)+
+      st('Real growth rate',pct(((1+S.A.ret/100)/(1+S.infl/100)-1)*100,2),b?pct(((1+S.B.ret/100)/(1+S.infl/100)-1)*100,2):undefined);
+  }
+  h+='<div class="stats">'+stats+'</div>';
+  if(B){
+    var nm=function(sd,bold){return '<'+(bold?'b':'span')+' class="nm'+sd+'">'+esc(sideLabel(sd))+'</'+(bold?'b':'span')+'>';};
+    var other=function(sd){return sd==='A'?'B':'A';};
+    var lines=[];
+    function story(list,what){
+      return list.map(function(c,i){
+        return i===0?nm(c.lead,1)+'’s '+what+' passes '+nm(other(c.lead))+'’s in <b>year '+c.y+'</b>'
+                    :nm(c.lead,1)+' moves back ahead in <b>year '+c.y+'</b>';
+      }).join('; ')+'.';
+    }
+    lines.push(cxBal.length?story(cxBal,'balance')
+      :nm(leaderAt('value'),1)+' has the larger balance in every year shown.');
+    if(div)lines.push(cxInc.length?story(cxInc,'yearly dividend income')
+      :nm(leaderAt('flow'),1)+' pays more dividend income in every year shown.');
+    h+='<div class="cross">'+lines.join('<br>')+'</div>';
+  }
+  h+='<h3>Balance year by year</h3><div class="chartWrap">'+growthChart(A,B,cxBal)+'<div class="tip" id="gTip"></div></div>'+
+    '<div class="legend"><span><i style="background:var(--jade-mid);opacity:.7"></i>Contribution</span><span><i style="background:var(--jade)"></i>Growth'+(div?' (price + reinvested dividends)':'')+'</span>'+
+    (B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+' balance</span>':'')+'</div>';
+  h+='<h3>'+(div?'Dividend income each year':'Growth each year')+'</h3><div class="chartWrap">'+flowChart(A,B,cxInc)+'<div class="tip" id="fTip"></div></div>'+
+    '<div class="legend"><span><i style="background:var(--jade)"></i>'+(div?'Dividends paid that year':'Growth earned that year')+(S.compare?' ('+esc(div?sideLabel('A'):'A')+')':'')+'</span>'+(B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+'</span>':'')+'</div>';
+  h+='<h3>Year by year</h3><div class="tbl"><table><thead><tr><th>Year</th><th>Contribution</th><th>Balance</th><th>'+(div?'Dividends':'Growth')+'</th>'+(div?'<th>Yield on cost</th>':'')+(div&&S.fade?'<th>Div growth</th>':'')+'<th>Today’s $</th>'+(B?'<th>'+esc(div?sideLabel('B'):'B')+' balance</th>':'')+'</tr></thead><tbody>';
+  A.forEach(function(r,i){
+    h+='<tr><td>'+(r.y===0?'Now':r.y)+'</td><td>'+money(r.contrib)+'</td><td>'+money(r.value)+'</td><td>'+(r.y?money(r.flow):'–')+'</td>'+
+      (div?'<td>'+(r.y?pct(r.inc/r.contrib*100,2):'–')+'</td>':'')+(div&&S.fade?'<td>'+(r.y?pct(r.g,2):'–')+'</td>':'')+'<td>'+money(r.real)+'</td>'+(B?'<td class="bcol">'+money(B[i].value)+'</td>':'')+'</tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+  h+='<footer class="foot"><span>An illustration, not a forecast: '+((div&&S.fade)?'rates follow the inputs above':'rates are held constant')+' and taxes and fees are ignored. Model output, not investment advice.'+((div&&(S.A.ticker||(S.compare&&S.B.ticker)))?' Picked stocks use their current yield and actual past 10-year dividend growth (capped at '+trimNum(S.pick.cap)+'%), with the price assumed to grow at that same rate.':'')+((div&&S.fade)?' Growth rates above the long-run rate fade to it in a straight line over the years set, then stay there; rates already below it are unchanged.':'')+'</span><span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span><span><a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></span></footer>';
+  var focusId=document.activeElement&&(document.activeElement.id||(document.activeElement.dataset&&document.activeElement.dataset.key?document.activeElement.dataset.side+document.activeElement.dataset.key:''));
+  /* keep anything half-typed in a Stock box across the redraw */
+  var typing=(document.activeElement&&/^pick[AB]$/.test(document.activeElement.id))?{id:document.activeElement.id,v:document.activeElement.value}:null;
+  $('#calc').innerHTML=h;
+  wire();
+  if(focusId){var el=document.getElementById(focusId)||document.querySelector('[data-side="'+focusId.charAt(0)+'"][data-key="'+focusId.slice(1)+'"]');if(el){el.focus();}}
+  if(typing){var pi=document.getElementById(typing.id);if(pi&&typing.v!==(pi.value||'')){pi.value=typing.v;try{pi.setSelectionRange(typing.v.length,typing.v.length);}catch(e){}pi.dispatchEvent(new Event('input'));}}
+  /* Hover boxes: single scenario unchanged; with a comparison, one line per
+     scenario (A green, B gold) and the shared contribution shown once. */
+  var TIP_A='#86D7A9',TIP_B='#E9C979';
+  wireHover('gChart','gCross','gTip',A,B,function(r,rb){
+    var when=r.y?'Year '+r.y:'Now';
+    if(!rb)return '<b>'+when+'</b><br>Balance '+money(r.value)+'<br>Contribution '+money(r.contrib)+'<br>Growth '+money(r.value-r.contrib);
+    return '<b>'+when+' balance</b>'+
+      '<br><span style="color:'+TIP_A+'">A  '+money(r.value)+' · growth '+money(r.value-r.contrib)+'</span>'+
+      '<br><span style="color:'+TIP_B+'">B  '+money(rb.value)+' · growth '+money(rb.value-rb.contrib)+'</span>'+
+      '<br>Contribution '+money(r.contrib);
+  });
+  wireHover('fChart','fCross','fTip',A,B,function(r,rb){
+    if(!r.y)return '<b>Now</b>';
+    if(!rb)return '<b>Year '+r.y+'</b><br>'+(div?'Dividends ':'Growth ')+money(r.flow);
+    return '<b>Year '+r.y+' '+(div?'dividends':'growth')+'</b>'+
+      '<br><span style="color:'+TIP_A+'">A  '+money(r.flow)+'</span>'+
+      '<br><span style="color:'+TIP_B+'">B  '+money(rb.flow)+'</span>';
+  });
+}
+function wire(){
+  [['i_start','start'],['i_monthly','monthly'],['i_raise','raise'],['i_years','years'],['i_infl','infl']].forEach(function(p){
+    var el=document.getElementById(p[0]);
+    el.addEventListener('change',function(){S[p[1]]=floorOf(p[1],num(el.value,S[p[1]]));if(p[1]==='years')S.years=Math.max(1,Math.min(60,Math.round(S.years)));renderSoon();});
+    el.addEventListener('input',function(){var v=parseFloat(el.value);if(isFinite(v)){v=floorOf(p[1],v);S[p[1]]=p[1]==='years'?Math.max(1,Math.min(60,Math.round(v))):v;softRender();}});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-side]'),function(el){
+    var side=el.getAttribute('data-side'),key=el.getAttribute('data-key');
+    if(el.type==='checkbox'){el.addEventListener('change',function(){S[side][key]=el.checked;render();});return;}
+    if(el.tagName==='SELECT'){el.addEventListener('change',function(){S[side][key]=parseInt(el.value,10);render();});return;}
+    function touched(){if(S[side].ticker&&(key==='yield'||key==='dgr'||key==='pg'||key==='ty'))S[side].edited=true;}
+    function syncPrice(){if(key==='yield'&&hasPrice(side)&&S[side].yield>0)S[side].price=round2(S[side].div/(S[side].yield/100));}
+    el.addEventListener('input',function(){var v=parseFloat(el.value);if(isFinite(v)){S[side][key]=floorOf(key,v);touched();syncPrice();softRender();}});
+    el.addEventListener('change',function(){S[side][key]=floorOf(key,num(el.value,S[side][key]));touched();syncPrice();renderSoon();});
+  });
+  ['A','B'].forEach(function(side){
+    var el=document.getElementById('price'+side);if(!el)return;
+    function setP(v){if(!(isFinite(v)&&v>0))return false;var r=S[side];r.price=v;r.yield=round2(r.div/v*100);r.edited=true;return true;}
+    el.addEventListener('input',function(){if(setP(parseFloat(el.value)))softRender();});
+    el.addEventListener('change',function(){if(!setP(parseFloat(el.value)))el.value=S[side].price;renderSoon();});
+  });
+  $('#i_compare').addEventListener('change',function(e){S.compare=e.target.checked;render();});
+  var fadeEl=document.getElementById('i_fade');if(fadeEl)fadeEl.addEventListener('change',function(e){S.fade=e.target.checked;render();});
+  var revEl=document.getElementById('i_revert');if(revEl)revEl.addEventListener('change',function(e){S.revert=e.target.checked;render();});
+  var lockEl=document.getElementById('i_revlock');if(lockEl)lockEl.addEventListener('change',function(e){S.revLock=e.target.checked;render();});
+  ['A','B'].forEach(function(side){
+    var inp=document.getElementById('pick'+side),list=document.getElementById('pickList'+side);
+    if(!inp)return;
+    var hits=[],cur=-1,pressed=null;
+    function draw(){
+      if(!inp.value.trim()){list.hidden=true;return;}
+      if(!hits.length){list.innerHTML='<div class="pickItem none">No match in the universe</div>';list.hidden=false;return;}
+      list.innerHTML=hits.map(function(u,i){
+        return '<div class="pickItem'+(u.open?'':' locked')+(i===cur?' on':'')+'" data-i="'+i+'"><b>'+esc(u.ticker)+'</b><span>'+esc(u.name)+'</span>'+
+          '<small>'+(u.open?(u.kind==='reits'?'REIT · ':'')+pct(u.yield,2):'members')+'</small></div>';
+      }).join('');
+      list.hidden=false;
+      /* mousedown only keeps the cursor in the box; the pick happens on the
+         finished click, so the redraw can't pass the click to whatever sits
+         underneath the list. Hover moves the single highlight. */
+      /* Pressing on a name keeps the cursor in the box; releasing on the same
+         name picks it. The redraw waits a moment so the release can't fall
+         through to whatever sits under the list. Works the same with a mouse,
+         a trackpad or a finger. */
+      Array.prototype.forEach.call(list.querySelectorAll('.pickItem[data-i]'),function(el){
+        var i=+el.getAttribute('data-i');
+        function down(ev){ev.preventDefault();pressed=i;}
+        function up(ev){
+          if(pressed!==i)return;pressed=null;ev.preventDefault();
+          var u=hits[i];if(!u||!u.open)return;
+          list.hidden=true;inp.value=u.ticker;
+          setTimeout(function(){applyPick(side,u);},30);
+        }
+        el.addEventListener('pointerdown',down);el.addEventListener('mousedown',function(ev){ev.preventDefault();});
+        el.addEventListener('pointerup',up);
+        el.addEventListener('mouseenter',function(){if(!hits[i].open)return;cur=i;
+          Array.prototype.forEach.call(list.querySelectorAll('.pickItem'),function(x){x.classList.toggle('on',x===el);});});
+      });
+    }
+    inp.addEventListener('input',function(){hits=matches(inp.value);cur=-1;for(var i=0;i<hits.length;i++){if(hits[i].open){cur=i;break;}}draw();});
+    inp.addEventListener('focus',function(){inp.select();});
+    inp.addEventListener('keydown',function(ev){
+      if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();if(!hits.length)return;var d=ev.key==='ArrowDown'?1:-1,n=cur;
+        for(var k=0;k<hits.length;k++){n=(n+d+hits.length)%hits.length;if(hits[n].open){cur=n;break;}}draw();}
+      else if(ev.key==='Enter'){ev.preventDefault();if(!inp.value.trim())unlink(side);else if(cur>=0)applyPick(side,hits[cur]);}
+      else if(ev.key==='Escape'){inp.value=S[side].ticker||'';list.hidden=true;}
+    });
+    /* Leaving the box empty unlinks the stock (the numbers stay); leaving it
+       half-typed puts back the stock that was there. */
+    inp.addEventListener('blur',function(){setTimeout(function(){
+      if(!document.body.contains(inp))return;
+      list.hidden=true;
+      if(!inp.value.trim()&&S[side].ticker){unlink(side);return;}
+      inp.value=S[side].ticker||'';
+    },150);});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'),function(btn){
+    btn.addEventListener('click',function(){unlink(btn.getAttribute('data-clear'));});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){t.addEventListener('click',function(){S.mode=t.getAttribute('data-mode');render();});});
+}
+/* After leaving a box, redraw a moment later, once the click that left it has
+   landed, so the box clicked next keeps the cursor. */
+function renderSoon(){clearTimeout(softTimer);softTimer=setTimeout(render,0);}
+/* While typing, redraw once the keystrokes pause, keeping the cursor where it was. */
+function softRender(){clearTimeout(softTimer);softTimer=setTimeout(function(){
+  var el=document.activeElement,pos=null;try{pos=el&&el.selectionStart;}catch(e){}
+  render();
+  try{var now=document.activeElement;if(now&&pos!==null&&now.setSelectionRange)now.setSelectionRange(pos,pos);}catch(e){}
+},350);}
+window.__calc={getState:function(){return JSON.parse(JSON.stringify(S));},simulate:simulate,
+  setPick:function(p){S.pick=Object.assign({},S.pick,p);markOpen();render();},
+  counts:function(){var c={stocks:0,reits:0,open:{stocks:0,reits:0},state:dataState};U.forEach(function(u){c[u.kind]++;if(u.open)c.open[u.kind]++;});return c;}};
+['A','B'].forEach(function(k){if(!isFinite(S[k].lr))S[k].lr=6;if(!isFinite(S[k].fy))S[k].fy=10;if(!isFinite(S[k].ty))S[k].ty=3;if(!isFinite(S[k].ry))S[k].ry=4;});
+if(typeof S.revert!=='boolean')S.revert=false;
+if(typeof S.revLock!=='boolean')S.revLock=true;
+if(!S.pick)S.pick={scope:'all',band:25,step:2,cap:15};
+if(!isFinite(S.pick.cap))S.pick.cap=15;
+render();
+loadUniverse();
+})();
+</script>
+</body>
+</html>

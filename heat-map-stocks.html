@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sigma Heat Map — Stocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+    --paper:#0F1B13;
+  }
+}
+:root[data-theme="dark"]{
+  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  --paper:#0F1B13;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:100vh}
+body.public-mode .app{grid-template-columns:1fr;min-height:0}
+body.public-mode .side{display:none}
+body.public-mode .stage{padding:0}
+
+.side{background:var(--panel);border-right:1px solid var(--rule);padding:22px 20px 40px;position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}
+.side h1{font:600 20px/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 4px}
+.side .tag{color:var(--muted);margin:0 0 18px;font-size:13px}
+.side h2{font:600 12.5px/1 var(--mono);letter-spacing:.02em;color:var(--muted);margin:20px 0 8px;text-transform:uppercase}
+.side h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:11px;margin-left:4px}
+textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--rule);border-radius:8px;background:var(--field);font:12.5px/1.5 var(--mono);resize:vertical;margin-top:10px}
+.btnrow{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--field);cursor:pointer;font-weight:600;font-size:13px}
+.btn.primary{background:var(--jade);border-color:var(--jade);color:#fff}
+.linkbtn{background:none;border:0;padding:0;color:var(--jade);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
+.field{display:block;margin-top:14px}
+.field>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.dataType{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dataType>span{margin-bottom:0}
+.radioOpt{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer}
+.radioOpt input{margin:0}
+.field input[type=url]{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:8px;background:var(--field);color:inherit;font:12.5px var(--mono)}
+.status{min-height:32px;margin-top:12px;font-size:12.5px;color:var(--muted);white-space:pre-line}
+.status.err{color:var(--rust)}
+
+.stage{padding:32px;min-width:0}
+.sheet{width:100%;max-width:1040px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;font-family:var(--mono);
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28);}
+.empty{padding:100px 10px;text-align:center;color:var(--muted);font:16px/1.6 var(--serif)}
+
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:28px}
+.pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.pageHead .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pageHead .asof{font-size:11.5px;color:var(--muted);text-align:right}
+
+.legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-size:11.5px;color:var(--muted)}
+.legend .li{display:inline-flex;align-items:center;gap:6px}
+.legend .sq{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .sq.under{background:var(--jade-soft);border:1px solid color-mix(in srgb, var(--jade) 35%, transparent)}
+.legend .sq.normal{background:var(--field);border:1px solid var(--rule)}
+.legend .sq.over{background:var(--rust-soft);border:1px solid color-mix(in srgb, var(--rust) 35%, transparent)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.tile{position:relative;border-radius:8px;padding:9px 6px;text-align:center;border:1px solid transparent;cursor:pointer;display:block;color:inherit;text-decoration:none}
+.tile:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.tile.under{background:var(--jade-soft);border-color:color-mix(in srgb, var(--jade) 35%, transparent)}
+.tile.normal{background:var(--field);border-color:var(--rule)}
+.tile.over{background:var(--rust-soft);border-color:color-mix(in srgb, var(--rust) 35%, transparent)}
+.tile .tk{font-weight:700;font-size:13px;letter-spacing:.02em}
+.tile.under .tk{color:var(--jade)}
+.tile.over .tk{color:var(--rust)}
+.tile .sg{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+
+.tile .wash{position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%) translateY(4px);
+  background:var(--ink);color:var(--paper);font-size:11px;line-height:1.5;padding:9px 11px;border-radius:7px;
+  white-space:nowrap;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);opacity:0;pointer-events:none;
+  transition:opacity .12s ease,transform .12s ease;z-index:5;text-align:left}
+.tile .wash::after{content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+.tile .wash b{font-weight:700}
+.tile:hover .wash,.tile:focus-within .wash{opacity:1;transform:translateX(-50%) translateY(0)}
+.tile:hover,.tile:focus-within{box-shadow:0 2px 10px -2px rgba(0,0,0,.18)}
+
+.matrixWrap{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
+.matrixWrap h3{font:600 14px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px}
+.matrixWrap .desc{font-size:12px;color:var(--muted);margin:0 0 16px;max-width:60ch}
+table.matrix{width:100%;border-collapse:collapse;font-size:13px}
+table.matrix th,table.matrix td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--rule)}
+table.matrix th:first-child,table.matrix td:first-child{text-align:left;color:var(--muted);font-weight:500}
+table.matrix thead th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--rule)}
+table.matrix thead th.under{color:var(--jade)}
+table.matrix thead th.over{color:var(--rust)}
+table.matrix td{font-variant-numeric:tabular-nums;font-weight:600}
+table.matrix tr.moreToggle td{padding:0;border-bottom:none}
+table.matrix .moreBtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:10px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--jade);text-align:left}
+table.matrix .moreBtn:hover{text-decoration:underline}
+table.matrix .moreBtn:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+table.matrix tbody.moreRows[hidden]{display:none}
+table.matrix tr.secHead td{font:600 11px var(--mono);letter-spacing:.03em;color:var(--muted);padding-top:18px;border-bottom:2px solid var(--rule)}
+table.matrix tr.secHead td:first-child{text-transform:uppercase;font-weight:600}
+table.matrix thead th .zr{display:block;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
+table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
+/* Zone column headings lightly tinted like their tiles (headings only). */
+table.matrix thead th:nth-child(3){background:color-mix(in srgb, var(rust-soft) 40%, transparent)}
+table.matrix thead th:nth-child(5){background:color-mix(in srgb, var(--jade-soft) 40%, transparent)}
+.matrixWrap .desc.zoneDef{margin-top:-10px}
+table.matrix td .n{display:block;font-size:10px;font-weight:500;color:var(--muted);margin-top:1px}
+
+.foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.pubFootLive{display:none}
+body.public-mode .pubFootLive{display:inline}
+.foot .pubLive{font-size:11.5px;color:var(--muted)}
+.foot .linkbtn{font-size:11.5px;margin-left:8px}
+
+@media(max-width:880px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule)}
+  .stage{padding:14px}
+  .sheet{padding:26px 18px 20px}
+  .tiles{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+  table.matrix{font-size:11.5px}
+}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
+.labsBy a:hover{text-decoration:underline}
+.foot .footLinks{flex-basis:100%}
+.foot a,.foot a:visited{color:var(--jade,#1F7A52)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <h1>Sigma Heat Map — Stocks</h1>
+    <p class="tag">Paste or fetch the full stocks universe. Automatically ranks every complete row by sigma, caps the map at the most extreme ~60 names, and rolls up averages across the whole set underneath.</p>
+
+    <textarea id="raw" placeholder="Paste rows here (tab-separated, one company per line), or use Fetch stocks below to pull from your GitHub Gist."></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="btnRender">Build map</button>
+    </div>
+
+    <h2>Live source <span class="hint">optional</span></h2>
+    <p class="tag">Tether this to your GitHub Gist CSV file so the map can be refreshed from current data any time. Leave blank to work off a one-time paste instead.</p>
+    <label class="field"><span>Stocks CSV URL</span>
+      <input type="url" id="urlStocks" placeholder="https://gist.githubusercontent.com/…/raw/stocks.csv" autocomplete="off">
+    </label>
+    <div class="btnrow">
+      <button class="btn" id="btnFetchStocks">Fetch stocks</button>
+    </div>
+
+    <h2>Names on the map</h2>
+    <p class="tag">Pick which zones show and how many tiles they get. Each zone's names are taken either most extreme first, or spread evenly from its most to its least extreme name. The aggregate stats underneath always use the whole universe.</p>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="checkbox" id="mzOver" checked>Overvalued</label>
+      <label class="radioOpt"><input type="checkbox" id="mzNormal" checked>Normal</label>
+      <label class="radioOpt"><input type="checkbox" id="mzUnder" checked>Undervalued</label>
+    </div>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="radio" name="mapMode" id="mmEqual" checked>Same number per zone</label>
+      <label class="radioOpt"><input type="radio" name="mapMode" id="mmProp">In proportion to zone size</label>
+    </div>
+    <label class="field"><span id="mapNLabel">Tiles per zone</span>
+      <input type="number" id="mapN" min="1" max="300" step="1" value="20">
+    </label>
+    <div class="btnrow zoneChecks">
+      <label class="radioOpt"><input type="radio" name="mapSpread" id="msExtreme" checked>Most extreme first</label>
+      <label class="radioOpt"><input type="radio" name="mapSpread" id="msEven">Spread evenly across the zone</label>
+    </div>
+    <div class="status" id="mapStatus"></div>
+
+    <h2>Look</h2>
+    <div class="btnrow">
+      <button class="btn" id="btnDark">Dark ledger</button>
+      <button class="btn" id="btnLight">Light ledger</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <h2>Publish</h2>
+    <p class="tag">Builds the sidebar-free page for whatever's currently loaded, and copies it — paste into your website's embed block. With a live source above, the published page re-fetches the sheet itself every ~15 minutes, refreshing values and re-ranking zones for this exact set of names; otherwise it's a one-time snapshot.</p>
+    <div class="btnrow">
+      <button class="btn primary" id="btnPublish">Copy website code</button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <article class="sheet" id="sheet"></article>
+  </main>
+</div>
+
+<div class="modalOverlay" id="publishModal" hidden>
+  <div class="modalBox">
+    <h3>Website code</h3>
+    <p id="publishMsg">Copied to your clipboard — go to your website's embed block and paste (Ctrl/⌘+V).</p>
+    <p class="modalHint">If the paste comes up empty, click inside the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.</p>
+    <textarea id="publishOutput" readonly spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn primary" id="publishCopyAgain">Copy again</button>
+      <button class="btn" id="publishClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.modalOverlay{position:fixed;inset:0;background:rgba(10,20,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.modalOverlay[hidden]{display:none}
+.modalBox{background:var(--field);border-radius:12px;padding:22px;max-width:560px;width:100%;box-shadow:0 20px 60px -12px rgba(0,0,0,.4)}
+.modalBox h3{margin:0 0 8px;font:600 17px var(--serif)}
+.modalBox p{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5}
+.modalBox .modalHint{font-size:12px}
+.modalBox textarea{height:140px;font-size:10.5px}
+</style>
+
+<script>
+/* ===== EDIT LINKS HERE =====
+   Every page link used by this tool. If a page moves, change it here only. */
+var LINKS={
+  card:        "https://tools.stardustcapital.net/card.html?ticker=",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
+};
+</script>
+<script>
+(function(){
+'use strict';
+
+/* Set to true for the published, sidebar-free output — same pattern as
+   the sigma card tool, built by the same regen-template script. */
+var PUBLIC_MODE=true;
+
+/* ------------------------------------------------------------------ *
+ * Schema, parsing and sigma math — copied verbatim from
+ * sigma-yield-card.html so the two tools always agree on what a given
+ * row's sigma/yield/etc. actually is. If that file's schema or sigma
+ * math changes, mirror the change here too.
+ * ------------------------------------------------------------------ */
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num'},
+ {k:'par', label:'Par (yield-parity price)', type:'money'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'5y CAGR (dividend)', type:'pct'},
+ {k:'cagr10y', label:'10y CAGR (dividend)', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200 dma', type:'money'},
+ {k:'ma200diff', label:'200 dma, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct'},
+ {k:'divGrowth3y', label:'Div growth, past 3y', type:'pct'}
+];
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio','divGrowth3y'];
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtBps(v){if(v===null)return '\u2013';var b=Math.round(v*100);return (b>=0?'+':'')+b+'bps';}
+
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/);
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' columns found, expected '+schema.length+'.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+/* Sigma sign convention (matches the sigma card exactly): negative =
+   "rich"/overvalued (yield abnormally low vs its own 10y average),
+   positive = "cheap"/undervalued (yield abnormally high). */
+function analyzeRow(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.ticker=rec.ticker||ne.tick||'\u2013';
+  var sigma=rec.sigma;
+  var sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigma=sigma!==null?sigma:sigmaComputed;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  return a;
+}
+
+/* Company-name abbreviation — same dictionary as the sigma card, used
+   only for the hover preview's full-name line. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',COMPANY:'Co',CO:'Co',INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',INTERNATIONAL:'Intl',HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',ASSOCIATES:'Assoc',MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',RESIDENTIAL:'Res',DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * CSV parsing + live fetch — same as the sigma card.
+ * ------------------------------------------------------------------ */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+function fetchLiveRows(stocksUrl,reitsUrl){
+  var sources=[];
+  if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
+  if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
+  if(!sources.length)return Promise.resolve(null);
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url,{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    });
+  })).then(function(texts){
+    var lines=[],tags=[];
+    texts.forEach(function(t,i){
+      var these=csvTextToLines(t);
+      lines=lines.concat(these);
+      these.forEach(function(){tags.push(sources[i].kind);});
+    });
+    return {lines:lines,tags:tags};
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Zoning, ranking and aggregation
+ * ------------------------------------------------------------------ */
+function zone3(sigma){
+  if(sigma===null||sigma===undefined||!isFinite(sigma))return null;
+  if(Math.abs(sigma)<1)return 'normal';
+  return sigma<0?'over':'under';
+}
+/* Map selection settings. The editor reads them from the sidebar; the
+   published page gets them baked in at publish time (MAP_SETTINGS_RAW).
+   mode: 'equal' = n tiles per zone; 'prop' = n tiles in total, split by
+   each zone's share of the universe. spread: 'extreme' = most extreme
+   first; 'even' = evenly spaced from most to least extreme. */
+var MAP_SET={n:20,mode:'equal',spread:'extreme',under:true,normal:true,over:true};
+var LAST_SEL=null;
+function cleanMapSet(s){
+  var n=parseInt(s&&s.n,10);
+  return {
+    n:(isFinite(n)&&n>=1)?Math.min(n,300):20,
+    mode:(s&&s.mode==='prop')?'prop':'equal',
+    spread:(s&&s.spread==='even')?'even':'extreme',
+    under:!(s&&s.under===false),
+    normal:!(s&&s.normal===false),
+    over:!(s&&s.over===false)
+  };
+}
+function sampleList(list,k){
+  if(!(k>0))return [];
+  if(k>=list.length)return list.slice();
+  if(MAP_SET.spread!=='even'||k===1)return list.slice(0,k);
+  var out=[];
+  for(var i=0;i<k;i++)out.push(list[Math.round(i*(list.length-1)/(k-1))]);
+  return out;
+}
+function zoneCounts(sizes){
+  /* sizes: {under,normal,over} full zone sizes. Returns tiles per zone. */
+  var keys=['under','normal','over'].filter(function(k){return MAP_SET[k];});
+  var res={under:0,normal:0,over:0};
+  if(!keys.length)return res;
+  if(MAP_SET.mode!=='prop'){
+    keys.forEach(function(k){res[k]=Math.min(MAP_SET.n,sizes[k]);});
+    return res;
+  }
+  var tot=keys.reduce(function(s,k){return s+sizes[k];},0);
+  if(!tot)return res;
+  var want=Math.min(MAP_SET.n,tot),used=0,rem=[];
+  keys.forEach(function(k){var exact=want*sizes[k]/tot;res[k]=Math.floor(exact);used+=res[k];rem.push({k:k,r:exact-res[k]});});
+  rem.sort(function(p,q){return q.r-p.r;});
+  for(var i=0;used<want&&i<rem.length;i++){res[rem[i].k]++;used++;}
+  return res;
+}
+/* Pick up to `cap` names from a list already sorted most-extreme-first,
+   but reserve slots for stocks and REITs in proportion to each kind's
+   share of that zone's full population (minimum 1 each, if present) —
+   so a type with a narrower sigma range (usually REITs) can't get
+   crowded out entirely by a wider one just because its values are less
+   extreme. `cmp` re-sorts the combined pick back into extreme-first
+   order for display. */
+function proportionalPick(sortedList,cap,cmp){
+  if(!(cap>0))return [];
+  var stocksList=sortedList.filter(function(x){return x.kind!=='reits';});
+  var reitsList=sortedList.filter(function(x){return x.kind==='reits';});
+  if(!stocksList.length||!reitsList.length)return sampleList(sortedList,cap).sort(cmp);
+  var total=sortedList.length;
+  var reitsShare=Math.round(cap*reitsList.length/total);
+  reitsShare=Math.max(1,Math.min(reitsShare,cap-1));
+  var stocksShare=cap-reitsShare;
+  var picked=sampleList(stocksList,stocksShare).concat(sampleList(reitsList,reitsShare));
+  picked.sort(cmp);
+  return picked;
+}
+function buildSelection(items){
+  /* items: [{rec,a}], already filtered to complete (a.sigma!==null) */
+  var under=[],normal=[],over=[];
+  items.forEach(function(x){
+    var z=zone3(x.a.sigma);
+    if(z==='under')under.push(x);
+    else if(z==='over')over.push(x);
+    else if(z==='normal')normal.push(x);
+  });
+  var descSigma=function(p,q){return q.a.sigma-p.a.sigma;};
+  var ascSigma=function(p,q){return p.a.sigma-q.a.sigma;};
+  under.sort(descSigma);
+  over.sort(ascSigma);
+  var cnt=zoneCounts({under:under.length,normal:normal.length,over:over.length});
+  var mapNormal;
+  if(MAP_SET.spread==='even'){
+    /* Even spread: sample the whole Normal band from top to bottom. */
+    mapNormal=proportionalPick(normal.slice().sort(descSigma),cnt.normal,descSigma);
+  }else{
+    /* Normal zone is -1σ to +1σ. Show the names closest to true zero on
+       each side, split half above 0 and half below 0. */
+    var halfPos=Math.ceil(cnt.normal/2),halfNeg=cnt.normal-halfPos;
+    var posList=normal.filter(function(x){return x.a.sigma>=0;}).sort(ascSigma);
+    var negList=normal.filter(function(x){return x.a.sigma<0;}).sort(descSigma);
+    if(posList.length<halfPos){halfNeg+=halfPos-posList.length;halfPos=posList.length;}
+    if(negList.length<halfNeg){halfPos=Math.min(posList.length,halfPos+halfNeg-negList.length);halfNeg=negList.length;}
+    var normalPos=proportionalPick(posList,halfPos,ascSigma);
+    var normalNeg=proportionalPick(negList,halfNeg,descSigma);
+    mapNormal=normalPos.concat(normalNeg);
+  }
+  mapNormal.sort(descSigma);
+  var mapUnder=proportionalPick(under,cnt.under,descSigma);
+  /* Overvalued is selected most-extreme-first by the ascending sort above,
+     then re-sorted for DISPLAY so the whole grid reads as one continuous
+     line (display order is set where the tiles are built). */
+  var mapOver=proportionalPick(over,cnt.over,descSigma);
+  LAST_SEL={under:[mapUnder.length,under.length],normal:[mapNormal.length,normal.length],over:[mapOver.length,over.length]};
+  return {
+    all:{under:under,normal:normal,over:over},
+    map:{under:mapUnder,normal:mapNormal,over:mapOver}
+  };
+}
+var METRICS=[
+  {k:'yield',label:'Yield',type:'pct',get:function(rec,a){return rec.yield;}},
+  {k:'sigma',label:'Sigma',type:'sigma',get:function(rec,a){return a.sigma;}},
+  {k:'ma200diff',label:'200 dma, % diff',type:'pct',get:function(rec,a){return rec.ma200diff;}},
+  {k:'pe',label:'P/E',type:'num',get:function(rec,a){return rec.pe;}},
+  {k:'payoutRatio',label:'Payout ratio',type:'pct',get:function(rec,a){return rec.payoutRatio;}},
+  {k:'divGrowth10y',label:'Div growth, past 10y',type:'pct',get:function(rec,a){return rec.divGrowth10y;}},
+  {k:'divGrowth3y',label:'Dividend growth recent trend',type:'pct',get:function(rec,a){return div3InBand(rec)?rec.divGrowth3y:null;}},
+  {k:'tnxSpread',label:'Spread to 10Y Treasury vs 10y avg',type:'bps',get:function(rec,a){return a.tnx?tnxDiffSign(a.tnx.diff):null;}}
+];
+/* Extra rows shown under "More stats" (collapsed by default). */
+function directionValue(raw){
+  if(raw===null||raw===undefined)return null;
+  var s=String(raw);
+  var up=/[⇧⬆↑▲▴↗]/.test(s);
+  var down=/[⇩⇣⬇↓▼▾↘]/.test(s);
+  var m=s.match(/[-+]?\d*\.?\d+/);
+  if(!m)return null;
+  var n=parseFloat(m[0]);
+  if(!isFinite(n))return null;
+  if(down&&!up)return -Math.abs(n);
+  if(up&&!down)return Math.abs(n);
+  return n;
+}
+/* 3-yr dividend growth counts only inside 0%–20%: values outside are data
+   artifacts (special dividends, conversions), since cutters leave the list. */
+function div3InBand(rec){var v=rec.divGrowth3y;return v!==null&&v!==undefined&&isFinite(v)&&v>=0&&v<=20;}
+var MORE_METRICS=[
+  {k:'volatility',label:'Volatility (yield gap/\u03c3 ratio)',type:'pct',get:function(rec,a){return rec.volatility;}},
+  {k:'direction',label:'Direction (σ trend, short-term)',type:'signed',get:function(rec,a){return directionValue(rec.direction);}},
+  {k:'parDiff',label:'Price vs Par (yield-parity price)',type:'pct',get:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.par!==null&&rec.par!==undefined&&rec.par>0)?(rec.price-rec.par)/rec.par*100:null;}},
+  {k:'divGrowthYears',label:'Years of dividend growth',type:'yrs',get:function(rec,a){return rec.divGrowthYears;}}
+];
+/* "Number of names" section: each test returns true/false (null = no data). */
+var COUNT_METRICS=[
+  {k:'risingCount',label:'Rising σ trend',test:function(rec,a){var d=directionValue(rec.direction);return d===null?null:d>0;}},
+  {k:'payoutOver100',label:'Payout ratio above 100%',test:function(rec,a){return (rec.payoutRatio!==null&&rec.payoutRatio!==undefined&&isFinite(rec.payoutRatio))?rec.payoutRatio>100:null;}},
+  {k:'slowingCount',label:'Slowing div growth',test:function(rec,a){if(!div3InBand(rec)||rec.divGrowth10y===null||rec.divGrowth10y===undefined||!isFinite(rec.divGrowth10y))return null;return rec.divGrowth3y-rec.divGrowth10y<-1;}},
+  {k:'belowDdm',label:'Priced below DDM fair value',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.ddm!==null&&rec.ddm!==undefined&&rec.ddm>0)?rec.price<rec.ddm:null;}},
+  {k:'near52Low',label:'Priced within 10% of 52-week low',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.low52w!==null&&rec.low52w!==undefined&&rec.low52w>0)?((rec.price-rec.low52w)/rec.low52w*100<=10):null;}}
+];
+var MORE_OPEN=true;
+function avgOf(list,getter){
+  var vals=[];
+  list.forEach(function(x){var v=getter(x.rec,x.a);if(v!==null&&v!==undefined&&isFinite(v))vals.push(v);});
+  if(!vals.length)return {avg:null,n:0};
+  var sum=vals.reduce(function(s,v){return s+v;},0);
+  return {avg:sum/vals.length,n:vals.length};
+}
+function fmtMetric(type,v){
+  if(v===null||v===undefined)return '\u2013';
+  if(type==='pct')return fmtPct(v);
+  if(type==='bps')return fmtBps(v);
+  if(type==='signed')return (v>0?'+':'')+trimZ(v.toFixed(2));
+  if(type==='yrs')return trimZ(v.toFixed(1));
+  if(type==='sigma')return fmtNum(v,2)+'\u03c3';
+  return fmtNum(v,2);
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering
+ * ------------------------------------------------------------------ */
+var ROWS=[]; // [{rec,a,kind}]
+var RAW_LINES=[]; // raw text lines as loaded, for publish embedding
+var RAW_TAGS=[];
+var FETCHED={stocks:null,reits:null}; // {lines:[...]} per kind, from the two live-fetch buttons
+
+function currentDataTypeKind(){return $('#dtReits')&&$('#dtReits').checked?'reits':'stocks';}
+function schemaForKind(k){return k==='reits'?SCHEMA_REITS:SCHEMA_STOCKS;}
+
+/* Fetch one feed (stocks or REITs) on its own and merge it with whatever
+   was already fetched for the other kind — so pulling one never wipes
+   out the other, and you don't have to re-fetch both every time. */
+function fetchOneLive(kind){
+  var label=kind==='reits'?'REITs':'Stocks';
+  var urlField=kind==='reits'?$('#urlReits'):$('#urlStocks');
+  var url=((urlField&&urlField.value)||'').trim();
+  if(!url){setStatus('Add a '+label+' CSV URL first.',true);return;}
+  saveLiveUrls();
+  setStatus('Fetching '+label+'…');
+  fetch(url,{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.text();
+  }).then(function(text){
+    var lines=csvTextToLines(text);
+    if(!lines.length){setStatus('Fetched '+label+' OK but found no rows — check the sheet has data.',true);return;}
+    FETCHED[kind]={lines:lines};
+    rebuildFromFetched();
+  }).catch(function(err){
+    setStatus('Could not fetch '+label+' — make sure the URL is a CSV raw link. ('+((err&&err.message)||err)+')',true);
+  });
+}
+function rebuildFromFetched(){
+  var lines=[],tags=[];
+  ['stocks','reits'].forEach(function(kind){
+    var f=FETCHED[kind];
+    if(!f)return;
+    lines=lines.concat(f.lines);
+    f.lines.forEach(function(){tags.push(kind);});
+  });
+  var finalText=lines.join('\n');
+  var ta=$('#raw');if(ta)ta.value=finalText;
+  handleRaw(finalText,tags);
+}
+
+function handleRaw(text,schemaTags){
+  var lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  if(!lines.length){setStatus('Paste at least one data row, or fetch a live source.',true);return;}
+  RAW_LINES=lines;
+  var tags;
+  if(Array.isArray(schemaTags))tags=schemaTags;
+  else{var kind=schemaTags||currentDataTypeKind();tags=lines.map(function(){return kind;});}
+  RAW_TAGS=tags;
+  var all=lines.map(function(l,i){
+    var kind=tags[i];
+    var parsed=parseRow(l,schemaForKind(kind));
+    var a=analyzeRow(parsed.rec);
+    return {rec:parsed.rec,a:a,kind:kind,issues:parsed.issues};
+  });
+  var complete=all.filter(function(x){return x.a.sigma!==null&&isFinite(x.a.sigma);});
+  ROWS=all;
+  var incomplete=all.length-complete.length;
+  setStatus(all.length+' row'+(all.length===1?'':'s')+' loaded, '+complete.length+' complete (usable)'+(incomplete?', '+incomplete+' skipped (no sigma — missing yield/average/SD or sigma column)':'')+'.');
+  render(complete);
+}
+
+function setStatus(msg,isErr){
+  var el=$('#status');if(!el)return;
+  el.textContent=msg;
+  el.className='status'+(isErr?' err':'');
+}
+
+/* Clicking a tile opens that ticker's single-stock card on the tools
+   subdomain in a new tab (that card build pulls the full live universe,
+   so any ticker shown here resolves). */
+var CARD_URL=LINKS.card;
+function tileHtml(x,zoneClass){
+  var rec=x.rec,a=x.a;
+  var name=shortCompanyName(a.name)||a.ticker;
+  var full=esc(a.name||a.ticker);
+  var href=CARD_URL+encodeURIComponent(a.ticker||'');
+  return '<a class="tile '+zoneClass+'" href="'+esc(href)+'" target="_blank" rel="noopener" aria-label="Open the '+esc(a.ticker)+' sigma card">'+
+    '<div class="tk">'+esc(a.ticker)+'</div>'+
+    '<div class="sg">'+fmtNum(a.sigma,2)+'\u03c3</div>'+
+    '<div class="wash">'+
+      '<b>'+full+'</b><br>'+
+      'Price: '+fmtMoney(rec.price)+'<br>'+
+      'Yield: '+fmtPct(rec.yield)+'<br>'+
+      'Payout: '+fmtPct(rec.payoutRatio)+'<br>'+
+      '200 dma: '+fmtPct(rec.ma200diff)+
+    '</div>'+
+  '</a>';
+}
+function legendHtml(sel){
+  return '<div class="legend">'+
+    '<span class="li"><span class="sq over"></span>Overvalued</span>'+
+    '<span class="li"><span class="sq normal"></span>Normal</span>'+
+    '<span class="li"><span class="sq under"></span>Undervalued</span>'+
+  '</div>';
+}
+function matrixHtml(sel){
+  var cols=[
+    {key:'all',label:'All',range:'',items:sel.all.under.concat(sel.all.normal,sel.all.over)},
+    {key:'over',label:'Overvalued',range:'−1σ or lower',cls:'over',items:sel.all.over},
+    {key:'normal',label:'Normal',range:'−1σ to +1σ',items:sel.all.normal},
+    {key:'under',label:'Undervalued',range:'+1σ or higher',cls:'under',items:sel.all.under}
+  ];
+  var ncol=cols.length+1;
+  var allItems=sel.all.under.concat(sel.all.normal,sel.all.over);
+  var allN=allItems.length;
+  /* Column headings carry each group's name, sigma range and size. */
+  var thead='<tr><th>Metric</th>'+cols.map(function(c){
+    var n=c.items.length,pct=allN?Math.round(n/allN*100):0;
+    var size=c.key==='all'?n+' names':n+' names ('+pct+'%)';
+    return '<th class="'+(c.cls||'')+'">'+c.label+'<span class="zr">'+(c.range?esc(c.range):'&nbsp;')+'</span><span class="zr zn">'+esc(size)+'</span></th>';
+  }).join('')+'</tr>';
+  function avgRow(m){
+    return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){return '<td>'+fmtMetric(m.type,avgOf(c.items,m.get).avg)+'</td>';}).join('')+'</tr>';
+  }
+  /* Section heading row; each zone cell shows its number of names and share. */
+  function secRow(label){return '<tr class="secHead"><td colspan="'+ncol+'">'+esc(label)+'</td></tr>';}
+  var avgRows=secRow('Averages per group')+METRICS.map(avgRow).join('');
+  var moreRows=MORE_METRICS.map(avgRow).join('');
+  var moreHtml='<tbody><tr class="moreToggle"><td colspan="'+ncol+'"><button type="button" class="moreBtn" aria-expanded="'+(MORE_OPEN?'true':'false')+'">'+(MORE_OPEN?'Fewer stats ▴':'More stats ▾')+'</button></td></tr></tbody>'+
+    '<tbody class="moreRows"'+(MORE_OPEN?'':' hidden')+'>'+moreRows+'</tbody>';
+  /* Number of names: counts, with each zone's share in brackets. The
+     "In zone" row gives the total each count is read against. */
+  var zoneRow='<tr><td>In zone</td>'+cols.map(function(c){
+    var pct=allN?Math.round(c.items.length/allN*100):0;
+    return '<td>'+c.items.length+'/'+pct+'%</td>';
+  }).join('')+'</tr>';
+  var countRows=COUNT_METRICS.map(function(m){
+    return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){
+      var n=0;c.items.forEach(function(x){if(m.test(x.rec,x.a)===true)n++;});
+      var pct=c.items.length?Math.round(n/c.items.length*100):0;
+      return '<td>'+n+' ('+pct+'%)</td>';
+    }).join('')+'</tr>';
+  }).join('');
+  var countHtml='<tbody>'+secRow('Number of names / % of names per group')+countRows+'</tbody>';
+  var hasReits=allItems.some(function(x){return x.kind==='reits';});
+  var noun=hasReits?'names (stocks & REITs)':'stocks';
+  return '<div class="matrixWrap"><h3>Aggregate average stats</h3>'+
+    '<table class="matrix"><thead>'+thead+'</thead><tbody>'+avgRows+'</tbody>'+moreHtml+countHtml+'</table></div>';
+}
+function wireMoreStats(){
+  var btn=document.querySelector('#sheet .moreBtn');
+  if(!btn)return;
+  btn.addEventListener('click',function(){
+    MORE_OPEN=!MORE_OPEN;
+    var body=document.querySelector('#sheet tbody.moreRows');
+    if(body)body.hidden=!MORE_OPEN;
+    btn.setAttribute('aria-expanded',MORE_OPEN?'true':'false');
+    btn.textContent=MORE_OPEN?'Fewer stats ▴':'More stats ▾';
+  });
+}
+function render(complete){
+  var sheet=$('#sheet');
+  if(!complete.length){
+    sheet.innerHTML='<div class="empty">Paste data or fetch a live source to build the map.</div>';
+    return;
+  }
+  LAST_COMPLETE=complete;
+  var sel=buildSelection(complete);
+  var shown=sel.map.under.length+sel.map.normal.length+sel.map.over.length;
+  var sub=shown+' representative stocks from the dividend-growers universe of '+complete.length+'+.';
+  var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — Stocks</h2><div class="sub">'+esc(sub)+'</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
+  h+=legendHtml(sel);
+  /* Display order: most overvalued through Normal to most undervalued,
+     low sigma to high sigma; colFlowTiles lays it out column by column. */
+  var ascS=function(p,q){return p.a.sigma-q.a.sigma;};
+  var allTiles=sel.map.over.slice().sort(ascS).map(function(x){return tileHtml(x,' over');})
+    .concat(sel.map.normal.slice().sort(ascS).map(function(x){return tileHtml(x,' normal');}))
+    .concat(sel.map.under.slice().sort(ascS).map(function(x){return tileHtml(x,' under');}))
+    .join('');
+  h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
+  h+=matrixHtml(sel);
+  h+='<footer class="foot"><span>Model output, not investment advice \u2014 each name\u2019s own dividend safety and payout ratio deserve their own check.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
+     '<span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+
+     '<span class="pubFootLive"><span class="pubLive" id="pubLiveStamp" hidden></span><button type="button" class="linkbtn" id="pubRefresh" hidden>Refresh</button></span></span></footer>';
+  sheet.innerHTML=h;
+  colFlowTiles();
+  mapStatusText();
+  wirePubFooter();
+  wireMoreStats();
+}
+
+/* Column flow: keep the same grid shape, but fill it column by column so
+   the reds sit in the left columns, Normal in the middle, greens on the right. */
+function colFlowTiles(){
+  var t=document.querySelector('.tiles'); if(!t)return;
+  var n=t.querySelectorAll('.tile').length; if(!n)return;
+  t.style.gridAutoFlow='';t.style.gridTemplateRows='';
+  var cols=getComputedStyle(t).gridTemplateColumns.split(' ').filter(Boolean).length||1;
+  t.style.gridTemplateRows='repeat('+Math.ceil(n/cols)+',auto)';
+  t.style.gridAutoFlow='column';
+}
+window.addEventListener('resize',function(){clearTimeout(colFlowTiles._t);colFlowTiles._t=setTimeout(colFlowTiles,120);});
+
+/* ------------------------------------------------------------------ *
+ * Live refresh — same locked-"universe" model as the sigma card: the
+ * set of tickers currently loaded stays fixed between publishes, but
+ * their VALUES refresh live, which naturally reclassifies a name's
+ * zone (and whether it clears the top-20 cutoff) as its sigma moves.
+ * ------------------------------------------------------------------ */
+var liveLastUpdated=null;
+var liveStale=false;
+function setLiveStamp(stale){
+  liveStale=stale;
+  var el=$('#pubLiveStamp');if(!el)return;
+  el.hidden=false;
+  if(stale&&liveLastUpdated){
+    el.textContent=' \u00b7 Live \u00b7 showing data from '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' (couldn\u2019t reach the sheet just now)';
+  }else if(liveLastUpdated){
+    el.textContent=' \u00b7 Live \u00b7 updated '+liveLastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  }else{
+    el.textContent=' \u00b7 Live \u00b7 connecting\u2026';
+  }
+}
+function updatePubBarVisibility(){
+  var stamp=$('#pubLiveStamp'),refresh=$('#pubRefresh');
+  var showLive=!!(LIVE_URL_STOCKS||LIVE_URL_REITS);
+  if(stamp&&!showLive)stamp.hidden=true;
+  if(refresh)refresh.hidden=!showLive;
+}
+function wirePubFooter(){
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS)setLiveStamp(liveStale);
+  var r=$('#pubRefresh');
+  if(r)r.addEventListener('click',function(){refreshLiveData();});
+}
+function refreshLiveData(){
+  if(!(LIVE_URL_STOCKS||LIVE_URL_REITS))return Promise.resolve();
+  if(!ROWS.length)return Promise.resolve();
+  return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
+    if(!res||!res.lines||!res.lines.length)throw new Error('empty');
+    var byTicker={};
+    res.lines.forEach(function(line,i){
+      var tag=res.tags[i];
+      var t=parseRow(line,schemaForKind(tag)).rec.ticker;
+      if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
+    });
+    var newLines=[],newTags=[];
+    ROWS.forEach(function(r){
+      var t=r.rec.ticker;
+      var hit=t&&byTicker[t.trim().toUpperCase()];
+      if(hit){newLines.push(hit.line);newTags.push(hit.tag);}
+    });
+    if(!newLines.length)throw new Error('no matching tickers in live feed');
+    handleRaw(newLines.join('\n'),newTags);
+    liveLastUpdated=new Date();
+    setLiveStamp(false);
+  }).catch(function(){
+    setLiveStamp(true);
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Live source persistence + baked-in defaults (same pattern as the
+ * sigma card tool) \u2014 so a fresh download still starts pre-filled.
+ * ------------------------------------------------------------------ */
+var LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var LIVE_URL_REITS="";
+var DEFAULT_LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
+var DEFAULT_LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
+var MAP_SETTINGS_RAW="{\"n\":20,\"mode\":\"equal\",\"spread\":\"extreme\",\"under\":true,\"normal\":true,\"over\":true}";
+var MAP_STORE_KEY="sigmaHeatMapSettings2_stocks";
+var SAMPLE_TAGS="[\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\",\"stocks\"]";
+var SAMPLE="THE MARZETTI COMPANY (XNAS:MZTI)	 $  109.74 	 $     97.00 	4	3.64%	1.99%	0.60%	7.34	2.73	MZTI	  ⇣ .03	102.76	 $  200.65 	30.30%		5.19%	7.40%	15.7	124.70	-12%	4.41	2.22%	0.32%	64.48%	14.62%	 $  180.51 	 $   164.47 	 $   148.43 	82.84%	8.12	36.93	65.84	Now: -1.28% | 10Y: -0.91% | Diff: -0.38%	62	57.24%	5.87\nMCCORMICK & COMPANY, INCORPORATED (XNYS:MKC)	 $    47.29 	 $     43.25 	1.92	4.06%	1.99%	0.76%	8.47	2.73	MKC	  ⇣ .05	53.85	 $     96.26 	37.97%		6.10%	9.15%	8.5	53.35	-11%	2.92	2.29%	0.61%	77.29%	26.48%	 $     83.84 	 $      71.32 	 $     58.79 	103.56%	4.33	18.76	35.09	Now: -0.87% | 10Y: -0.91% | Diff: +0.04%	38	34.70%	7.36\nNIKE, INC. (XNYS:NKE)	 $    38.67 	 $     31.97 	1.64	4.24%	1.51%	1.00%	9.1	2.72	NKE	  ⇣ .08	48.30	 $  108.60 	66.42%		6.56%	10.13%	18.5	46.03	-16%	2.57	1.77%	0.96%	139.61%	54.38%	 $     92.66 	 $      71.63 	 $     50.60 	180.84%	3.92	16.54	31.76	Now: -0.69% | 10Y: -1.39% | Diff: +0.70%	24	78.60%	7.30\nGENERAL MILLS, INC. (XNYS:GIS)	 $    34.29 	 $     31.18 	2.44	7.12%	3.82%	1.23%	3.69	2.68	GIS	  ⇣ .07	47.21	 $     63.93 	32.27%		8.53%	10.22%	0.0	37.50	-9%	2.46	4.36%	1.12%	63.07%	25.60%	 $     55.92 	 $      47.14 	 $     38.36 	86.43%	3.51	18.79	28.41	Now: 2.19% | 10Y: 0.92% | Diff: +1.27%	5	0.00%	3.17\nTRACTOR SUPPLY COMPANY (XNAS:TSCO)	 $    33.94 	 $     28.36 	0.96	2.83%	1.55%	0.48%	18.36	2.64	TSCO	⇧ 2.64	57.58	 $     61.94 	31.19%		6.57%	15.26%	18.3	38.09	-11%	1.72	1.90%	0.54%	49.01%	28.49%	 $     50.57 	 $      40.90 	 $     31.23 	82.50%	5.18	15.59	41.99	Now: -2.10% | 10Y: -1.35% | Diff: -0.75%	15	51.65%	7.13\nAmdocs Limited (XNAS:DOX)	 $    62.83 	 $     49.74 	2.28	3.63%	1.92%	0.65%	11.2	2.61	DOX	  ⇣ .09	79.01	 $  118.76 	34.07%		6.17%	10.49%	15.0	62.60	0%	2.47	2.14%	0.60%	69.28%	28.05%	 $  106.36 	 $      88.74 	 $     71.11 	89.01%	6.59	25.58	53.43	Now: -1.30% | 10Y: -0.98% | Diff: -0.32%	13	54.29%	11.44\nTHE CLOROX COMPANY (XNYS:CLX)	 $    88.00 	 $     79.12 	5	5.68%	3.07%	1.00%	5.13	2.61	CLX	  ⇣ .10	108.18	 $  162.95 	32.61%		7.30%	9.37%	18.3	99.77	-12%	2.46	3.49%	0.89%	62.85%	25.54%	 $  143.30 	 $   120.83 	 $     98.36 	85.18%	8.25	41.35	66.84	Now: 0.75% | 10Y: 0.17% | Diff: +0.58%	49	103.91%	1.68\nCOMCAST CORPORATION (XNAS:CMCSA)	 $    23.22 	 $     20.48 	1.32	5.68%	2.46%	1.26%	10.2	2.57	CMCSA	New	42.34	 $     53.63 	51.00%		9.24%	15.02%	7.3	26.08	-11%	2.07	2.89%	1.35%	96.58%	46.67%	 $     45.65 	 $      34.81 	 $     23.97 	130.96%	3.49	14.08	28.26	Now: 0.76% | 10Y: -0.44% | Diff: +1.19%	17	41.66%	10.50\nTENNANT COMPANY (XNYS:TNC)	 $    66.44 	 $     60.18 	1.24	1.87%	1.36%	0.21%	4.09	2.48	TNC	⇧ .03	24.75	 $     91.50 	15.23%		2.28%	2.79%	65.5	#N/A	#N/A	1.15	1.63%	0.20%	14.18%	12.29%	 $     75.86 	 $      67.70 	 $     59.54 	37.73%	1.85	9.74	15.01	Now: -3.06% | 10Y: -1.54% | Diff: -1.52%	53	122.20%	5.54\nBOOZ ALLEN HAMILTON HOLDING CORPORATION (XNYS:BAH)	 $    88.49 	 $     59.50 	2.36	2.67%	1.73%	0.38%	15.2	2.46	BAH	  ⇣ .35	111.27	 $  136.37 	21.96%		5.41%	10.98%	13.7	76.54	16%	1.36	2.08%	0.44%	28.50%	21.00%	 $  113.71 	 $      95.13 	 $     76.55 	54.10%	9.71	32.52	78.74	Now: -2.26% | 10Y: -1.17% | Diff: -1.09%	13	36.60%	9.02\nKIMBERLY-CLARK CORPORATION (XNAS:KMB)	 $  107.94 	 $     92.42 	5.12	4.74%	3.49%	0.53%	3.83	2.38	KMB	  ⇣ .30	100.14	 $  146.84 	15.16%		5.72%	6.91%	24.5	103.00	5%	1.15	4.01%	0.63%	18.21%	15.79%	 $  127.59 	 $   110.55 	 $     93.50 	36.04%	7.46	39.71	60.43	Now: -0.19% | 10Y: 0.59% | Diff: -0.77%	53	116.13%	2.92\nPepsico, Inc. (XNAS:PEP)	 $  137.34 	 $  123.47 	5.92	4.31%	3.04%	0.54%	7.73	2.35	PEP	  ⇣ .20	156.77	 $  194.97 	17.88%		6.25%	9.08%	17.3	145.99	-6%	0.85	3.39%	1.09%	27.32%	32.09%	 $  174.87 	 $   130.79 	 $     86.72 	41.96%	12.46	55.73	101.04	Now: -0.62% | 10Y: 0.14% | Diff: -0.75%	52	74.41%	7.89\nAMERISAFE, INC (XNAS:AMSF)	 $    20.91 	 $     20.87 	1.64	7.84%	2.85%	2.13%	9.73	2.34	AMSF	⇧ .18	50.72	 $     57.61 	74.90%		12.48%	19.85%	9.7	30.90	-32%	n/a								175.52%	4.15	17.08	33.64	Now: 2.91% | 10Y: -0.05% | Diff: +2.97%	12	76.40%	6.41\nFIDELITY NATIONAL INFORMATION SERVICES, INC. (XNYS:FIS)	 $    38.55 	 $     32.10 	1.76	4.57%	1.95%	1.14%	5.16	2.29	FIS	  ⇣ .23	38.17	 $     90.32 	58.55%		5.87%	7.55%	5.9	43.72	-12%	1.56	2.43%	1.36%	87.53%	55.95%	 $     72.29 	 $      50.73 	 $     29.16 	134.29%	2.91	14.58	23.59	Now: -0.36% | 10Y: -0.95% | Diff: +0.59%	2	27.08%	-4.07\nHORMEL FOODS CORPORATION (XNYS:HRL)	 $    21.28 	 $     18.96 	1.17	5.50%	2.66%	1.24%	7.3	2.28	HRL	  ⇣ .08	29.96	 $     43.94 	46.64%		7.82%	11.12%	34.2	22.83	-7%	1.86	3.03%	1.33%	81.62%	43.80%	 $     38.65 	 $      29.33 	 $     20.01 	106.50%	2.37	10.78	19.19	Now: 0.57% | 10Y: -0.24% | Diff: +0.81%	58	188.08%	2.37\nINTUIT INC. (XNAS:INTU)	 $  341.09 	 $  252.84 	4.8	1.41%	0.79%	0.27%	15	2.27	INTU	  ⇣ .31	222.87	 $  610.60 	34.80%		2.83%	5.69%	20.7	360.56	-5%	1.31	0.95%	0.35%	47.43%	36.22%	 $  502.86 	 $   379.32 	 $   255.78 	79.01%	19.42	65.47	157.40	Now: -3.52% | 10Y: -2.11% | Diff: -1.41%	14	29.09%	15.69\nCapgemini SE (OTCM:CAPMF)	 $  138.45 	 $     97.21 	3.95	2.85%	1.73%	0.50%	10	2.24	CAPMF	  ⇣ .21	124.74	 $  228.41 	29.01%		4.59%	7.40%	14.9	123.89	12%	0.70	2.33%	0.75%	22.54%	32.31%	 $  169.66 	 $   124.93 	 $     80.20 	64.97%	10.25	41.70	83.04	Now: -2.08% | 10Y: -1.17% | Diff: -0.91%	6	42.41%	–\nPERRIGO COMPANY PUBLIC LIMITED COMPANY (XNYS:PRGO)	 $    15.78 	 $       9.23 	1.16	7.35%	2.74%	2.07%	6.35	2.23	PRGO	  ⇣ .14	27.59	 $     42.32 	75.56%		10.00%	13.61%	#FIELD!	12.44	27%	0.89	4.06%	3.68%	81.02%	90.62%	 $     28.57 	 $      14.27 	-$       0.03 	168.19%	2.15	10.19	17.40	Now: 2.42% | 10Y: -0.16% | Diff: +2.58%	22		2.60\nACCENTURE PUBLIC LIMITED COMPANY (XNYS:ACN)	 $  258.24 	 $  118.15 	6.52	2.52%	1.67%	0.40%	11.63	2.16	ACN	  ⇣ .49	233.58	 $  390.32 	23.69%		4.38%	7.59%	19.0	191.38	35%	0.29	2.23%	1.01%	13.08%	45.22%	 $  292.02 	 $   175.25 	 $     58.47 	51.15%	19.59	74.79	158.80	Now: -2.40% | 10Y: -1.23% | Diff: -1.17%	15	48.06%	13.88\nLOWE'S COMPANIES, INC. (XNYS:LOW)	 $  209.07 	 $  178.45 	5	2.39%	1.80%	0.28%	14.64	2.16	LOW	  ⇣ .41	225.84	 $  278.04 	15.31%		4.74%	9.38%	17.7	225.95	-7%	0.49	2.18%	0.43%	9.70%	19.89%	 $  229.36 	 $   187.78 	 $   146.20 	32.99%	19.60	66.94	158.90	Now: -2.54% | 10Y: -1.10% | Diff: -1.44%	62	42.27%	6.38\nPAYCHEX, INC. (XNAS:PAYX)	 $  112.12 	 $     85.45 	4.32	3.85%	2.96%	0.42%	10.17	2.12	PAYX	  ⇣ .39	138.24	 $  145.89 	14.18%		6.25%	10.15%	22.3	103.42	8%	0.29	3.63%	0.80%	6.28%	22.00%	 $  119.16 	 $      94.49 	 $     69.83 	30.12%	11.38	46.00	92.24	Now: -1.08% | 10Y: 0.06% | Diff: -1.14%	12	85.80%	9.72\nMondelez International, Inc. (XNAS:MDLZ)	 $    64.94 	 $     51.20 	2.08	3.20%	2.22%	0.49%	11.91	2.01	MDLZ	  ⇣ .31	76.15	 $     93.49 	21.89%		5.62%	9.87%	20.4	60.39	8%	0.92	2.64%	0.62%	21.45%	23.42%	 $     78.87 	 $      63.66 	 $     48.46 	43.97%	6.41	24.20	51.94	Now: -1.73% | 10Y: -0.68% | Diff: -1.05%	13	65.50%	10.78\nTHE HOME DEPOT, INC. (XNYS:HD)	 $  329.20 	 $  277.15 	9.32	2.83%	2.28%	0.27%	13.57	2.01	HD	  ⇣ .54	387.76	 $  408.92 	12.06%		5.35%	10.11%	23.0	334.30	-2%	0.33	2.70%	0.40%	4.86%	14.87%	 $  345.19 	 $   296.22 	 $   247.26 	24.22%	33.27	118.08	269.67	Now: -2.10% | 10Y: -0.62% | Diff: -1.48%	15	65.25%	5.28\nOpen Text Corporation (XNAS:OTEX)	 $    26.59 	 $     19.78 	1.1	4.14%	2.29%	0.92%	8.25	2.00	OTEX	  ⇣ .35	30.33	 $     48.02 	40.22%		6.15%	9.14%	10.3	23.87	11%	1.06	2.86%	1.20%	44.88%	42.18%	 $     38.52 	 $      27.31 	 $     16.09 	80.60%	2.43	10.63	19.70	Now: -0.79% | 10Y: -0.61% | Diff: -0.18%	12	42.67%	4.32\nTHE HERSHEY COMPANY (XNYS:HSY)	 $  165.61 	 $  156.16 	5.81	3.51%	2.40%	0.56%	9.62	1.98	HSY	  ⇣ .10	178.16	 $  241.92 	23.25%		5.55%	8.79%	20.1	188.89	-12%	1.47	2.72%	0.54%	29.20%	19.80%	 $  213.96 	 $   181.17 	 $   148.39 	46.08%	14.56	60.17	117.99	Now: -1.42% | 10Y: -0.50% | Diff: -0.92%	15	70.61%	11.15\nBROWN-FORMAN CORPORATION (XNYS:BF B)	 $    28.71 	 $     22.61 	0.92	3.20%	1.89%	0.67%	5.44	1.98	BF B	New	20.39	 $     48.68 	35.19%		4.18%	5.44%	18.5	27.04	6%									69.55%	1.56	7.73	12.67	Now: -1.72% | 10Y: -1.01% | Diff: -0.71%	###	59.31%	-15.69\nEASTMAN CHEMICAL COMPANY (XNYS:EMN)	 $    66.53 	 $     56.11 	3.36	5.05%	3.29%	0.90%	6.63	1.96	EMN	  ⇣ .07	81.69	 $  102.10 	27.30%		6.96%	9.60%	12.5	71.00	-6%	0.66	4.18%	1.32%	20.74%	31.56%	 $     80.33 	 $      59.33 	 $     38.34 	53.46%	6.38	29.94	51.75	Now: 0.12% | 10Y: 0.39% | Diff: -0.27%	15	63.01%	2.35\nCALIFORNIA WATER SERVICE GROUP (XNYS:CWT)	 $    48.50 	 $     41.29 	1.34	2.76%	1.96%	0.42%	6.6	1.93	CWT	New	32.50	 $     68.45 	21.30%		3.80%	5.24%	21.8	46.64	4%									41.14%	2.54	11.92	20.58	Now: -2.17% | 10Y: -0.94% | Diff: -1.22%	60	60.18%	9.26\nMATTHEWS INTERNATIONAL CORPORATION (XNAS:MATW)	 $    19.28 	 $     18.42 	1.02	5.29%	2.72%	1.33%	6.76	1.92	MATW	⇧ .00	25.05	 $     37.47 	49.03%		7.34%	10.18%	0.0	24.75	-22%	1.50	3.22%	1.38%	64.11%	42.70%	 $     31.64 	 $      23.41 	 $     15.18 	94.37%	1.96	9.15	15.90	Now: 0.36% | 10Y: -0.18% | Diff: +0.54%	30	0.00%	3.57\nROBERT HALF INC. (XNYS:RHI)	 $    43.73 	 $     21.83 	2.36	5.40%	2.72%	1.45%	11.41	1.84	RHI	  ⇣ .36	83.12	 $     86.75 	53.36%		9.26%	15.90%	36.0	32.21	36%	0.48	3.95%	3.02%	36.78%	76.60%	 $     59.82 	 $      26.32 	-$       7.18 	98.37%	6.95	26.77	56.36	Now: 0.47% | 10Y: -0.18% | Diff: +0.65%	20	194.54%	9.02\nMCDONALD'S CORPORATION (XNYS:MCD)	 $  258.12 	 $  229.20 	7.72	2.99%	2.43%	0.31%	7.33	1.84	MCD	  ⇣ .47	198.18	 $  318.28 	12.67%		4.26%	6.07%	21.0	283.18	-9%	0.73	2.72%	0.37%	9.85%	13.55%	 $  283.54 	 $   248.58 	 $   213.61 	23.31%	15.66	71.23	126.94	Now: -1.94% | 10Y: -0.47% | Diff: -1.46%	50	62.69%	9.12\nFIDELITY NATIONAL FINANCIAL, INC (XNYS:FNF)	 $    40.51 	 $     37.88 	2.08	5.13%	3.17%	1.08%	4.24	1.82	FNF	  ⇣ .08	42.00	 $     65.51 	33.87%		6.32%	7.78%	14.1	47.99	-16%	1.09	3.83%	1.20%	34.16%	31.23%	 $     54.35 	 $      41.70 	 $     29.05 	61.72%	3.15	16.46	25.54	Now: 0.21% | 10Y: 0.27% | Diff: -0.07%	14	72.32%	7.83\nUNIVERSAL CORPORATION (XNYS:UVV)	 $    41.44 	 $     38.11 	3.28	7.92%	5.54%	1.36%	4.65	1.74	UVV	⇧ .07	68.37	 $     59.19 	24.62%		9.93%	12.47%	55.2	50.35	-18%	1.32	6.14%	1.34%	28.93%	21.87%	 $     53.43 	 $      44.37 	 $     35.31 	42.84%	5.17	26.49	41.88	Now: 2.99% | 10Y: 2.64% | Diff: +0.34%	53		–\nCOGNIZANT TECHNOLOGY SOLUTIONS CORPORATION (XNAS:CTSH)	 $    65.11 	 $     37.08 	1.32	2.03%	1.46%	0.33%	6.83	1.74	CTSH	  ⇣ .29	32.59	 $     90.64 	22.55%		2.82%	3.93%	11.9	58.95	10%	0.22	1.90%	0.59%	6.95%	31.32%	 $     69.64 			39.20%	2.56	11.88	20.72	Now: -2.90% | 10Y: -1.44% | Diff: -1.46%	6	24.05%	5.53\nBLUE OWL CAPITAL INC. (XNYS:OWL)	 $    10.33 	 $       7.95 	0.9	8.71%	4.57%	2.39%	10	1.74	OWL	  ⇣ .02	28.42	 $     19.70 	52.26%		14.03%	22.60%		10.31	0%	3.96	4.99%	0.94%	74.77%	18.90%	 $     18.05 	 $      16.10 	 $     14.15 	90.71%	2.33	9.50	18.92	Now: 3.78% | 10Y: 1.67% | Diff: +2.11%	3	0.00%	21.88\nEDISON INTERNATIONAL (XNYS:EIX)	 $    58.79 	 $     51.10 	3.51	5.97%	4.16%	1.05%	7.33	1.73	EIX	  ⇣ .28	90.10	 $     84.37 	25.14%		8.50%	12.11%	7.7	67.81	-13%	1.17	4.78%	1.01%	24.85%	21.22%	 $     73.40 	 $      60.93 	 $     48.45 	43.52%	7.12	32.39	57.72	Now: 1.04% | 10Y: 1.26% | Diff: -0.22%	20	45.94%	6.53\nARTESIAN RESOURCES CORPORATION (XNAS:ARTNA)	 $    33.56 	 $     30.50 	1.25	3.72%	2.83%	0.52%	3.48	1.70	ARTNA	⇧ .01	23.79	 $     44.11 	18.48%		4.42%	5.24%	14.7	33.40	0%	0.97	3.21%	0.53%	16.10%	16.67%	 $     38.96 	 $      33.37 	 $     27.78 	31.43%	1.76	9.53	14.26	Now: -1.20% | 10Y: -0.07% | Diff: -1.14%	31	54.58%	3.24\nUPBOUND GROUP, INC. (XNAS:UPBD)	 $    20.70 	 $     14.98 	1.56	7.54%	4.02%	2.12%	6.91	1.66	UPBD	  ⇣ .52	38.76	 $     38.80 	52.64%		10.53%	14.70%	13.5	18.87	10%	0.75	5.65%	2.51%	33.32%	44.49%	 $     27.60 	 $      18.39 	 $        9.18 	87.44%	3.04	14.09	24.67	Now: 2.61% | 10Y: 1.12% | Diff: +1.49%	6	101.46%	4.17\nAMERICAN STATES WATER COMPANY (XNYS:AWR)	 $    86.32 	 $     69.45 	2.182	2.53%	1.93%	0.38%	8.29	1.59	AWR	  ⇣ .17	60.35	 $  112.91 	19.42%		3.76%	5.61%	23.6	80.09	8%	0.92	2.19%	0.37%	15.42%	16.77%	 $     99.63 	 $      85.16 	 $     70.68 	30.80%	4.84	21.13	39.22	Now: -2.40% | 10Y: -0.97% | Diff: -1.43%	72	59.72%	10.89\nGENUINE PARTS COMPANY (XNYS:GPC)	 $  120.90 	 $     90.78 	4.25	3.52%	2.89%	0.40%	5.24	1.57	GPC	⇧ .32	92.75	 $  146.99 	13.75%		4.54%	5.86%		119.96	1%	-0.10	3.61%	0.93%	-2.57%	25.91%	 $  117.79 	 $      86.47 	 $     55.14 	21.58%	7.08	35.34	57.41	Now: -1.41% | 10Y: -0.01% | Diff: -1.41%	70	0.00%	4.59\nPORTLAND GENERAL ELECTRIC COMPANY (XNYS:POR)	 $    44.42 	 $     43.26 	2.1	4.73%	3.61%	0.71%	5.97	1.57	POR	⇧ .01	48.50	 $     58.22 	19.80%		6.32%	8.44%	19.0	50.01	-11%	0.94	4.03%	0.74%	17.23%	18.36%	 $     52.07 	 $      43.92 	 $     35.77 	31.07%	3.75	18.10	30.40	Now: -0.20% | 10Y: 0.71% | Diff: -0.91%	18	89.85%	4.59\nHP INC. (XNYS:HPQ)	 $    28.78 	 $     17.56 	1.2	4.17%	3.27%	0.61%	10.7	1.47	HPQ	⇧ .57	40.01	 $     36.69 	18.72%		6.93%	11.53%	11.0	24.54	17%	-0.03	4.20%	1.04%	-0.81%	24.74%	 $     28.54 	 $      21.42 	 $     14.30 	27.50%	3.32	13.13	26.88	Now: -0.76% | 10Y: 0.37% | Diff: -1.13%	14	45.74%	4.92\nEversource Energy (XNYS:ES)	 $    68.55 	 $     62.72 	3.15	4.60%	3.44%	0.80%	6	1.44	ES	  ⇣ .23	72.92	 $     91.46 	23.25%		6.15%	8.23%	17.7	70.03	-2%	0.71	3.97%	0.88%	15.64%	22.08%	 $     79.27 	 $      64.14 	 $     49.00 	33.42%	5.64	27.20	45.73	Now: -0.33% | 10Y: 0.54% | Diff: -0.88%	25	81.56%	5.65\nSONOCO PRODUCTS COMPANY (XNYS:SON)	 $    49.96 	 $     39.27 	2.12	4.24%	3.35%	0.63%	4.78	1.41	SON	  ⇣ .11	44.64	 $     63.33 	18.94%		5.36%	6.77%	#FIELD!	52.40	-5%	0.49	3.87%	0.76%	9.65%	19.73%	 $     54.78 	 $      44.93 	 $     35.07 	26.76%	3.38	17.23	27.41	Now: -0.69% | 10Y: 0.45% | Diff: -1.13%	42		2.20\nBLACKSTONE SECURED LENDING FUND (XNYS:BXSL)	 $    23.29 	 $     22.47 	3.08	13.22%	10.30%	2.09%	12	1.40	BXSL	⇧ .03	113.54	 $     29.89 	20.25%		23.31%	41.07%	18.3	24.14	-4%	0.97	12.30%	0.95%	7.48%	7.69%	 $     25.03 	 $      23.24 	 $     21.45 	28.36%	9.57	36.00	77.54	Now: 8.30% | 10Y: 7.40% | Diff: +0.89%	3		3.06\nH2O AMERICA (XNAS:HTO)	 $    59.74 	 $     43.75 	1.76	2.95%	2.23%	0.52%	7.95	1.38	HTO	⇧ .03	47.41	 $     79.03 	23.42%		4.32%	6.33%	23.4	58.85	2%	0.53	2.66%	0.53%	10.60%	19.84%	 $     66.08 	 $      54.22 	 $     42.37 	32.29%	3.78	16.75	30.66	Now: -1.98% | 10Y: -0.67% | Diff: -1.31%	57	68.92%	5.46\nAVISTA CORPORATION (XNYS:AVA)	 $    37.57 	 $     34.46 	1.97	5.24%	4.08%	0.86%	4.07	1.35	AVA	  ⇣ .26	39.26	 $     48.25 	21.09%		6.40%	7.81%	13.6	39.74	-5%	0.72	4.59%	0.90%	14.13%	19.62%	 $     42.88 	 $      35.51 	 $     28.14 	28.42%	2.94	15.46	23.80	Now: 0.31% | 10Y: 1.18% | Diff: -0.87%	22	71.31%	2.59\nTHE KROGER CO. (XNYS:KR)	 $    66.76 	 $     54.15 	1.56	2.34%	1.96%	0.29%	12.79	1.33	KR	  ⇣ .62	61.12	 $     79.71 	14.63%		4.27%	7.79%	36.3	63.65	5%	0.17	2.28%	0.32%	2.37%	14.04%	 $     68.34 	 $      58.97 		19.41%	5.20	18.99	42.13	Now: -2.59% | 10Y: -0.94% | Diff: -1.65%	18	84.71%	14.65\nAUTOMATIC DATA PROCESSING, INC. (XNAS:ADP)	 $  293.84 	 $  188.16 	6.8	2.31%	2.06%	0.19%	12.19	1.31	ADP	  ⇣ .87	254.38	 $  329.60 	9.27%		4.11%	7.31%	26.0	240.37	22%	-0.39	2.44%	0.33%	-5.26%	13.55%	 $  278.38 	 $   238.58 	 $   198.77 	12.17%	21.48	80.26	174.11	Now: -2.61% | 10Y: -0.84% | Diff: -1.78%	51	60.28%	12.69\nT. ROWE PRICE GROUP, INC. (XNAS:TROW)	 $  103.90 	 $     85.22 	5.2	5.00%	3.65%	1.04%	7.16	1.30	TROW	⇧ .02	131.74	 $  142.27 	28.47%		7.07%	9.99%	10.5	103.69	0%	0.18	4.77%	1.36%	5.00%	28.50%	 $  109.10 	 $      79.49 	 $     49.87 	36.93%	10.38	47.57	84.16	Now: 0.08% | 10Y: 0.75% | Diff: -0.68%	38	52.63%	2.28\nTYSON FOODS, INCORPORATED (XNYS:TSN)	 $    57.04 	 $     49.96 	2.04	3.58%	2.30%	1.03%	14.04	1.24	TSN	  ⇣ .25	88.00	 $     88.71 	44.91%		6.90%	13.31%	35.0	59.64	-4%	0.58	2.98%	1.03%	19.98%	34.66%	 $     68.44 	 $      48.66 	 $     28.89 	55.52%	7.59	26.48	61.52	Now: -1.35% | 10Y: -0.60% | Diff: -0.75%	13	125.35%	2.05\nNEXTERA ENERGY, INC. (XNYS:NEE)	 $    83.71 	 $     74.41 	2.49	2.97%	2.49%	0.40%	11.21	1.20	NEE	  ⇣ .45	86.36	 $     99.84 	16.01%		5.06%	8.61%	15.1	87.31	-4%	0.08	2.93%	0.49%	1.39%	16.86%	 $     84.88 	 $      70.77 	 $     56.65 	19.27%	7.21	27.96	58.40	Now: -1.95% | 10Y: -0.41% | Diff: -1.55%	30	44.82%	11.05\nTHOMSON REUTERS CORPORATION (XNAS:TRI)	 $  118.25 	 $     76.28 	2.62	2.22%	1.81%	0.34%	6.14	1.17	TRI	  ⇣ .65	61.32	 $  144.60 	19.01%		2.98%	4.02%	31.3	96.49	23%	-0.42	2.50%	0.67%	-11.37%	26.85%	 $  104.80 	 $      73.05 	 $     41.31 	22.28%	4.75	22.78	38.54	Now: -2.71% | 10Y: -1.09% | Diff: -1.63%	37	69.44%	-0.67\nBROOKFIELD ASSET MANAGEMENT LTD. (XNYS:BAM)	 $    48.26 	 $     42.20 	2.01	4.16%	3.14%	0.88%	10	1.16	BAM	  ⇣ .14	63.48	 $     63.95 	28.07%		6.71%	10.80%	27.9	47.80	1%	n/a								32.52%	5.21	21.22	42.26	Now: -0.76% | 10Y: 0.24% | Diff: -1.01%	2	116.28%	23.73\nILLINOIS TOOL WORKS INC. (XNYS:ITW)	 $  278.55 	 $  238.82 	6.88	2.47%	2.21%	0.23%	11.34	1.11	ITW	  ⇣ .44	241.02	 $  311.19 	10.56%		4.23%	7.23%	25.1	270.64	3%	-0.26	2.58%	0.43%	-4.33%	16.77%	 $  266.48 			11.72%	20.14	77.76	163.26	Now: -2.46% | 10Y: -0.69% | Diff: -1.77%	63	61.99%	9.72\nTRINITY INDUSTRIES, INC. (XNYS:TRN)	        29.46 	 $     24.28 	1.24	4.21%	2.91%	1.19%	14.95	1.10	TRN	  ⇣ .33	57.35	 $     42.65 	40.84%		8.45%	16.95%	7.1	31.41	-6%									44.78%	4.99	16.87	40.49	Now: -0.72% | 10Y: 0.01% | Diff: -0.73%	14	30.01%	7.45\nTHE AES CORPORATION (XNYS:AES)	 $    14.83 	 $     13.21 	0.704	4.74%	3.73%	0.95%	5.5	1.07	AES	⇧ .02	15.67	 $     18.88 	25.58%		6.20%	8.10%	5.5	14.77	0%	0.01	4.73%	1.30%	0.25%	27.40%	 $     14.87 	 $      10.80 	 $        6.74 	27.34%	1.20	5.93	9.74	Now: -0.18% | 10Y: 0.83% | Diff: -1.01%	11	26.26%	1.36\nOLD REPUBLIC INTERNATIONAL CORPORATION (XNYS:ORI)	 $    38.52 	 $     36.65 	3.76	9.76%	7.05%	2.58%	4.79	1.05	ORI	  ⇣ .04	79.23	 $     53.37 	36.58%		12.33%	15.58%	8.7	40.43	-5%	0.14	9.18%	4.07%						38.54%	6.00	30.57	48.66	Now: 4.83% | 10Y: 4.15% | Diff: +0.69%	34	84.69%	36.91\nBROOKFIELD INFRASTRUCTUR PARTNER UNT (XNYS:BIP)	 $    37.32 	 $     33.21 	1.82	4.88%	4.31%	0.57%	7.64	0.99	BIP	  ⇣ .15	47.86	 $     42.23 	13.27%		7.05%	10.18%	#FIELD!	#N/A	#N/A	-0.51	5.40%	1.02%	-9.63%	18.94%	 $     33.73 	 $      26.66 	 $     19.59 	13.16%	3.80	17.06	30.80	Now: -0.05% | 10Y: 1.41% | Diff: -1.46%	16		–\nBROKFLD RWBL PRT NON VTG UNT (XNYS:BEP)	 $    28.65 	 $     26.30 	1.57	5.48%	4.55%	0.97%	5.46	0.96	BEP	  ⇣ .05	34.85	 $     34.54 	21.34%		7.15%	9.33%	#FIELD!	#N/A	#N/A	-0.12	5.61%	1.09%	-2.32%	19.40%	 $     27.99 	 $      22.43 	 $     16.87 	20.56%	2.67	13.20	21.66	Now: 0.55% | 10Y: 1.65% | Diff: -1.09%	10		403.15\nVERIZON COMMUNICATIONS INC. (XNYS:VZ)	 $    44.73 	 $     38.68 	2.83	6.33%	5.33%	1.10%	2.2	0.91	VZ	⇧ .13	48.78	 $     53.09 	20.62%		7.05%	7.86%	11.4	46.82	-4%	0.19	6.06%	1.35%	4.33%	22.20%	 $     46.66 	 $      36.74 	 $     26.81 	18.69%	3.52	20.26	28.52	Now: 1.40% | 10Y: 2.43% | Diff: -1.03%	20	72.20%	2.60\nVIRTUS INFRCP US PRERD STCK ETF (ARCX:PFFA)	 $    18.56 	 $     18.52 	2.06	11.10%	9.67%	1.63%	1.5	0.88	PFFA	⇧ .35	33.64	 $     21.31 	16.88%		11.96%	12.88%	#FIELD!	20.92	-11%	-0.24	13.05%	8.29%	-14.95%	63.55%	 $     15.79 			14.82%	2.39	14.26	19.38	Now: 6.17% | 10Y: 6.77% | Diff: -0.60%	5		4.61\nAMCOR PLC (XNYS:AMCR)	 $    47.39 	 $     36.25 	2.6	5.49%	4.21%	1.52%	2	0.84	AMCR	  ⇣ .34	44.13	 $     61.82 	36.09%		6.06%	6.69%	19.9	42.98	10%	0.19	5.21%	1.45%	5.30%	27.87%	 $     49.90 	 $      36.70 	 $     23.49 	30.45%	3.17	18.44	25.69	Now: 0.56% | 10Y: 1.31% | Diff: -0.75%	5	109.03%	1.85\nTHE J. M. SMUCKER COMPANY (XNYS:SJM)	 $  129.90 	 $     88.25 	4.48	3.45%	3.02%	0.54%	5.37	0.78	SJM	  ⇣ .53	98.76	 $  148.17 	18.01%		4.48%	5.82%	60.5	111.19	17%	-0.19	3.58%	0.68%	-3.66%	18.89%	 $  125.14 	 $   100.60 	 $     76.06 	14.07%	7.56	37.49	61.27	Now: -1.48% | 10Y: 0.12% | Diff: -1.60%	29	208.56%	2.63\nBRISTOL-MYERS SQUIBB COMPANY (XNYS:BMY)	 $    62.48 	 $     45.27 	2.52	4.03%	3.39%	0.85%	5.27	0.76	BMY	  ⇣ .09	55.12	 $     74.29 	25.01%		5.21%	6.74%	13.8	59.95	4%	-0.09	4.13%	1.04%	-2.38%	25.14%	 $     60.99 	 $      45.28 	 $     29.58 	18.90%	4.21	20.98	34.14	Now: -0.90% | 10Y: 0.49% | Diff: -1.39%	17	55.80%	3.59\nARES CAPITAL CORPORATION. (XNAS:ARCC)	 $    19.11 	 $     17.40 	1.92	10.05%	9.43%	0.83%	2.36	0.74	ARCC	  ⇣ .13	33.51	 $     20.36 	8.83%		11.29%	12.69%	15.7	19.02	0%									6.56%	2.42	13.86	19.65	Now: 5.12% | 10Y: 6.53% | Diff: -1.41%			0.03\nSTAR GROUP UNT (XNYS:SGU)	 $    12.94 	 $     11.41 	0.74	5.72%	5.22%	0.68%	6.99	0.74	SGU	  ⇣ .03	18.50	 $     14.19 	13.05%		8.02%	11.24%	#FIELD!	12.38	5%	-0.20	5.92%	1.02%	-3.46%	17.18%	 $     12.49 	 $      10.27 	 $        8.05 	9.63%	1.45	6.71	11.79	Now: 0.79% | 10Y: 2.32% | Diff: -1.53%	12		5.72\nSYSCO CORPORATION (XNYS:SYY)	 $    82.90 	 $     68.19 	2.2	2.65%	2.47%	0.26%	5.8	0.72	SYY	New	50.14	 $     82.90 	0.00%		3.52%	4.66%	22.7	80.48	3%										3.87	18.81	31.34	Now: -2.28% | 10Y: -0.43% | Diff: -1.85%	58	60.21%	3.79\nINVSC S P 500 HIGH DIV LW VLTLTY ETF (ARCX:SPHD)	 $    52.01 	 $     46.58 	2.27	4.36%	3.99%	0.53%	6	0.71	SPHD	  ⇣ .52	52.55	 $     56.87 	13.17%		5.84%	7.82%	#FIELD!	50.77	2%									9.35%	4.07	19.60	32.95	Now: -0.56% | 10Y: 1.09% | Diff: -1.66%	1		8.59\nMEDTRONIC PUBLIC LIMITED COMPANY (XNYS:MDT)	 $    96.54 	 $     73.31 	2.84	2.94%	2.31%	0.90%	6.45	0.70	MDT	  ⇣ .32	68.09	 $  122.94 	39.11%		4.02%	5.50%	23.8	88.16	10%	-0.05	2.97%	0.61%	-1.01%	20.57%	 $     95.56 	 $      75.70 	 $     55.84 	27.34%	5.31	25.08	43.01	Now: -1.99% | 10Y: -0.59% | Diff: -1.40%	46	69.90%	1.37\nWESTERN MIDSTREAM PARTNERS COM UNT (XNYS:WES)	 $    46.39 	 $     36.90 	3.72	8.02%	6.79%	1.81%	8.82	0.68	WES	  ⇣ .13	107.21	 $     54.80 	26.59%		12.24%	18.67%	#FIELD!	44.32	5%	-0.24	8.68%	2.74%	-7.59%	31.60%	 $     42.87 	 $      28.21 	 $     13.54 	18.12%	8.66	37.00	70.21	Now: 3.09% | 10Y: 3.89% | Diff: -0.80%	4		17.89\nUNITEDHEALTH GROUP INCORPORATED (XNYS:UNH)	 $  406.97 	 $  255.97 	8.84	2.17%	1.54%	0.98%	15.61	0.65	UNH	  ⇣ .18	430.07	 $  573.28 	63.24%		4.49%	9.26%	23.2	362.76	12%	0.24	1.98%	0.79%	9.60%	39.61%	 $  446.06 	 $   284.85 	 $   123.64 	40.86%	37.71	124.44	305.63	Now: -2.76% | 10Y: -1.36% | Diff: -1.40%	15	50.45%	9.19\nSTANLEY BLACK & DECKER, INC. (XNYS:SWK)	 $  103.44 	 $     61.90 	3.36	3.25%	2.59%	1.04%	4.73	0.63	SWK	  ⇣ .34	70.47	 $  129.51 	39.99%		4.09%	5.16%	25.2	85.54	21%	-0.14	3.44%	1.41%	-5.55%	41.00%	 $     97.70 	 $      55.29 	 $     12.87 	25.20%	5.33	27.24	43.24	Now: -1.68% | 10Y: -0.31% | Diff: -1.38%	59	81.93%	1.46\nSOUTHSIDE BANCSHARES, INC. (XNYS:SBSI)	 $    33.66 	 $     27.59 	1.44	4.28%	3.94%	0.60%	4.81	0.57	SBSI	  ⇣ .57	30.39	 $     36.57 	15.14%		5.41%	6.84%	13.3	32.41	4%									8.63%	2.30	11.72	18.67	Now: -0.65% | 10Y: 1.04% | Diff: -1.69%	14	56.69%	0.09\nPRUDENTIAL FINANCIAL, INC. (XNYS:PRU)	 $  116.45 	 $     91.89 	5.6	4.81%	4.03%	1.59%	8.99	0.49	PRU	  ⇣ .09	163.53	 $  139.08 	39.55%		7.40%	11.37%	10.5	108.54	7%	-0.39	5.55%	1.87%	-13.34%	33.79%	 $  100.92 	 $      61.57 	 $     22.22 	19.43%	13.25	56.17	107.36	Now: -0.12% | 10Y: 1.13% | Diff: -1.25%	16	50.72%	4.36\nRLI CORP. (XNYS:RLI)	 $    65.23 	 $     45.42 	2.64	4.05%	3.45%	1.23%	5.35	0.49	RLI	  ⇣ .46	58.11	 $     76.57 	35.80%		5.25%	6.82%	15.2	57.57	13%									17.38%	4.45	22.07	36.04	Now: -0.88% | 10Y: 0.55% | Diff: -1.43%	13	61.60%	-8.66\nCLEARWAY ENERGY, INC. (XNYS:CWEN)	 $    32.03 	 $     28.57 	1.87	5.84%	5.35%	1.00%	7.57	0.48	CWEN	  ⇣ .45	48.91	 $     34.93 	18.73%		8.41%	12.11%	39.0	35.61	-10%	-0.48	6.57%	1.52%	-11.11%	23.12%	 $     28.47 			9.06%	3.88	17.46	31.44	Now: 0.91% | 10Y: 2.45% | Diff: -1.54%	6		7.27\nBEST BUY CO., INC. (XNYS:BBY)	 $    95.65 	 $     55.10 	3.84	4.01%	3.48%	1.15%	10.28	0.46	BBY	  ⇣ .28	123.93	 $  110.36 	33.15%		6.55%	10.68%	15.9	75.24	27%	-0.59	4.76%	1.25%	-15.59%	26.38%	 $     80.73 	 $      55.50 	 $     30.27 	15.38%	10.22	41.12	82.81	Now: -0.91% | 10Y: 0.58% | Diff: -1.49%	20	63.75%	2.07\nNORTHERN OIL AND GAS, INC. (XNYS:NOG)	 $    28.35 	 $     17.18 	1.8	6.35%	5.54%	1.76%	12	0.46	NOG	  ⇣ .44	66.36	 $     32.52 	31.81%		11.19%	19.72%	#FIELD!	24.55	15%	n/a								14.69%	5.59	21.04	45.31	Now: 1.42% | 10Y: 2.64% | Diff: -1.22%	4		7.61\nJOHN HANCOCK TAX ADVANTAGED INCM CF (XNYS:HTD)	 $    23.38 	 $     21.90 	1.9	8.13%	7.74%	0.90%		0.43	HTD	  ⇣ .39	27.63	 $     24.54 	11.66%		8.13%	8.13%	#FIELD!	24.84	-6%									4.97%	1.90	12.23	15.40	Now: 3.20% | 10Y: 4.84% | Diff: -1.64%	1		3.79\nWEC ENERGY GROUP INC. (XNYS:WEC)	 $  116.07 	 $     99.80 	3.81	3.28%	3.15%	0.33%	7.14	0.39	WEC	  ⇣ 1.07	96.37	 $  120.87 	10.61%		0.00%	6.54%	21.1	111.00	5%	-1.02	3.58%	0.29%	-8.22%	8.05%	 $  106.53 	 $      97.19 	 $     87.85 	4.14%	7.59	34.82	61.55	Now: -1.65% | 10Y: 0.25% | Diff: -1.90%	22	69.16%	7.97\nNORTHWEST NATURAL HOLDING COMPANY (XNYS:NWN)	 $    49.93 	 $     44.45 	1.97	3.95%	3.71%	0.68%	0.54	0.35	NWN	  ⇣ .28	29.87	 $     53.09 	18.26%		4.05%	4.16%	16.6	50.13	0%									6.33%	2.08	13.02	16.85	Now: -0.98% | 10Y: 0.81% | Diff: -1.79%	70	65.51%	5.59\nARES MANAGEMENT CORPORATION (XNYS:ARES)	 $  128.15 	 $     95.80 	5.4	4.21%	3.84%	1.29%	7.07	0.29	ARES	  ⇣ .26	135.85	 $  140.68 	33.64%		5.93%	8.34%	102.3	124.75	3%	-0.48	5.09%	1.82%	-17.20%	35.79%	 $  106.11 	 $      60.24 	 $     14.38 	9.78%	10.69	49.18	86.67	Now: -0.72% | 10Y: 0.94% | Diff: -1.65%	7		25.45\nUGI CORPORATION (XNYS:UGI)	 $    38.67 	 $     31.65 	1.5	3.88%	3.51%	1.39%	5.01	0.26	UGI	  ⇣ .10	32.15	 $     42.71 	39.55%		4.95%	6.32%	12.9	36.68	5%	-0.27	4.35%	1.79%	-10.88%	41.02%	 $     34.46 	 $      18.60 	 $        2.74 	10.46%	2.45	12.33	19.82	Now: -1.05% | 10Y: 0.61% | Diff: -1.66%	37	50.06%	-0.51\nREGIONS FINANCIAL CORPORATION (XNYS:RF)	 $    28.57 	 $     23.59 	1.06	3.71%	3.44%	1.04%	15.85	0.26	RF	  ⇣ .17	52.52	 $     30.85 	30.37%		7.74%	16.16%	11.2	28.68	0%	-0.50	4.53%	1.63%	-18.13%	35.92%	 $     23.39 	 $      13.13 	 $        2.87 	7.97%	4.62	15.11	37.42	Now: -1.22% | 10Y: 0.54% | Diff: -1.76%	13	41.41%	9.16\nINTERCONTINENTAL EXCHANGE, INC. (XNYS:ICE)	 $  168.85 	 $  121.79 	2.08	1.23%	1.21%	0.10%	12.07	0.25	ICE	  ⇣ 1.17	77.09	 $  172.52 	8.57%		2.18%	3.85%	23.0	154.48	9%	-0.94	1.41%	0.19%	-12.75%	13.53%	 $  147.33 	 $   124.48 	 $   101.63 	2.18%	6.50	24.40	52.69	Now: -3.70% | 10Y: -1.69% | Diff: -2.00%	14	28.38%	9.46\nINVSC HIGH YIELD DIVIDEND ETF (XNAS:PEY)	 $    24.41 	 $     19.59 	1.02	4.18%	4.07%	0.59%	7	0.18	PEY	  ⇣ .42	25.52	 $     25.04 	14.41%		5.86%	8.22%	#FIELD!	22.86	7%	-0.56	4.70%	0.92%	-11.09%	19.65%	 $     21.70 	 $      16.91 	 $     12.11 	2.58%	2.01	9.26	16.26	Now: -0.75% | 10Y: 1.17% | Diff: -1.92%			4.67\nPEOPLES BANCORP INC. (XNAS:PEBO)	 $    38.57 	 $     28.01 	1.64	4.25%	4.07%	1.23%	10.37	0.14	PEBO	  ⇣ .09	53.30	 $     40.26 	30.20%		6.96%	11.41%	11.3	36.08	7%									4.37%	4.40	17.64	35.66	Now: -0.68% | 10Y: 1.17% | Diff: -1.85%	9	47.96%	6.44\nPENSKE AUTOMOTIVE GROUP, INC. (XNYS:PAG)	 $  212.12 	 $  140.12 	5.6	2.64%	2.55%	0.68%	18.52	0.14	PAG	  ⇣ .14	339.96	 $  219.82 	26.58%		6.17%	14.44%	14.8	182.75	16%	-0.48	3.39%	1.57%	-22.08%	46.23%	 $  165.28 	 $      67.21 	-$     30.85 	3.63%	30.63	91.71	248.25	Now: -2.29% | 10Y: -0.35% | Diff: -1.94%	14	39.02%	19.89\nMAIN STREET CAPITAL CORPORATION (XNYS:MAIN)	 $    55.26 	 $     48.95 	4.32	7.82%	7.70%	0.92%	3.8	0.13	MAIN	  ⇣ .02	84.30	 $     56.12 	11.92%		9.42%	11.35%	11.1	55.49	0%									1.55%	6.27	33.45	50.84	Now: 2.89% | 10Y: 4.80% | Diff: -1.91%	17	87.06%	16.15\nTARGET CORPORATION (XNYS:TGT)	     154.38 	 $     83.44 	4.64	3.01%	2.94%	0.91%	7.3	0.08	TGT	⇧ .03	118.84	 $  158.09 	30.85%		4.27%	6.08%	16.0	134.02	15%	-0.70	3.74%	1.05%	-19.62%	28.14%	 $  124.09 	 $      80.65 	 $     37.20 	2.40%	9.39	42.75	76.09	Now: -1.92% | 10Y: 0.04% | Diff: -1.96%	54	48.16%	2.17\nBANCFIRST CORPORATION (XNAS:BANF)	 $  110.31 	 $  101.48 	2.08	1.89%	1.86%	0.40%	10.53	0.06	BANF	  ⇣ .09	68.44	 $  111.69 	21.74%					111.67										1.25%	5.66	22.56	45.88	Now: -3.04% | 10Y: -1.04% | Diff: -2.01%	32	0.00%	9.45\nU.S. BANCORP (XNYS:USB)	 $    59.45 	 $     45.02 	2.08	3.50%	3.44%	1.03%	7.39	0.06	USB	  ⇣ .10	53.64	 $     60.44 	30.01%		5.00%	7.14%	11.6	58.05	2%		4.19%	1.42%						1.66%	4.24	19.25	34.39	Now: -1.43% | 10Y: 0.54% | Diff: -1.97%	15	40.49%	2.22\nCME GROUP INC. (XNAS:CME)	 $  303.14 	 $  218.31 	11.35	3.74%	3.79%	0.79%	8.39	-0.06	CME	  ⇣ .65	316.36	 $  299.16 	20.83%		5.60%	8.38%	24.8	280.19	8%	n/a								-1.31%	25.40	110.46	205.91	Now: -1.18% | 10Y: 0.89% | Diff: -2.08%	15	92.78%	9.20\nTHE TJX COMPANIES, INC. (XNYS:TJX)	 $  140.31 	 $  122.78 	1.92	1.37%	1.39%	0.21%	14.43	-0.09	TJX	  ⇣ .33	85.34	 $  138.42 	15.49%		2.68%	5.27%	26.0	151.20	-7%	-0.82	1.66%	0.35%	-17.39%	21.14%	 $  115.92 	 $      86.26 	 $     56.60 	-1.35%	7.39	25.43	59.91	Now: -3.56% | 10Y: -1.51% | Diff: -2.05%	29	35.51%	16.17\nAIR PRODUCTS AND CHEMICALS, INC. (XNYS:APD)	 $  316.43 	 $  229.11 	7.24	2.29%	2.31%	0.22%	8.8	-0.10	APD	  ⇣ 1.24	208.33	 $  313.32 	9.47%		3.49%	5.32%	#FIELD!	290.08	9%	-1.68	2.76%	0.28%	-16.99%	10.11%	 $  262.66 			-0.98%	16.83	71.93	136.40	Now: -2.64% | 10Y: -0.59% | Diff: -2.05%	43		2.63\nTHE PROCTER & GAMBLE COMPANY (XNYS:PG)	 $  161.57 	 $  137.62 	4.23	2.62%	2.67%	0.36%	4.77	-0.15	PG	  ⇣ .75	89.00	 $  158.38 	13.47%		3.30%	4.17%	24.3	148.92	8%									-1.97%	6.74	34.36	54.64	Now: -2.31% | 10Y: -0.23% | Diff: -2.08%	69	63.74%	4.69\nFRANKLIN TEMPLETON, INC. (XNYS:BEN)	 $    31.64 	 $     21.11 	1.32	4.17%	4.70%	2.14%	7.39	-0.25	BEN	⇧ .06	34.04	 $     28.08 	45.48%		5.96%	8.51%	21.6	30.24	5%	-0.65	6.72%	3.93%	-37.88%	58.56%	 $     19.66 	 $        1.13 	-$     17.40 	-11.26%	2.69	12.22	21.83	Now: -0.76% | 10Y: 1.80% | Diff: -2.56%	28	89.98%	3.37\nARCHER-DANIELS-MIDLAND COMPANY. (XNYS:ADM)	 $    76.91 	 $     55.58 	2.08	2.70%	2.85%	0.57%	7.6	-0.26	ADM	⇧ .19	54.53	 $     72.97 	19.88%		3.90%	5.63%	21.1	76.51	1%									-5.12%	4.33	19.45	35.07	Now: -2.22% | 10Y: -0.05% | Diff: -2.17%	52	56.94%	6.67\nBLACKROCK ENHANCED EQUITY DIVIDED CF (XNYS:BDJ)	 $       9.60 	 $       8.42 	0.74	7.71%	8.31%	2.30%	0	-0.26	BDJ	  ⇣ .06	10.76	 $       8.91 	27.73%		7.71%	7.71%	#FIELD!	9.42	2%	-0.81	10.45%	3.39%	-26.24%	32.42%	 $       7.08 		 $        0.86 	-7.24%	0.74	4.76	6.00	Now: 2.78% | 10Y: 5.41% | Diff: -2.63%			-12.29\nNutrien Ltd. (XNYS:NTR)	 $    69.42 	 $     53.03 	2.2	3.17%	3.41%	0.74%	3.7	-0.33	NTR	New	42.60	 $     64.45 	21.71%		3.80%	4.56%	14.1	71.09	-2%	-0.84	0.04213	0.0124	-24.78%	29.37%	 $     52.22 	 $      31.83 	 $     11.44 	-7.15%	3.16	16.95	25.64	Now: -1.76% | 10Y: 0.51% | Diff: -2.27%	7	44.54%	-7.29\nEnbridge Inc. (XNYS:ENB)	 $    49.46 	 $     45.03 	2.76	5.58%	5.99%	0.0115	6.05	-0.35	ENB	  ⇣ .35	64.14	 $     46.10 	19.18%		7.49%	10.04%	27.1	52.23	-5%	-0.91	6.96%	1.52%	-19.88%	21.82%	 $     39.63 	 $      28.84 	 $     18.04 	-6.80%	4.97	23.89	40.25	Now: 0.65% | 10Y: 3.09% | Diff: -2.44%	29	151.09%	1.39\nAltria Group, Inc. (XNYS:MO)	 $    78.03 	 $     54.70 	4.44	5.69%	6.40%	1.86%	7.1	-0.38	MO	  ⇣ .44	111.96	 $     69.35 	28.98%		8.02%	11.30%	16.1	68.88	13%	-0.92	7.71%	2.20%	-26.23%	28.47%	 $     57.56 	 $      35.35 	 $     13.13 	-11.13%	8.82	40.50	71.46	Now: 0.76% | 10Y: 3.50% | Diff: -2.74%	55	91.67%	5.73\nHA SUSTAINABLE INFRASTRUCTURE CAPITAL, INC. (XNYS:HASI)	 $    37.22 	 $     27.28 	1.7	4.57%	5.04%	1.21%	3.83	-0.39	HASI	  ⇣ .09	33.25	 $     33.75 	24.03%		5.51%	6.65%		38.13	-2%									-9.32%	2.48	13.18	20.07	Now: -0.36% | 10Y: 2.14% | Diff: -2.50%	7	0.00%	2.17\nH & R BLOCK, INC. (XNYS:HRB)	 $    51.31 	 $     28.16 	1.68	3.27%	3.71%	1.02%	7.11	-0.43	HRB	  ⇣ .68	42.40	 $     45.30 	27.49%		4.62%	6.51%	10.1	39.14	31%	-0.99	4.88%	1.63%	-32.84%	33.34%	 $     34.46 	 $      17.35 	 $        0.24 	-11.71%	3.34	15.33	27.06	Now: -1.65% | 10Y: 0.81% | Diff: -2.46%	10	33.04%	12.60\nSCHWAB US DIVIDEND EQUITY ETF (ARCX:SCHD)	 $    35.78 	 $     26.32 	1.05	2.93%	3.10%	0.36%	11.04	-0.45	SCHD	  ⇣ .71	35.94	 $     33.90 	11.55%		4.95%	8.36%	#FIELD!	32.35	11%	-1.31	3.58%	0.49%	-17.97%	13.69%	 $     29.35 	 $      24.45 	 $     19.55 	-5.25%	2.99	11.69	24.25	Now: -1.99% | 10Y: 0.20% | Diff: -2.19%	13		6.45\niShares:Sel Div (XNAS:DVY)	 $  162.53 	 $  137.16 	5.25	3.23%	3.39%	0.35%	7.06	-0.46	DVY	  ⇣ .51	131.97	 $  154.66 	10.44%		4.54%	6.39%	#FIELD!	156.18	4%	-0.94	3.89%	0.70%	-16.88%	17.89%	 $  135.09 	 $   106.02 	 $     76.95 	-4.84%	10.39	47.79	84.18	Now: -1.70% | 10Y: 0.49% | Diff: -2.19%	5		7.27\nCOHEN & STEERS, INC. (XNYS:CNS)	 $    72.48 	 $     58.39 	2.68	3.70%	4.42%	1.48%	6.65	-0.48	CNS	⇧ .02	65.26	 $     60.67 	33.62%		5.10%	7.04%	22.2	70.88	2%	-0.82	6.23%	3.09%	-40.65%	49.64%	 $     43.02 	 $        7.04 	-$     28.94 	-16.29%	5.10	23.90	41.36	Now: -1.23% | 10Y: 1.52% | Diff: -2.75%	16	82.24%	5.79\nMPLX COM UNT (XNYS:MPLX)	 $    60.16 	 $     50.22 	4.31	7.16%	8.57%	2.62%	9.87	-0.54	MPLX	  ⇣ .16	134.75	 $     50.31 	30.53%		11.47%	18.36%	#FIELD!	57.23	5%	-0.56	11.24%	7.23%	-36.26%	64.29%	 $     38.35 	-$        0.33 	-$     39.01 	-16.37%	11.05	45.20	89.55	Now: 2.24% | 10Y: 5.67% | Diff: -3.43%	11		12.32\nPACER US CASH COWS 100 ETF (BATS:COWZ)	 $    71.37 	 $     56.84 	1.24	1.74%	1.92%	0.32%	12	-0.59	COWZ	  ⇣ .27	45.71	 $     64.44 	16.55%		3.06%	5.40%	#FIELD!	65.45	9%	-1.05	2.40%	0.63%	-27.52%	26.11%	 $     51.73 		 $     14.46 	-9.70%	3.85	14.49	31.22	Now: -3.19% | 10Y: -0.98% | Diff: -2.22%	4		8.70\nBRITISH AMERICAN TOBACCO P.L.C. (XNYS:BTI)	 $    61.52 	 $     51.80 	3.24	5.27%	6.33%	1.77%	3.59	-0.60	BTI	  ⇣ .45	62.20	 $     51.21 	28.00%		6.28%	7.49%	15.7	59.14	4%	-1.18	7.76%	2.11%	-32.10%	27.14%	 $     41.77 			-16.76%	4.61	24.83	37.37	Now: 0.34% | 10Y: 3.43% | Diff: -3.09%	3	82.86%	5.51\nQUALCOMM INCORPORATED (XNAS:QCOM)	 $  164.79 	 $  121.99 	3.68	2.23%	2.69%	0.76%	6.18	-0.61	QCOM	⇧ .27	86.39	 $  136.65 	28.10%		3.01%	4.07%	19.1	169.52	-3%	-1.18	3.37%	0.96%	-33.82%	28.55%	 $  109.05 	 $      62.01 	 $     14.96 	-17.08%	6.70	32.06	54.33	Now: -2.70% | 10Y: -0.21% | Diff: -2.49%	22	42.59%	6.41\nALPS ALERIAN MLP ETF (ARCX:AMLP)	 $    54.06 	 $     46.04 	3.97	7.34%	8.56%	2.00%	4.00	-0.61	AMLP	  ⇣ .09	78.68	 $     46.37 	23.38%		8.93%	10.87%	#FIELD!	52.89	2%									-14.23%	5.88	31.05	47.63	Now: 2.41% | 10Y: 5.66% | Diff: -3.25%	3		8.31\nENERGY TRANSFER UNT (XNYS:ET)	 $    20.91 	 $     16.18 	1.35	6.46%	8.42%	2.99%	2.57	-0.66	ET	  ⇣ .04	23.95	 $     16.03 	35.56%		7.33%	8.32%	#FIELD!	#N/A	#N/A	-0.90	13.04%	7.33%	-50.48%	56.22%	 $     10.35 	-$        1.40 	-$     13.16 	-23.34%	1.74	9.84	14.10	Now: 1.53% | 10Y: 5.52% | Diff: -3.99%	4		7.16\nTHE FIRST BANCORP, INC. (XNAS:FNLC)	 $    36.35 	 $     24.61 	1.48	4.07%	4.57%	0.76%	5.54	-0.66	FNLC	  ⇣ .30	33.06	 $     32.36 	16.67%		5.33%	6.98%	10.4	31.15	17%	-1.39	5.34%	0.91%	-23.77%	17.12%	 $     27.71 	 $      21.49 	 $     15.26 	-10.96%	2.54	12.49	20.57	Now: -0.86% | 10Y: 1.67% | Diff: -2.53%	11	42.24%	27.73\nBLACK HILLS CORPORATION (XNYS:BKH)	 $    82.01 	 $     62.27 	2.81	3.43%	3.92%	0.69%	5.25	-0.72	BKH	  ⇣ .70	61.37	 $     71.61 	17.66%		4.43%	5.72%	20.7	73.38	12%									-12.69%	4.69	23.37	37.99	Now: -1.50% | 10Y: 1.02% | Diff: -2.53%	53	70.87%	6.71\nONEOK, INC. (XNYS:OKE)	 $    97.07 	 $     64.02 	4.28	4.41%	5.80%	1.89%	5.55	-0.74	OKE	  ⇣ .21	95.68	 $     73.76 	32.57%		5.78%	7.57%	14.9	88.73	9%	-0.18	8.26%	21.35%	-46.65%	258.31%	 $     51.79 	-$  198.96 	-$  449.70 	-24.01%	7.35	36.14	59.54	Now: -0.52% | 10Y: 2.90% | Diff: -3.42%		65.77%	4.12\nDELEK LOGISTICS PARTNERS COM UNT (XNYS:DKL)	 $    56.08 	 $     42.82 	4.5	8.02%	9.82%	2.32%	8.19	-0.78	DKL	  ⇣ .06	123.50	 $     45.82 	23.60%		11.89%	17.63%	#FIELD!	#N/A	#N/A									-18.29%	9.89	43.35	80.14	Now: 3.10% | 10Y: 6.92% | Diff: -3.83%	12		–\nKINDER MORGAN, INC. (XNYS:KMI)	 $    33.87 	 $     25.60 	1.19	3.51%	4.76%	1.55%	1.94	-0.80	KMI	  ⇣ .18	20.10	 $     25.02 	32.63%		3.87%	4.26%	20.8	32.07	6%									-26.12%	1.44	8.41	11.69	Now: -1.42% | 10Y: 1.86% | Diff: -3.27%	7	73.20%	2.14\nCOLGATE-PALMOLIVE COMPANY (XNYS:CL)	 $    95.29 	 $     74.55 	2.08	2.18%	2.30%	0.14%	3.26	-0.85	CL	  ⇣ 3.56	38.92	 $     90.39 	6.04%		2.56%	3.01%	37.7	89.68	6%									-5.14%	2.87	15.69	23.24	Now: -2.75% | 10Y: -0.60% | Diff: -2.15%	61	82.28%	3.19\nINVESCO LTD (XNYS:IVZ)	 $    27.76 	 $     21.82 	0.84	3.03%	4.65%	1.86%	0	-0.87	IVZ	⇧ .13	12.22	 $     18.06 	40.08%		3.03%	3.03%	#FIELD!	27.98	-1%									-34.95%	0.84	5.41	6.81	Now: -1.90% | 10Y: 1.75% | Diff: -3.65%	4		2.80\nENTERPRISE PRODUCTS PARTNERS UNT (XNYS:EPD)	 $    38.15 	 $     30.02 	2.24	5.87%	6.91%	1.10%	3.77	-0.94	EPD	  ⇣ .25	43.61	 $     32.43 	15.88%		7.07%	8.50%	#FIELD!	37.31	2%	-1.00	8.08%	2.22%	-27.35%	27.45%	 $     27.72 	 $      17.24 	 $        6.77 	-14.99%	3.24	17.32	26.29	Now: 0.94% | 10Y: 4.01% | Diff: -3.06%	26		4.98\nAMERIPRISE FINANCIAL, INC. (XNYS:AMP)	 $  490.83 	 $  422.37 	6.8	1.39%	1.95%	0.59%	8.8	-0.94	AMP	New	195.67	 $  349.44 	30.50%		2.11%	3.22%	11.0	492.73	0%	-1.08	2.55%	1.07%	-45.63%	42.12%	 $  266.86 	 $      60.11 	-$  146.64 	-28.81%	15.81	67.56	128.11	Now: -3.54% | 10Y: -0.95% | Diff: -2.59%	20	15.29%	9.73\nNATIONAL FUEL GAS COMPANY (XNYS:NFG)	 $    79.55 	 $     75.03 	2.14	2.69%	3.18%	0.50%	3.08	-0.98	NFG	  ⇣ .19	39.49	 $     67.33 	15.63%		3.13%	3.64%	11.1	83.37	-5%	-1.36	3.69%	0.74%	-27.11%	19.98%	 $     57.98 			-15.36%	2.90	16.00	23.49	Now: -2.24% | 10Y: 0.28% | Diff: -2.52%	53	29.77%	3.75\nAFLAC INCORPORATED (XNYS:AFL)	 $  123.89 	 $  105.48 	2.44	1.97%	2.22%	0.25%	11.38	-1.00	AFL	  ⇣ .79	85.74	 $  110.05 	11.12%		3.38%	5.79%	13.3	115.87	7%	-1.07	2.60%	0.59%	-24.36%	22.82%	 $     93.72 			-11.17%	7.17	27.63	58.11	Now: -2.96% | 10Y: -0.68% | Diff: -2.28%	43	26.15%	13.98\nJPMORGAN CHASE & CO. (XNYS:JPM)	 $  337.04 	 $  279.10 	6.6	1.96%	2.46%	0.50%	12.45	-1.01	JPM	  ⇣ .04	251.90	 $  268.11 	20.23%		3.52%	6.33%	14.1	322.95	4%									-20.45%	21.34	78.95	172.95	Now: -2.97% | 10Y: -0.44% | Diff: -2.53%	15	27.68%	17.84\nELI LILLY AND COMPANY (XNYS:LLY)	 $      1,417.5 	 $  850.51 	6.92	0.49%	1.53%	0.88%	10.96	-1.18	LLY	  ⇣ .11	235.40	 $  451.80 	57.60%		0.82%	1.38%	46.0	1091.24	30%									-68.13%	19.58	76.71	158.69	Now: -4.44% | 10Y: -1.37% | Diff: -3.07%	10	22.46%	16.17\nCINCINNATI FINANCIAL CORPORATION (XNAS:CINF)	 $  181.19 	 $  151.99 	3.76	2.08%	2.59%	0.43%	6.7	-1.19	CINF	  ⇣ .48	91.91	 $  145.45 	16.55%		2.87%	3.97%	10.6	168.13	8%									-19.72%	7.19	33.62	58.29	Now: -2.85% | 10Y: -0.31% | Diff: -2.54%	65	22.04%	9.34\nEXXONMOBIL HOLDINGS CORPORATION (XNYS:XOM)	 $  187.25 	 $  112.51 	4.12	2.20%	4.18%	1.61%	3.36	-1.23	XOM	  ⇣ .15	77.70	 $     98.48 	38.52%		2.60%	3.06%	19.3	154.60	21%									-47.41%	5.73	31.22	46.47	Now: -2.73% | 10Y: 1.28% | Diff: -4.01%	26	42.41%	4.44\nBROADCOM INC. (XNAS:AVGO)	 $  326.08 	 $  289.96 	2.6	0.80%	2.13%	1.05%	31.8	-1.27	AVGO	⇧ .05	419.14	 $  122.18 	49.41%		3.17%	12.61%	41.6	367.67	-11%									-62.53%	41.13	85.78	333.36	Now: -4.13% | 10Y: -0.77% | Diff: -3.36%	14	33.21%	12.37\nUNITED BANKSHARES, INC. (XNAS:UBSI)	 $    48.22 	 $     34.68 	1.52	3.15%	3.86%	0.55%	1.46	-1.28	UBSI	  ⇣ .11	24.74	 $     39.39 	14.24%		3.39%	3.64%	13.1	44.80	8%									-18.30%	1.76	10.50	14.24	Now: -1.78% | 10Y: 0.96% | Diff: -2.74%	26	41.19%	1.17\nAMGEN INC. (XNAS:AMGN)	 $  466.01 	 $  292.12 	10.08	2.16%	2.70%	0.40%	12.6	-1.33	AMGN	  ⇣ .73	389.19	 $  373.53 	14.87%		3.92%	7.09%	28.9	374.79	24%									-19.85%	33.03	121.51	267.69	Now: -2.77% | 10Y: -0.20% | Diff: -2.56%	13	62.60%	7.24\nWALMART INC. (XNAS:WMT)	 $  123.51 	 $     98.88 	0.99	0.80%	1.70%	0.65%	4.31	-1.39	WMT	  ⇣ .17	20.10	 $     58.17 	38.05%		0.99%	1.22%	44.7	118.51	4%									-52.90%	1.51	7.86	12.24	Now: -4.13% | 10Y: -1.20% | Diff: -2.93%	51	35.87%	9.45\nINTERNATIONAL BUSINESS MACHINES CORPORATION (XNYS:IBM)	 $  257.81 	 $  199.19 	6.72	2.61%	3.89%	0.90%	2.82	-1.42	IBM	  ⇣ .36	121.53	 $  172.95 	23.22%		3.00%	3.44%	19.5	249.16	3%									-32.92%	8.87	49.60	71.93	Now: -2.32% | 10Y: 0.99% | Diff: -3.31%	25	50.73%	0.35\nSTATE STRT UTLTES SLET SCTR SPDR ETF (ARCX:XLU)	 $    43.43 	 $     39.03 	1.2	2.76%	3.09%	0.23%	5	-1.42	XLU	New	25.70	 $     38.84 	7.42%		3.53%	4.50%	#FIELD!	44.30	-2%	-1.88	3.49%	0.39%	-20.89%	11.09%	 $     34.36 	 $      29.54 		-10.56%	1.95	9.86	15.84	Now: -2.17% | 10Y: 0.19% | Diff: -2.36%	15		4.58\nTHE SOUTHERN COMPANY (XNYS:SO)	 $    93.71 	 $     81.69 	2.96	3.16%	4.05%	0.60%	3.18	-1.49	SO	  ⇣ 3.02	55.05	 $     73.06 	14.81%		3.69%	4.32%	22.6	92.43	1%									-22.04%	4.05	22.23	32.81	Now: -1.77% | 10Y: 1.15% | Diff: -2.92%	23	71.38%	2.57\nCATERPILLAR INC. (XNYS:CAT)	 $  622.50 	 $  537.08 	6.52	1.05%	2.19%	0.71%	7.38	-1.61	CAT	  ⇣ 1.61	168.02	 $  297.63 	32.42%		1.50%	2.13%	24	809.91	-23%	-1.74	2.71%	0.95%	-61.29%	35.20%	 $  240.99 	 $      21.89 	-$  197.21 	-52.19%	13.29	60.31	107.71	Now: -3.88% | 10Y: -0.71% | Diff: -3.17%	33	25.58%	10.14\nState Street SPDR S&P500 (ARCX:SPY)	 $  755.72 	 $  629.28 	7.52	1.00%	1.55%	0.34%	5.82	-1.64	SPY	New	171.67	 $  484.17 	21.87%		1.32%	1.75%	#FIELD!	728.85	4%									-35.93%	13.24	64.35	107.32	Now: -3.93% | 10Y: -1.35% | Diff: -2.59%			5.00\nABBVIE INC. (XNYS:ABBV)	 $  294.89 	 $  190.75 	6.92	2.35%	3.77%	0.86%	13.65	-1.65	ABBV	  ⇣ .23	289.68	 $  183.57 	22.90%		4.45%	8.44%	50.8	237.10	24%									-37.75%	24.88	88.04	201.64	Now: -2.58% | 10Y: 0.87% | Diff: -3.45%	53	119.18%	5.87\nCONSOLIDATED EDISON, INC. (XNYS:ED)	 $  116.64 	 $     94.96 	3.55	3.04%	3.51%	0.28%	2.79	-1.66	ED	  ⇣ 1.19	64.05	 $  101.18 	8.01%		3.49%	4.01%	19.2	109.02	7%	-2.52	3.96%	0.36%	-23.05%	9.16%	 $     89.75 			-13.25%	4.67	26.16	37.89	Now: -1.89% | 10Y: 0.61% | Diff: -2.49%	51	58.30%	3.45\nEMERSON ELECTRIC CO. (XNYS:EMR)	 $  164.94 	 $  122.64 	2.22	1.35%	2.48%	0.68%	1.58	-1.66	EMR	  ⇣ .03	36.47	 $     89.69 	27.51%		1.46%	1.57%	36.1	147.03	12%									-45.62%	2.60	15.42	21.05	Now: -3.58% | 10Y: -0.42% | Diff: -3.16%	29	48.57%	2.21\nGILEAD SCIENCES, INC. (XNAS:GILD)	 $  170.68 	 $  116.88 	3.28	1.92%	3.29%	0.81%	3.82	-1.69	GILD	  ⇣ .29	64.10	 $     99.64 	24.63%		2.32%	2.80%	0.0	139.88	22%									-41.62%	4.77	25.42	38.68	Now: -3.01% | 10Y: 0.39% | Diff: -3.40%	9	0.00%	3.50\nVALERO ENERGY CORPORATION (XNYS:VLO)	 $  399.66 	 $  159.90 	4.8	1.20%	3.73%	1.46%	7.77	-1.73	VLO	⇧ .01	127.50	 $  128.78 	39.25%		1.75%	2.54%	9.0	285.71	40%									-67.78%	10.14	45.28	82.23	Now: -3.73% | 10Y: 0.83% | Diff: -4.56%	3	10.80%	5.98\nCARDINAL HEALTH, INC. (XNYS:CAH)	 $  250.48 	 $  180.45 	2.04	0.81%	2.62%	1.04%	2.2	-1.74	CAH	  ⇣ .05	35.16	 $     77.93 	39.59%		0.91%	1.01%	34.6	222.15	13%									-68.89%	2.54	14.61	20.56	Now: -4.11% | 10Y: -0.28% | Diff: -3.83%	30	28.16%	0.48\nDUKE ENERGY CORPORATION (XNYS:DUK)	 $  127.39 	 $  112.40 	4.34	3.41%	4.01%	0.34%	2.54	-1.78	DUK	  ⇣ .92	76.80	 $  108.11 	8.51%		3.86%	4.38%	19.2	124.36	2%									-15.13%	5.58	31.60	45.21	Now: -1.52% | 10Y: 1.11% | Diff: -2.64%	15	65.33%	2.50\nMERCK & CO., INC. (XNYS:MRK)	 $  149.52 	 $     82.01 	3.4	2.27%	2.81%	0.30%	6.34	-1.81	MRK	  ⇣ .17	80.82	 $  120.94 	10.55%		3.09%	4.20%		126.71	18%	-2.55	3.38%	0.43%	-32.66%	12.80%	 $  100.68 	 $      81.55 	 $     62.41 	-19.11%	6.29	29.86	50.96	Now: -2.66% | 10Y: -0.09% | Diff: -2.57%	14	0.00%	1.09\nPhilip Morris International Inc. (XNYS:PM)	 $  208.79 	 $  142.11 	5.88	2.82%	4.66%	0.99%	3.05	-1.86	PM	  ⇣ 4.31	108.25	 $  126.16 	21.22%		3.27%	3.80%	30.5	181.88	15%									-39.57%	7.94	43.89	64.36	Now: -2.11% | 10Y: 1.76% | Diff: -3.87%	16	85.85%	4.98\nTEXAS INSTRUMENTS INCORPORATED (XNAS:TXN)	 $  300.84 	 $  152.73 	5.68	1.89%	2.53%	0.34%	12.8	-1.88	TXN	  ⇣ .08	222.71	 $  224.84 	13.44%		3.45%	6.30%	39.0	259.66	16%	-2.69	3.06%	0.44%	-38.34%	14.24%	 $  185.51 	 $   142.67 	 $     99.84 	-25.26%	18.94	69.17	153.54	Now: -3.04% | 10Y: -0.37% | Diff: -2.67%	19	73.68%	5.06\nThe Travelers Companies, Inc. (XNYS:TRV)	 $  396.22 	 $  264.25 	4.4	1.11%	2.06%	0.44%	6.22	-2.17	TRV	  ⇣ .12	103.62	 $  213.40 	21.22%		1.50%	2.03%	10.4	329.85	20%	-2.17	2.46%	0.62%	-54.77%	25.27%	 $  179.19 	 $      79.06 	-$     21.07 	-46.14%	8.04	38.41	65.21	Now: -3.82% | 10Y: -0.84% | Diff: -2.98%	20	11.53%	5.12\nJOHNSON & JOHNSON (XNYS:JNJ)	 $  273.20 	 $  185.12 	5.2	1.90%	2.62%	0.31%	5.93	-2.29	JNJ	  ⇣ .18	119.73	 $  198.11 	11.99%		2.54%	3.39%	41.5	246.99	11%									-27.49%	9.25	44.74	74.99	Now: -3.03% | 10Y: -0.28% | Diff: -2.75%	62	78.92%	4.29\nTHE COCA-COLA COMPANY (XNYS:KO)	 $    94.08 	 $     67.27 	2.12	2.25%	3.00%	0.30%	4.59	-2.49	KO	  ⇣ .28	43.99	 $     70.55 	10.03%		2.82%	3.53%	27.7	82.14	15%									-25.01%	3.32	17.07	26.92	Now: -2.68% | 10Y: 0.10% | Diff: -2.78%	62	62.50%	5.68\nCISCO SYSTEMS, INC. (XNAS:CSCO)	 $  104.51 	 $     70.54 	1.68	1.61%	2.84%	0.49%	7.73	-2.51	CSCO	⇧ .06	44.49	 $     59.08 	17.29%		2.33%	3.38%	31.4	101.18	3%									-43.47%	3.54	15.82	28.67	Now: -3.32% | 10Y: -0.06% | Diff: -3.26%	13	50.48%	2.97\nBADGER METER, INC. (XNYS:BMI)	 $  148.38 	 $  112.09 							BMI	New	0.00				.													#DIV/0!	0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	21	0.00%	–\nBROADRIDGE FINANCIAL SOLUTIONS, INC. (XNYS:BR)	 $  178.82 	 $  133.83 							BR	New	0.00				.													#DIV/0!	0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	18	0.00%	–\nMICROSOFT CORPORATION (XNAS:MSFT)	 $  521.91 	 $  349.20 	3.64	0.70%			9.72		MSFT	New	112.49				.														9.20	37.89	74.60	Now: -4.23% | 10Y: -2.90% | Diff: -1.33%	21	0.00%	–\nAMERICAN FINANCIAL GROUP, INC. (XNYS:AFG)	 $  153.87 	 $  123.09 	7.02	4.56%					AFG	– .00	102.09						13.4	136.27	13%									#DIV/0!	7.02	45.19	56.90	Now: -0.37% | 10Y: -2.90% | Diff: +2.53%	20	61.30%	–\nTHE ALLSTATE CORPORATION (XNYS:ALL)	 $  259.87 	 $  188.15 							ALL	– .00	0.00						5.2	228.34	14%									#DIV/0!	0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	15	0.00%	–\nINFRACAP MLP ETF (ARCX:AMZA)	 $    49.42 	 $     38.01 	3.78	7.65%					AMZA	– .00	54.97							46.93	5%									#DIV/0!	3.78	24.33	30.64	Now: 2.72% | 10Y: -2.90% | Diff: +5.62%	3	0.00%	–\nCOMMUNITY FINANCIAL SYSTEM, INC. (XNYS:CBU)	 $    62.37 	 $     53.46 	1.96	3.14%					CBU	– .00	28.50							62.88	-1%									#DIV/0!	1.96	12.62	15.89	Now: -1.79% | 10Y: -2.90% | Diff: +1.11%	34	0.00%	–\nCNA FINANCIAL CORPORATION (XNYS:CNA)	 $    48.68 	 $     41.53 	1.84	3.78%					CNA	– .00	26.76							47.47	3%										1.84	11.85	14.91	Now: -1.15% | 10Y: -2.90% | Diff: +1.75%	9	0.00%	–\nCAPITAL SOUTHWEST CORPORATION (XNAS:CSWC)	 $    23.17 	 $     19.91 	2.55	11.01%	8.80%		6.8		CSWC	– .00	62.82	 $     28.98 			15.29%	21.25%	14	23.41	-1%									25.06%	4.92	22.91	39.91	Now: 6.08% | 10Y: 5.90% | Diff: +0.18%	10	152.74%	–\nCOMMUNITY TRUST BANCORP, INC. (XNAS:CTBI)	 $    68.98 	 $     50.64 	2.6	3.77%					CTBI	– .00	37.81							68.99	0%										2.60	16.74	21.07	Now: -1.16% | 10Y: -2.90% | Diff: +1.74%	46	0.00%	–\nCHEVRON CORPORATION (XNYS:CVX)	 $  235.52 	 $  146.49 	6.84	2.90%	4.28%		4.55		CVX	– .00	141.47	 $  159.81 						193.34	22%									-32.14%	10.67	54.96	86.51	Now: -2.02% | 10Y: 1.38% | Diff: -3.40%	38	0.00%	–\nEOG RESOURCES, INC. (XNYS:EOG)	 $  165.54 	 $  101.59 	4.08	2.46%					EOG	– .00	59.34							137.06	21%										4.08	26.27	33.07	Now: -2.46% | 10Y: -2.90% | Diff: +0.44%	8	0.00%	–\nEATON CORPORATION PUBLIC LIMITED COMPANY (XNYS:ETN)	 $  369.97 	 $  311.92 	4.4	1.19%					ETN	– .00	63.99							396.93	-7%										4.40	28.33	35.66	Now: -3.74% | 10Y: -2.90% | Diff: -0.84%	16	0.00%	–\nFASTENAL COMPANY (XNAS:FAST)	 $    51.91 	 $     38.97 	1.04	2.00%					FAST	– .00	15.13							47.21	10%										1.04	6.70	8.43	Now: -2.93% | 10Y: -2.90% | Diff: -0.03%	27	0.00%	–\nFirst Community Bankshares, Inc. (XNAS:FCBC)	 $    46.94 	 $     30.29 	1.24	2.64%	3.63%		9.08		FCBC	– .00	36.46	 $     34.16 			4.08%	6.30%	15	43.88	7%									-27.23%	2.96	12.49	23.97	Now: -2.29% | 10Y: 0.73% | Diff: -3.02%		39.17%	–\nGENERAL DYNAMICS CORPORATION (XNYS:GD)	 $  372.59 	 $  306.77 	6	1.61%					GD	– .00	87.26				1.61%	1.61%	22	354.87	5%										6.00	38.63	48.63	Now: -3.32% | 10Y: -2.90% | Diff: -0.42%	30	35.30%	–\niShares:7-10 Trs Bd (XNAS:IEF)	 $    91.76 	 $     88.64 							IEF	– .00	0.00						#FIELD!	93.86	-2%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%			–\nINGREDION INCORPORATED (XNYS:INGR)	 $    96.97 	 $     93.30 	3.28	3.38%					INGR	– .00	47.70							105.67	-8%										3.28	21.12	26.59	Now: -1.55% | 10Y: -2.90% | Diff: +1.35%	15	0.00%	–\nLOCKHEED MARTIN CORPORATION (XNYS:LMT)	 $  636.95 	 $  437.25 	13.2	2.07%	2.62%		10.59		LMT	– .00	436.36	 $  503.82 			3.43%	5.67%	23	568.41	12%									-20.90%	36.12	143.59	292.76	Now: -2.86% | 10Y: -0.28% | Diff: -2.58%		46.89%	–\nGLOBAL X MLP & ENERGY INFRASTRUCTURE ETF (ARCX:MLPX)	 $    76.53 	 $     57.66 							MLPX	– .00	0.00							72.75	5%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	4	0.00%	–\nNORTHWESTERN ENERGY GROUP, INC. (XNAS:NWE)	 $    79.81 	 $     58.57 	2.64	3.31%	4.00%		4.06		NWE	– .00	52.57	 $     66.00 			4.04%	4.92%	29	70.46	13%									-17.30%	3.93	20.71	31.86	Now: -1.62% | 10Y: 1.10% | Diff: -2.72%	19	94.88%	–\nOGE ENERGY CORP. (XNYS:OGE)	 $    49.47 	 $     41.70 	1.7	3.44%					OGE	– .00	24.72				3.44%	3.44%	19	47.14	5%										1.70	10.94	13.78	Now: -1.49% | 10Y: -2.90% | Diff: +1.41%	19	63.91%	–\nONE GAS, INC. (XNYS:OGS)	 $    78.54 	 $     70.37 	2.68	3.41%			8.37		OGS	– .00	74.59						17	80.91	-3%										5.99	26.06	48.53	Now: -1.52% | 10Y: -2.90% | Diff: +1.38%	11	57.83%	–\nPRINCIPAL FINANCIAL GROUP, INC. (XNAS:PFG)	 $  111.63 	 $     80.00 	3.04	2.72%	3.56%		7.62		PFG	– .00	79.82	 $     85.39 			3.93%	5.68%	12	103.57	8%									-23.50%	6.34	28.46	51.36	Now: -2.21% | 10Y: 0.66% | Diff: -2.87%		33.74%	–\nPHILLIPS 66 (XNYS:PSX)	 $  282.83 	 $  127.16 	5.08	1.80%					PSX	– .00	73.88							198.91	42%										5.08	32.70	41.18	Now: -3.13% | 10Y: -2.90% | Diff: -0.23%	13	0.00%	–\nRTX CORPORATION (XNYS:RTX)	 $  199.80 	 $  166.74 	2.92	1.46%			5.49		RTX	– .00	64.97				1.91%	2.49%		195.31	2%										4.98	24.58	40.39	Now: -3.47% | 10Y: -2.90% | Diff: -0.57%	33	0.00%	–\nSTEPAN COMPANY (XNYS:SCL)	 $    69.61 	 $     41.82 							SCL	– .00	0.00						378	56.89	22%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	57	0.00%	–\nTHE SHERWIN-WILLIAMS COMPANY (XNYS:SHW)	 $  332.61 	 $  289.86 	3.2	0.96%					SHW	– .00	46.54							332.74	0%										3.20	20.60	25.94	Now: -3.97% | 10Y: -2.90% | Diff: -1.07%	47	0.00%	–\nSNAP-ON INCORPORATED (XNYS:SNA)	 $  355.66 	 $  320.80 	9.76	2.74%					SNA	– .00	141.94						18	380.26	-6%										9.76	62.83	79.11	Now: -2.18% | 10Y: -2.90% | Diff: +0.72%	16	50.77%	–\nSpire Inc. (XNYS:SR)	 $    88.00 	 $     74.84 	3.3	3.75%			5.45		SR	– .00	73.20				4.89%	6.38%	25	26.23	236%										5.61	27.72	45.47	Now: -1.18% | 10Y: -2.90% | Diff: +1.72%	22	92.00%	–\nSKYWORKS SOLUTIONS, INC. (XNAS:SWKS)	 $    87.58 	 $     51.93 							SWKS	– .00	0.00							67.65	29%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	11	0.00%	–\niShares:20+ Trs Bd ETF (XNAS:TLT)	 $    81.84 	 $     76.43 							TLT	– .00	0.00						#FIELD!	84.62	-3%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%			–\nUNUM GROUP (XNYS:UNM)	 $    91.14 	 $     69.02 	2.02	2.22%					UNM	– .00	29.38							83.97	9%										2.02	13.00	16.37	Now: -2.71% | 10Y: -2.90% | Diff: +0.19%	18	0.00%	–\nUS TREASURY 2 YEAR NOTE ETF (XNAS:UTWO)	 $    47.60 	 $     47.27 							UTWO	– .00	0.00							48.07	-1%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%		0.00%	–\nWESTLAKE CORPORATION (XNYS:WLK)	 $    68.28 	 $     56.33 	2.12	3.10%					WLK	– .00	30.83							86.95	-21%										2.12	13.65	17.18	Now: -1.82% | 10Y: -2.90% | Diff: +1.08%	21	0.00%	–\nJOHN WILEY & SONS, INC. (XNYS:WLY)	 $    51.17 	 $     28.38 	1.42	2.78%					WLY	– .00	20.65				2.78%	2.78%	14	43.38	18%										1.42	9.14	11.51	Now: -2.15% | 10Y: -2.90% | Diff: +0.75%	27	38.07%	–\nW. R. BERKLEY CORPORATION (XNYS:WRB)	 $    73.86 	 $     62.40 							WRB	– .00	0.00							68.95	7%										0.00	0.00	0.00	Now: -4.93% | 10Y: -2.90% | Diff: -2.03%	36	0.00%	–\nEssential Utilities, Inc. (XNYS:WTRG)	 $    43.52 	 $     36.11 	1.442	3.31%					WTRG	– .00	20.98							39.41	10%										1.44	9.29	11.69	Now: -1.61% | 10Y: -2.90% | Diff: +1.29%	35	0.00%	–\nRYDER SYSTEM, INC. (XNYS:R)	 $  282.55 	 $  161.41 							R	  ⇣ 2.36	0.00				0.00%	0.00%	22	237.65	19%										0.00	0.00	0.00			0.00%	–\nCOSTCO WHOLESALE CORPORATION (XNAS:COST)	########	 $  844.06 							COST																										–\nTHE PROGRESSIVE CORPORATION (XNYS:PGR)	 $  231.28 	 $  189.20 							PGR																										–\n10 Y TSY YLD NDX	 $    49.29 	 $     39.56 		4.93%					TNX									#N/A	#N/A																–\nSTATE STRET MATRL SLCT SCTR SPDR ETF (ARCX:XLB)	 $    52.74 	 $     42.04 							XLB\nSTE STRT COMTN SR SLCT SCTR SPDR ETF (ARCX:XLC)	 $    99.90 	 $     99.33 							XLC\nSTATE STRET ENRGY SLECT SEC SPDR ETF (ARCX:XLE)	 $    70.02 	 $     43.19 							XLE\nSTE STRT FINCL SLCT SECTOR SPDR ETF (ARCX:XLF)	 $    56.51 	 $     47.67 							XLF\nSTATE STRT INDSTL SLCT SCTR SPDR ETF (ARCX:XLI)	 $  167.40 	 $  147.14 							XLI\nSTATE STRET TEC SELECT SEC SPDR ETF (ARCX:XLK)	 $  179.51 	 $  126.68 							XLK\nSTE SRT CNSR STPLS SLCT SEC SPDR ETF (ARCX:XLP)	 $    89.42 	 $     75.16 							XLP									84.46	6%\nSTATE SRT REL EST SLCT SCTR SPDR ETF (ARCX:XLRE)	 $    43.17 	 $     39.73 							XLRE\nSTATE STRT HLTH CRE SLT SEC SPDR ETF (ARCX:XLV)	 $  184.87 	 $  141.97 							XLV\nSTATE STRT CONS DSRY SLT SE SPDR ETF (ARCX:XLY)	 $  115.38 	 $  105.19 							XLY";
+var PUBLIC_TEMPLATE_B64="";
+
+function saveLiveUrls(){
+  try{
+    localStorage.setItem('sigmaHeatMapLiveUrls',JSON.stringify({stocks:($('#urlStocks')&&$('#urlStocks').value)||''}));
+  }catch(e){/* private window or storage disabled — fine, just don't persist */}
+}
+function loadLiveUrls(){
+  var stocks=DEFAULT_LIVE_URL_STOCKS,reits=DEFAULT_LIVE_URL_REITS;
+  try{
+    var raw=localStorage.getItem('sigmaHeatMapLiveUrls');
+    if(raw){
+      var o=JSON.parse(raw);
+      if(o&&o.stocks)stocks=o.stocks;
+      if(o&&o.reits)reits=o.reits;
+    }
+  }catch(e){/* ignore */}
+  var us=$('#urlStocks'),ur=$('#urlReits');
+  if(us)us.value=stocks;
+  if(ur)ur.value=reits;
+}
+
+function b64DecodeUtf8(b64){return decodeURIComponent(escape(atob(b64)));}
+function jsStrEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');}
+function buildPublishedCode(){
+  if(!RAW_LINES.length){setStatus('Build a map first, then copy the website code.',true);return null;}
+  var escaped=RAW_LINES.map(function(rowText){return jsStrEscape(rowText);}).join('\\n');
+  var stocksUrl=jsStrEscape((($('#urlStocks')&&$('#urlStocks').value)||'').trim());
+  var reitsUrl='';
+  var tagsJson=jsStrEscape(JSON.stringify(RAW_TAGS));
+  var base=b64DecodeUtf8(PUBLIC_TEMPLATE_B64);
+  return base
+    .replace('%%SAMPLE_DATA%%',function(){return escaped;})
+    .replace('%%STOCKS_URL%%',function(){return stocksUrl;})
+    .replace('%%REITS_URL%%',function(){return reitsUrl;})
+    .replace('%%SAMPLE_TAGS%%',function(){return tagsJson;})
+    .replace('%%MAP_SETTINGS%%',function(){return jsStrEscape(JSON.stringify(MAP_SET));});
+}
+function tryCopyToClipboard(text){
+  var msg=$('#publishMsg'),ta=$('#publishOutput');
+  function ok(){msg.textContent='Copied to your clipboard — go to your website’s embed block and paste (Ctrl/⌘+V).';}
+  function fail(){
+    msg.textContent='Couldn’t copy automatically — click in the box below, select all (Ctrl/⌘+A), copy (Ctrl/⌘+C), then paste on your site.';
+    ta.focus();ta.select();
+  }
+  function legacyFallback(){
+    ta.focus();ta.select();
+    try{if(document.execCommand('copy'))ok();else fail();}catch(e){fail();}
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(legacyFallback);
+  }else legacyFallback();
+}
+
+/* ------------------------------------------------------------------ *
+ * Wiring
+ * ------------------------------------------------------------------ */
+var LAST_COMPLETE=[];
+function readMapInputs(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('mapN'))return;
+  MAP_SET=cleanMapSet({n:g('mapN').value,mode:g('mmProp').checked?'prop':'equal',spread:g('msEven').checked?'even':'extreme',under:g('mzUnder').checked,normal:g('mzNormal').checked,over:g('mzOver').checked});
+}
+function writeMapInputs(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('mapN'))return;
+  g('mapN').value=MAP_SET.n;
+  g('mmProp').checked=MAP_SET.mode==='prop';g('mmEqual').checked=MAP_SET.mode!=='prop';
+  g('msEven').checked=MAP_SET.spread==='even';g('msExtreme').checked=MAP_SET.spread!=='even';
+  g('mzUnder').checked=MAP_SET.under;g('mzNormal').checked=MAP_SET.normal;g('mzOver').checked=MAP_SET.over;
+  if(g('mapNLabel'))g('mapNLabel').textContent=MAP_SET.mode==='prop'?'Total tiles':'Tiles per zone';
+}
+function saveMapSet(){try{localStorage.setItem(MAP_STORE_KEY,JSON.stringify(MAP_SET));}catch(e){}}
+function loadMapSet(){try{var r=localStorage.getItem(MAP_STORE_KEY);if(r)MAP_SET=cleanMapSet(JSON.parse(r));}catch(e){}}
+function mapStatusText(){
+  var el=document.getElementById('mapStatus');if(!el)return;
+  if(!MAP_SET.under&&!MAP_SET.normal&&!MAP_SET.over){el.textContent='No zones selected \u2014 the map will be empty.';return;}
+  if(!LAST_SEL){el.textContent='';return;}
+  var parts=[];
+  [['over','Overvalued'],['normal','Normal'],['under','Undervalued']].forEach(function(z){
+    if(MAP_SET[z[0]])parts.push(z[1]+' '+LAST_SEL[z[0]][0]+' of '+LAST_SEL[z[0]][1]);
+  });
+  el.textContent='Showing: '+parts.join(' \u00b7 ')+'.';
+}
+function onMapChange(){
+  readMapInputs();saveMapSet();writeMapInputs();
+  if(LAST_COMPLETE.length)render(LAST_COMPLETE);
+  mapStatusText();
+}
+function wire(){
+  var mn=document.getElementById('mapN');if(mn)mn.addEventListener('input',onMapChange);
+  ['mzUnder','mzNormal','mzOver','mmEqual','mmProp','msExtreme','msEven'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',onMapChange);});
+  $('#btnRender').addEventListener('click',function(){handleRaw($('#raw').value);});
+  $('#raw').addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){handleRaw($('#raw').value);}});
+  $('#btnDark').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','dark');});
+  $('#btnLight').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','light');});
+  $('#btnFetchStocks').addEventListener('click',function(){fetchOneLive('stocks');});
+  $('#btnPublish').addEventListener('click',function(){
+    saveLiveUrls();
+    var code=buildPublishedCode();
+    if(!code)return;
+    $('#publishOutput').value=code;
+    $('#publishModal').hidden=false;
+    tryCopyToClipboard(code);
+  });
+  $('#publishCopyAgain').addEventListener('click',function(){tryCopyToClipboard($('#publishOutput').value);});
+  $('#publishClose').addEventListener('click',function(){$('#publishModal').hidden=true;});
+}
+
+if(PUBLIC_MODE)document.body.classList.add('public-mode');
+if(PUBLIC_MODE){try{MAP_SET=cleanMapSet(JSON.parse(MAP_SETTINGS_RAW));}catch(e){}}
+else loadMapSet();
+writeMapInputs();
+wire();
+if(SAMPLE){
+  $('#raw').value=SAMPLE;
+  var bootTags=null;
+  if(SAMPLE_TAGS){try{bootTags=JSON.parse(SAMPLE_TAGS);}catch(e){bootTags=null;}}
+  handleRaw(SAMPLE,bootTags);
+}else{
+  render([]);
+}
+
+if(PUBLIC_MODE){
+  if(LIVE_URL_STOCKS)$('#urlStocks').value=LIVE_URL_STOCKS;
+  if(LIVE_URL_REITS)$('#urlReits').value=LIVE_URL_REITS;
+  updatePubBarVisibility();
+  if(LIVE_URL_STOCKS||LIVE_URL_REITS){
+    refreshLiveData();
+    setInterval(refreshLiveData,15*60*1000);
+  }
+}else{
+  loadLiveUrls();
+}
+
+})();
+</script>
+</body>
+</html>
