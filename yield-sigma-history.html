@@ -540,7 +540,7 @@ function strip(t){
 
 function draw(){
   const t=sel.value, rows=VIEW(t);
-  document.getElementById('since').textContent='Monthly reading since '+fmtMonth(rows[0][0])+'.';
+  document.getElementById('since').textContent='Monthly chart since '+fmtMonth(rows[0][0])+'. Each point compiled from the previous 10 years.';
   { const el=document.getElementById('thru'); if(el){ let mx=''; for(const k in DATA){ const L=DATA[k][DATA[k].length-1][0]; if(L>mx) mx=L; } el.textContent='Data through '+fmtMonth(mx); } }
   document.getElementById('premnote').classList.toggle('on', document.querySelector('input[name="rng"]:checked').value==='all');
   const mode=document.getElementById('showPx').checked?'px':'none'; 
