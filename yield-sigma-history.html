@@ -508,7 +508,7 @@ function divGrowth(rows,i){ const y=rows[i][0].slice(0,4); const j=rows.findInde
   const g=rows[j][6]/rows[j-1][6]-1; return ' ('+(g>=0?'+':'−')+Math.abs(g*100).toFixed(1)+'% vs prior year)'; }
 /* Live stock price: same Gist CSV that feeds the card and heat maps. Read once on load,
    then every 15 minutes; if it can't be reached, the cell simply doesn't show. */
-const LIVE={px:{},at:''};
+const LIVE={px:{},y:{},sg:{},at:''};
 const LIVE_URLS=['https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv',
                  'https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv'];
 function parseCSVLive(text){ const out=[]; let row=[],cur='',q=false;
@@ -517,25 +517,30 @@ function parseCSVLive(text){ const out=[]; let row=[],cur='',q=false;
     else if(c=='"') q=true; else if(c==','){ row.push(cur); cur=''; } else if(c=='\n'||c=='\r'){ if(c=='\r'&&text[i+1]=='\n') i++; row.push(cur); out.push(row); row=[]; cur=''; } else cur+=c; }
   if(cur!==''||row.length){ row.push(cur); out.push(row); } return out; }
 async function loadLive(){
-  const got={};
+  const got={}, gy={}, gs={};
+  const pctN=v=>{ const n=parseFloat(String(v||'').replace(/[^0-9.\-]/g,'')); return isFinite(n)?n:null; };
   for(const u of LIVE_URLS){
     try{ const r=await fetch(u+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) continue;
       const rows=parseCSVLive(await r.text()); if(!rows.length) continue;
       const h=rows[0].map(x=>x.trim().toLowerCase()); const it=h.indexOf('ticker'), ip=h.indexOf('price'); if(it<0||ip<0) continue;
-      for(const rw of rows.slice(1)){ const t=(rw[it]||'').trim().toUpperCase(); const v=parseFloat((rw[ip]||'').replace(/[$,\s]/g,'')); if(t&&isFinite(v)&&v>0) got[t]=v; }
+      /* Same columns the card reads: Yield = 5th column, Sigma = 9th column */
+      const iy=h.indexOf('yield')>=0?h.indexOf('yield'):4, is=h.indexOf('sigma')>=0?h.indexOf('sigma'):8;
+      for(const rw of rows.slice(1)){ const t=(rw[it]||'').trim().toUpperCase(); const v=parseFloat((rw[ip]||'').replace(/[$,\s]/g,'')); if(t&&isFinite(v)&&v>0) got[t]=v;
+        if(t){ const yv=pctN(rw[iy]), sv=pctN(rw[is]); if(yv!=null&&yv>0) gy[t]=yv; if(sv!=null) gs[t]=sv; } }
     }catch(e){}
   }
-  if(Object.keys(got).length){ LIVE.px=got; LIVE.at=new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); strip(sel.value); }
+  if(Object.keys(got).length){ LIVE.px=got; LIVE.y=gy; LIVE.sg=gs; LIVE.at=new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); strip(sel.value); }
 }
 function strip(t){
   const rows=VIEW(t), last=rows[rows.length-1];
-  const z=last[1], cls = z>=1?'pos':z<=-1?'neg':'';
+  const live=LIVE.px[t]!=null&&LIVE.sg[t]!=null&&LIVE.y[t]!=null;
+  const z=live?LIVE.sg[t]:last[1], cls = z>=1?'pos':z<=-1?'neg':'';
   const zone = z>=1?'undervalued':z<=-1?'overvalued':'normal band';
   document.getElementById('strip').innerHTML =
-    `<div class="stat"><span class="k">${t} · ${fmtMonth(last[0])}</span><span class="v ${cls}">${sgn(z,2)}σ</span></div>
+    `<div class="stat"><span class="k">${t} · ${live?'TODAY':fmtMonth(last[0])}</span><span class="v ${cls}">${sgn(z,2)}σ</span></div>
      <div class="stat"><span class="k">Zone</span><span class="v">${zone}</span></div>
-     <div class="stat"><span class="k">Dividend yield</span><span class="v">${last[2].toFixed(2)}%</span></div>
-     <div class="stat"><span class="k">Stock price</span><span class="v">$${(LIVE.px[t]!=null?LIVE.px[t]:last[3]).toFixed(2)}</span></div>
+     <div class="stat"><span class="k">Dividend yield</span><span class="v">${(live?LIVE.y[t]:last[2]).toFixed(2)}%</span></div>
+     <div class="stat"><span class="k">Stock price</span><span class="v">$${(live?LIVE.px[t]:last[3]).toFixed(2)}</span></div>
      <div class="stat prop"><span class="k">Bell curve shape <button type="button" class="labs" data-leg="cs" aria-label="About this proprietary metric">Labs</button></span><span class="v">${NORMS[t]?NORMS[t][1]+' <small>'+NORMS[t][0].toFixed(1)+'</small>':'—'}</span></div>
      <div class="stat prop"><span class="k">Volatility dispersion <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>`;
 }
