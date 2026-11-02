@@ -606,8 +606,8 @@ function inputsHtml(){
       :'<div class="f pickRow"><label>Stock</label>'+pickBox('A')+'</div>';
     /* once a stock is picked, faint notes under the labels say where the numbers came from */
     var live=S.A.ticker||(S.compare&&S.B.ticker);
-    h+=rateField('Starting yield','yield','%',0.1,live?'current':'')+rateField('Div growth','dgr','%/yr',0.5,live?'past 10 yrs':'')+rateField('Price growth','pg','%/yr',0.5,S.revert?'<label class="lockchk"><input type="checkbox" id="i_revlock"'+(S.revLock?' checked':'')+'>set by reversion</label>':'',S.revert&&S.revLock);
-    h+='<label class="chk"><input type="checkbox" id="i_fade"'+(S.fade?' checked':'')+'> Fade growth to a long-run rate</label>';
+    h+=rateField('Starting yield','yield','%',0.1,live?'current':'')+rateField('Div growth','dgr','%/yr',0.5,live?'past 10 yrs':'')+rateField('Price growth','pg','%/yr',0.5,S.revert?'<label class="lockchk"><input type="checkbox" id="i_revlock"'+(S.revLock?' checked':'')+'>set by div reversion</label>':'',S.revert&&S.revLock);
+    h+='<label class="chk"><input type="checkbox" id="i_fade"'+(S.fade?' checked':'')+'> Fade div growth to a long-run rate</label>';
     if(S.fade)h+=rateField('Long-run growth','lr','%/yr',0.25)+rateField('Fade over','fy','yrs',1);
     h+='<label class="chk"><input type="checkbox" id="i_revert"'+(S.revert?' checked':'')+'> Revert yield to its 10-yr average (0σ)</label>';
     if(S.revert)h+=rateField('Target yield','ty','%',0.1,live?'10-yr average':'')+rateField('Revert over','ry','yrs',1,live?'by volatility':'');
