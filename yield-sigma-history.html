@@ -176,7 +176,7 @@ table.log tr.open td{font-weight:600}
 </div></div>
 
   <div class="predhead"><span class="chartlabel" id="predttl"></span><button type="button" class="labs" id="predlabs" aria-label="About this proprietary metric">Labs</button></div>
-  <div class="legend" id="predleg" hidden><div class="lg on"><b>σ predicted</b> · The total return expected over the next 24 months (or 12, with the switch above the bars), worked out from this stock's own history: every past month's Yield Sigma™ reading paired with what the stock actually returned afterwards. Each prediction uses only months whose result was already known at the time, so it could have been made back then.</div>
+  <div class="legend" id="predleg" hidden><div class="lg on"><b>σ predicted</b> · The total return expected over the next 24 months (or 12, with the switch above the bars), worked out from this stock's own history: every past month's Yield Sigma™ reading paired with what the stock actually returned afterwards. Each prediction uses only months whose result was already known at the time, so it could have been made back then. It needs at least 5 years of results, and until then reads inconclusive. Extreme predictions are pulled back toward the stock's own average return, more so when its record is short.</div>
     <div class="lgf">Proprietary metric by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a> for <a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a>.</div></div>
   <div class="logwrap"><table class="log" id="predtab"></table></div>
   <div class="chartlabel" style="margin:22px 0 0">Stretches outside the normal range</div>
@@ -198,7 +198,7 @@ table.log tr.open td{font-weight:600}
   </div>
   </details>
   <footer class="foot"><span>Historical results and statistical estimates, not investment advice. Past returns don't guarantee future ones.</span>
-    <span class="footLinks"><a href="https://www.yieldsigma.com/methodology" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="https://www.yieldsigma.com/methodology/card-field-guide" target="_blank" rel="noopener">Card field guide</a></span>
+    <span class="footLinks"><a href="https://www.yieldsigma.com/methodology/yield-sigma-methodology" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="https://www.yieldsigma.com/methodology/card-field-guide" target="_blank" rel="noopener">Card field guide</a></span>
     <span class="footCredit"><a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a> · by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a></span><span id="thru"></span></footer>
 </div>
 
@@ -336,9 +336,10 @@ Chart.register({id:'quietTip', beforeTooltipDraw(c){ if(c._quietTip) return fals
 // own-history prediction: for each month, fit forward return on Yield Sigma using only months whose outcome was already known
 const HZ=()=>+document.querySelector('input[name="hz"]:checked').value, RCOL=h=>h===24?7:4, PRED={};
 function predFor(t,h){ const k=t+'|'+h; if(PRED[k]) return PRED[k]; const A=DATA[t], c=RCOL(h), out=new Array(A.length).fill(null);
-  for(let a=0;a<A.length;a++){ const m=a-h; if(m<24) continue; let sx=0,sy=0,sxx=0,sxy=0,n=0;
+  for(let a=0;a<A.length;a++){ const m=a-h; if(m<60) continue; let sx=0,sy=0,sxx=0,sxy=0,n=0;
     for(let k2=0;k2<m;k2++){ const y=A[k2][c]; if(y==null) continue; const x=A[k2][1]; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; n++; }
-    if(n<24) continue; const b=(n*sxy-sx*sy)/(n*sxx-sx*sx); if(!isFinite(b)) continue; out[a]=Math.round(((sy-b*sx)/n+b*A[a][1])*10)/10; }
+    if(n<60) continue; const b=(n*sxy-sx*sy)/(n*sxx-sx*sx); if(!isFinite(b)) continue; const ne=n/h, w=ne/(ne+3); // smoothing: pull toward the stock's own average, harder when the record is short
+    out[a]=Math.round((sy/n+w*b*(A[a][1]-sx/n))*10)/10; }
   return PRED[k]=out; }
 const UNI={};
 function uniSlope(h){ if(UNI[h]!=null) return UNI[h]; const c=RCOL(h); let sx=0,sy=0,sxx=0,sxy=0,n=0;
@@ -348,6 +349,7 @@ function predCap(t,rows,pv,h){ const c=RCOL(h), el=document.getElementById('pred
   document.getElementById('predttl').innerHTML='<span class="nt">σ</span> predicted vs actual · '+h+'-month total return, by Yield Sigma™ at purchase';
   const B=[['+1σ and above',z=>z>=1],['0 to +1σ',z=>z>=0&&z<1],['−1σ to 0',z=>z<0&&z>-1],['−1σ and below',z=>z<=-1]];
   const f=v=>v==null?'—':sgn(Math.round(v*10)/10)+'%';
+  if(!pv.some((v,i)=>v!=null&&rows[i][c]!=null)){ el.innerHTML='<tbody><tr><td>Inconclusive: σ predicted needs at least 5 years of results for this stock.</td></tr></tbody>'; return; }
   el.innerHTML='<thead><tr><th>Yield Sigma™ at purchase</th><th>Months</th><th><span class="nt">σ</span> predicted returns (average)</th><th>Actual returns (average)</th></tr></thead><tbody>'+
     B.map(([lb,fn])=>{ const m=[]; rows.forEach((r,i)=>{ if(pv[i]!=null&&r[c]!=null&&fn(r[1])) m.push([pv[i],r[c]]); });
       const ap=m.length?m.reduce((s2,q)=>s2+q[0],0)/m.length:null, aa=m.length?m.reduce((s2,q)=>s2+q[1],0)/m.length:null;
@@ -382,7 +384,7 @@ Chart.register({id:'barsGlide', afterDraw(c){ if(!c.canvas||c.canvas.id!=='bars'
   if(tip._i!==i){ tip._i=i; const r=rows[i];
     const up=r[RCOL(HZ())]==null||r[RCOL(HZ())]>=0, sw='<i class="sw" style="background:'+(up?css('--jade'):css('--rust'))+'"></i>', cr=v=>v==null?'—':'<span class="'+(v>=0?'up':'dn')+'">'+sgn(v)+'%</span>';
     const H=HZ(), rr=r[RCOL(H)], pv=((c.options&&c.options.plugins&&c.options.plugins.predTicks)||{}).pv, pd=pv?pv[i]:null;
-    tip.innerHTML='<b>Bought '+fmtMonth(r[0])+'</b> · '+sw+(rr==null?'not yet available':'Total return, next '+H+' months: '+cr(rr))+(pd!=null?' · σ predicted: '+sgn(pd)+'%':'')+' · Total return to today: '+cr(r[5]); }
+    tip.innerHTML='<b>Bought '+fmtMonth(r[0])+'</b> · '+sw+(rr==null?'not yet available':'Total return, next '+H+' months: '+cr(rr))+(rr!=null||pd!=null?' · σ predicted: '+(pd!=null?sgn(pd)+'%':'inconclusive'):'')+' · Total return to today: '+cr(r[5]); }
   placeFlag(tip,c,a[0].element); }});
 Chart.register({id:'readoutSync', afterDraw(c){ if(!c.canvas||c.canvas.id!=='chart') return; const a=c.tooltip&&c.tooltip.getActiveElements?c.tooltip.getActiveElements():[];
   setReadout(null);
