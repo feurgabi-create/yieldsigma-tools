@@ -663,7 +663,7 @@ function draw(){
       const gr=prevRow?(D>=prevRow[6]?'+':'−')+Math.abs((D/prevRow[6]-1)*100).toFixed(1)+'% yearly '+(D>=prevRow[6]?'increase':'decrease'):'';
       const avgY=yrRows.reduce((s2,q)=>s2+q[2],0)/yrRows.length;
       /* dividend yield first, level with the % dot; then the dividend amount and its yearly change */
-      const html='<b>avg dividend yield '+avgY.toFixed(2)+'%</b><br><span class="s">'+yr+' · $'+D.toFixed(2)+' per year</span>'+(gr?'<br><span class="s">'+gr+'</span>':'');
+      const html='<b>'+avgY.toFixed(2)+'% dividend yield</b><br><span class="s">'+yr+' · $'+D.toFixed(2)+' per year</span>'+(gr?'<br><span class="s">'+gr+'</span>':'');
       if(tip._h!==html){ tip.innerHTML=html; tip._h=html; }
       const w=tip.offsetWidth, h=tip.offsetHeight, x0=c.scales.x.getPixelForValue(yrRows.length?rows.indexOf(yrRows[0]):i), x1=c.scales.x.getPixelForValue(rows.indexOf(yrRows[yrRows.length-1]));
       /* box beside the % dot: right of it, flipped to the left near the right edge */
