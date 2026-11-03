@@ -245,6 +245,10 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
   .side{display:none} .app{display:block} .stage{padding:0}
   .card{box-shadow:none;max-width:none}
 }
+.labsPill{font:600 9px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:999px;padding:2px 6px;margin-left:6px;cursor:pointer;vertical-align:2px;font-style:normal}
+.labsPill:hover,.labsPill[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
+.labsPop{display:block;margin:10px auto 0;max-width:52ch;font:400 13px/1.55 var(--mono);font-style:normal;text-align:left;color:var(--c-ink);background:var(--c-jade-soft);border-radius:8px;padding:9px 12px}
+.labsPop[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -711,7 +715,9 @@ function edgeSentence(rec,s){
   var y=yieldAtSigma(rec,s),v=incomeEdgeYears(rec,y);
   if(v===null||Math.abs(v)<0.05)return '';
   var yrs=Math.abs(v).toFixed(1);
-  return ', and it represents <b>'+(v>0?'':'\u2212')+yrs+' years of income edge</b>: '+(v>0?'a 0\u03c3 buyer would only reach this yearly income level after '+yrs+' years of holding as the dividend grows.':'a buyer at this level would only reach a 0\u03c3 buyer\u2019s yearly income level after '+yrs+' years of holding as the dividend grows.');
+  return ', and it represents <b>'+(v>0?'':'\u2212')+yrs+' years of income edge</b>.'+
+    '<button type="button" class="labsPill" aria-expanded="false" aria-label="About income edge">Labs</button>'+
+    '<span class="labsPop" hidden><b>Income edge.</b> Years of dividend growth captured on day one. Today\u2019s dividend yield already pays what a 0\u03c3 buyer only reaches after this many years of dividend raises. If negative: years you give up.</span>';
 }
 
 /* ------------------------------------------------------------------ *
@@ -1975,6 +1981,11 @@ if(PUBLIC_MODE){
 
 window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:parseRow,analyze:analyze,buildCard:buildCard,SAMPLE:SAMPLE};
 })();
+</script>
+<script>
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.labsPill');if(!b)return;
+  var p=b.nextElementSibling;if(!p||!p.classList.contains('labsPop'))return;var open=p.hasAttribute('hidden');
+  if(open)p.removeAttribute('hidden');else p.setAttribute('hidden','');b.setAttribute('aria-expanded',open?'true':'false');});
 </script>
 </body>
 </html>
