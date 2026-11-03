@@ -1984,7 +1984,7 @@ window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:pa
 </script>
 <script>
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.labsPill');if(!b)return;
-  var p=b.nextElementSibling;if(!p||!p.classList.contains('labsPop'))return;var open=p.hasAttribute('hidden');
+  var h=b.closest('p,div');var p=h?h.querySelector('.labsPop'):null;if(!p)return;var open=p.hasAttribute('hidden');
   if(open)p.removeAttribute('hidden');else p.setAttribute('hidden','');b.setAttribute('aria-expanded',open?'true':'false');});
 </script>
 </body>
