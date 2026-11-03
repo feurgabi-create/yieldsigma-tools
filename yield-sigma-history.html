@@ -47,7 +47,7 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;al
 legend{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);float:left;margin-right:6px}
 .chartbox{position:relative;height:390px;min-width:0}
 .chartbox.bars{height:235px}
-.chartbox.divbox{height:110px}
+.chartbox.divbox{height:126px}
 .divtip{position:absolute;left:0;top:0;pointer-events:none;opacity:0;white-space:nowrap;
   font:500 11px/1.35 var(--mono);color:var(--ink);padding:5px 9px;border-radius:8px;
   background:color-mix(in srgb,var(--jade) 13%,var(--bg));border:1px solid color-mix(in srgb,var(--jade) 45%,transparent);
@@ -59,7 +59,7 @@ legend{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--
 .sigtip .sw{display:inline-block;width:9px;height:9px;margin:0 5px 0 2px;vertical-align:0}
 .sigtip .zs{font:500 26px/1 var(--serif);text-shadow:none;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;color:var(--ink)} .sigtip .zs.up{color:var(--jade)} .sigtip .zs.dn{color:var(--rust)}
 .divtip.on{opacity:1} .divtip b{color:var(--jade);font-weight:600} .divtip .s{color:var(--muted)}
-.row.divrow{margin-top:-18px}
+.row.divrow{margin-top:-8px}
 .row{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:6px}
 .side{position:relative;height:340px;cursor:pointer}
 .sigrow .chartbox{margin-top:-25px}
@@ -652,7 +652,7 @@ function draw(){
     type:'line', data:{labels, datasets:[{label:'Dividend amount ($ per year)', data:rows.map(r=>r[6]), stepped:true, fill:'origin', borderColor:jade+'88', backgroundColor:jade+'26', borderWidth:1.2, pointRadius:0, pointHoverRadius:0, yAxisID:'y3'}]},
     plugins:[divLabels,{id:'pctDot',afterDatasetsDraw(c){ const act=c.getActiveElements(); if(!act.length) return;
       const i=act[0].index; if(i>=rows.length) return; const ys=rows.map(q=>q[2]), mn=Math.min(...ys), mx=Math.max(...ys);
-      const tier=mx>mn?Math.min(3,Math.floor(4*(rows[i][2]-mn)/(mx-mn))):3, r=[6,8,9.5,11][tier];
+      const tier=mx>mn?Math.min(3,Math.floor(4*(rows[i][2]-mn)/(mx-mn))):3, r=[6,9,12.5,16][tier];
       const x=c.scales.x.getPixelForValue(i), y=c.scales.y3.getPixelForValue(rows[i][6]), g=c.ctx;
       g.save(); g.beginPath(); g.arc(x,y,r,0,7); g.fillStyle=css('--jade'); g.strokeStyle=css('--bg'); g.lineWidth=1.5; g.fill(); g.stroke();
       g.fillStyle='#fff'; g.font='700 '+(r*1.15).toFixed(1)+"px 'JetBrains Mono', monospace"; g.textAlign='center'; g.textBaseline='middle'; g.fillText('%',x,y+.5); g.restore(); }},{id:'divGlide',afterEvent(c,args){ const e=args.event, tip=document.getElementById('divtip'); if(!tip) return;
@@ -667,7 +667,7 @@ function draw(){
       const w=tip.offsetWidth, h=tip.offsetHeight, x0=c.scales.x.getPixelForValue(yrRows.length?rows.indexOf(yrRows[0]):i), x1=c.scales.x.getPixelForValue(rows.indexOf(yrRows[yrRows.length-1]));
       let x=(x0+x1)/2-w/2; x=Math.max(a.left,Math.min(a.right-w,x)); let y=c.scales.y3.getPixelForValue(D)-h-6; y=Math.max(2,y);
       tip.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)'; tip.classList.add('on'); }}],
-    options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:0}},
+    options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:18}},
       interaction:{mode:'index', intersect:false},
       onHover: hoverTo(()=>[chart,bars]),
       plugins:{divLabels:{rows}, legend:{display:false},
