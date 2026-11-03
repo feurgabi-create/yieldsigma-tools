@@ -802,6 +802,8 @@ function prevExtremes(rec,a){
   var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return list.map(function(x){var p=x[1].split('-');return (x[0]>=0?'+':'\u2212')+Math.abs(x[0]).toFixed(2)+'\u03c3 ('+M[+p[1]-1]+' '+p[0]+')';}).join(' \u00b7 ');
 }
+/* Stocks that pay outsized special dividends year after year: the card counts regular dividends only. */
+var YS_SPECIALS=['PGR','AFG','CME','WRB','ORI','TRI'];
 function yieldAtSigma(rec,s){
   if(rec.avg10y===null||!rec.oneSD)return null;
   if(!ysStats(rec,rec.avg10y))return rec.avg10y+s*rec.oneSD;
@@ -1095,7 +1097,7 @@ function buildCard(rec,a){
 
   var divStats=[
     ['Dividend / share',fmtMoney(rec.divDollar)],
-    ['Current yield',fmtPct(rec.yield)],
+    ['Current yield',fmtPct(rec.yield)+(YS_SPECIALS.indexOf((rec.ticker||'').toUpperCase())>=0?'*':'')],
     ['10y average yield',fmtPct(rec.avg10y)],
     ['Max yield',fmtPct(rec.avMaxY),'Max yield, 10 years average of its most extreme yields.'],
     ['Div growth, past 10y',fmtPct(rec.divGrowth10y)],
@@ -1121,6 +1123,10 @@ function buildCard(rec,a){
       return '<div class="statBlock"><div class="stat noBorder" style="align-items:flex-start"><span class="l" style="flex:1;min-width:0">'+esc(p[0])+
         '<span class="statNote" style="display:block;margin-top:3px"><a href="https://www.yieldsigma.com/yield-sigma-card/yield-sigma-history" target="_blank" rel="noopener" style="color:var(--c-jade);text-decoration:underline;text-underline-offset:2px;white-space:nowrap">See history \u2192</a></span></span>'+
         '<span class="v" style="text-align:right;white-space:nowrap;line-height:1.7">'+p[1].split(' \u00b7 ').map(esc).join('<br>')+'</span></div></div>';
+    }
+    if(p[0]==='Current yield'&&/\*$/.test(p[1])){
+      return '<div class="statBlock"><div class="stat noBorder"><span class="l">'+esc(p[0])+'</span><span class="v">'+esc(p[1])+'</span></div>'+
+        '<p class="statNote">* Pays outsized special dividends, not counted here.</p></div>';
     }
     if(p[0]==='Max yield'){
       return '<div class="statBlock"><div class="stat noBorder"><span class="l">'+esc(p[0])+'</span><span class="v">'+esc(p[1])+'</span></div>'+
