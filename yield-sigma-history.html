@@ -665,7 +665,11 @@ function draw(){
       const html=(gr?'<b>'+gr+'</b><br>':'')+'<span class="s">'+yr+' · $'+D.toFixed(2)+' per year</span><br><span class="s">avg dividend yield '+avgY.toFixed(2)+'%</span>';
       if(tip._h!==html){ tip.innerHTML=html; tip._h=html; }
       const w=tip.offsetWidth, h=tip.offsetHeight, x0=c.scales.x.getPixelForValue(yrRows.length?rows.indexOf(yrRows[0]):i), x1=c.scales.x.getPixelForValue(rows.indexOf(yrRows[yrRows.length-1]));
-      let x=(x0+x1)/2-w/2; x=Math.max(a.left,Math.min(a.right-w,x)); let y=c.scales.y3.getPixelForValue(D)-h-6; y=Math.max(2,y);
+      /* box beside the % dot: right of it, flipped to the left near the right edge */
+      const ys=rows.map(q=>q[2]), mn=Math.min(...ys), mx=Math.max(...ys), tr=mx>mn?Math.min(3,Math.floor(4*(r[2]-mn)/(mx-mn))):3, rad=[6,9,12.5,16][tr];
+      const dx=c.scales.x.getPixelForValue(i), dy=c.scales.y3.getPixelForValue(D);
+      let x=dx+rad+8; if(x+w>a.right) x=dx-rad-8-w; x=Math.max(0,x);
+      let y=dy-h/2; y=Math.max(2,Math.min(c.height-h-2,y));
       tip.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)'; tip.classList.add('on'); }}],
     options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:18}},
       interaction:{mode:'index', intersect:false},
