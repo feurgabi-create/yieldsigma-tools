@@ -1103,7 +1103,7 @@ function buildCard(rec,a){
   ].filter(function(p){return p[1]!=='\u2013';});
 
   var histStats=[
-    ['Volatility (yield gap/\u03c3 ratio)',fmtPct(rec.volatility)],
+    ['Volatility dispersion',fmtPct(rec.volatility)],
     ['Previous extremes',prevExtremes(rec,a)],
     ['P/E',rec.pe!==null?fmtNum(rec.pe,1):'\u2013'],
     ['P/AFFO',rec.pAffo!==null?fmtNum(rec.pAffo,1):'\u2013'],
@@ -1113,6 +1113,10 @@ function buildCard(rec,a){
   if(a.streak)histStats.push(['Consecutive dividend growth',a.streak.years+' years'+(a.streak.tier?' — '+a.streak.tier:'')]);
 
   function statRow(p){
+    if(p[0]==='Volatility dispersion'){
+      return '<div class="statBlock"><div class="stat noBorder"><span class="l">'+esc(p[0])+'<button type="button" class="labsPill" aria-expanded="false" aria-label="About volatility dispersion">Labs</button></span><span class="v">'+esc(p[1])+'</span></div>'+
+        '<span class="labsPop" hidden style="margin:8px 0 0;max-width:none;font-size:12px"><b>Volatility dispersion.</b> How far the dividend yield has historically swung from its 10-year average. Tight: under 21%. Moderate: 21\u201340%. Wide: over 40%. Tighter means smaller swings and a faster return toward mean. Conversely wider readings produce slower returns to the mean.</span></div>';
+    }
     if(p[0]==='Previous extremes'){
       return '<div class="statBlock"><div class="stat noBorder" style="align-items:flex-start"><span class="l" style="flex:1;min-width:0">'+esc(p[0])+
         '<span class="statNote" style="display:block;margin-top:3px"><a href="https://www.yieldsigma.com/yield-sigma-card/yield-sigma-history" target="_blank" rel="noopener" style="color:var(--c-jade);text-decoration:underline;text-underline-offset:2px;white-space:nowrap">See history \u2192</a></span></span>'+
@@ -1146,7 +1150,7 @@ function buildCard(rec,a){
       '<div class="grid2">'+
         '<div><div class="panelLabel">Dividend per share, by year</div><div id="stairPanel"></div></div>'+
         '<div><div class="panelLabel">Implied price range that year</div>'+
-          (dispersion?'<p class="dispersion"><b>'+esc(dispersion.label)+'</b> (Volatility '+esc(fmtPct(rec.volatility))+'): '+esc(dispersion.text)+'</p>':'')+
+          (dispersion?'<p class="dispersion"><b>'+esc(dispersion.label)+'</b> (Volatility dispersion '+esc(fmtPct(rec.volatility))+'): '+esc(dispersion.text)+'</p>':'')+
           '<div id="fanPanel"></div></div>'+
       '</div>'+
       '<div class="yearControl">'+
@@ -1984,7 +1988,7 @@ window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:pa
 </script>
 <script>
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.labsPill');if(!b)return;
-  var h=b.closest('p,div');var p=h?h.querySelector('.labsPop'):null;if(!p)return;var open=p.hasAttribute('hidden');
+  var h=b.closest('.statBlock')||b.closest('p,div');var p=h?h.querySelector('.labsPop'):null;if(!p)return;var open=p.hasAttribute('hidden');
   if(open)p.removeAttribute('hidden');else p.setAttribute('hidden','');b.setAttribute('aria-expanded',open?'true':'false');});
 </script>
 </body>
