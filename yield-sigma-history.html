@@ -135,7 +135,7 @@ table.log tr.open td{font-weight:600}
   <div class="strip" id="strip"></div>
   <div class="legend" id="propleg" hidden>
     <div class="lg" id="leg-cs"><b>Bell curve shape and score</b> · How closely this stock's Yield Sigma™ readings, over its full history, form a normal bell curve. Graded Textbook (8–10), Defined (6–8), Loose (4–6) or Not normalizing (below 4), with the score beside it. The better the shape, the more reliably readings far from 0 have come back.</div>
-    <div class="lg" id="leg-vd"><b>Volatility dispersion</b> · How far the dividend yield has historically swung from its 10-year average. Tight: under 21%. Moderate: 21–40%. Wide: over 40%. Tighter means smaller swings and a faster return toward mean. Conversely wider readings produce slower returns to the mean.</div>
+    <div class="lg" id="leg-vd"><b>Yield Sigma Volatility</b> · How much the dividend yield typically swings relative to its own 10-year baseline (1σ ÷ average yield). A lower percentage means the yield is tightly anchored and snaps back faster; a higher percentage indicates large cyclical swings.</div>
     <div class="lgf">Proprietary metrics by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a> for <a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a>.</div>
   </div>
 
@@ -542,7 +542,7 @@ function strip(t){
      <div class="stat"><span class="k">Dividend yield</span><span class="v">${(live?LIVE.y[t]:last[2]).toFixed(2)}%</span></div>
      <div class="stat"><span class="k">Stock price</span><span class="v">$${(live?LIVE.px[t]:last[3]).toFixed(2)}</span></div>
      <div class="stat prop"><span class="k">Bell curve shape <button type="button" class="labs" data-leg="cs" aria-label="About this proprietary metric">Labs</button></span><span class="v">${NORMS[t]?NORMS[t][1]+' <small>'+NORMS[t][0].toFixed(1)+'</small>':'—'}</span></div>
-     <div class="stat prop"><span class="k">Volatility dispersion <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>`;
+     <div class="stat prop"><span class="k">Yield Sigma Volatility <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>`;
 }
 
 function draw(){
