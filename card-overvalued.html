@@ -1109,7 +1109,7 @@ function buildCard(rec,a){
   function statRow(p){
     if(p[0]==='Previous extremes'){
       return '<div class="statBlock"><div class="stat noBorder" style="align-items:flex-start"><span class="l" style="flex:1;min-width:0">'+esc(p[0])+
-        '<span class="statNote" style="display:block;margin-top:3px"><a href="https://tools.yieldsigma.com/yield-sigma-history.html?t='+encodeURIComponent(rec.ticker||'')+'" target="_blank" rel="noopener" style="color:var(--c-jade);text-decoration:underline;text-underline-offset:2px;white-space:nowrap">See history \u2192</a></span></span>'+
+        '<span class="statNote" style="display:block;margin-top:3px"><a href="https://www.yieldsigma.com/yield-sigma-card/yield-sigma-history" target="_blank" rel="noopener" style="color:var(--c-jade);text-decoration:underline;text-underline-offset:2px;white-space:nowrap">See history \u2192</a></span></span>'+
         '<span class="v" style="text-align:right;white-space:nowrap;line-height:1.7">'+p[1].split(' \u00b7 ').map(esc).join('<br>')+'</span></div></div>';
     }
     if(p[0]==='Max yield'){
