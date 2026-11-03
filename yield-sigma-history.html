@@ -92,7 +92,7 @@ legend{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--
   .bellwrap.on{transform:none}
   .bellshade{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:4}
   .bellshade.on{display:block}}
-.sidectl{display:grid;gap:8px;align-content:start;justify-items:start;padding-top:22px}
+.sidectl{display:grid;gap:8px;align-content:start;justify-items:start;padding-top:0}
 .sidectl select{font-size:12px;padding:4px 6px;width:100%}
 .topflip{position:absolute;top:0;left:0;right:0;width:100%;padding:4px 6px;font-size:11.5px;z-index:2}
 @media (max-width:560px){.row{grid-template-columns:minmax(0,1fr) 84px} .side{height:280px}}
@@ -280,7 +280,7 @@ function drawBell(){
 })();
 function setBell(on){
   if(on) document.getElementById('bagg').value='0.5';
-  BELL=on; const w=document.getElementById('bellwrap'); w.classList.toggle('on',on); document.getElementById('bellshade').classList.toggle('on',on);
+  BELL=on; document.getElementById('agg').style.visibility=on?'hidden':''; const w=document.getElementById('bellwrap'); w.classList.toggle('on',on); document.getElementById('bellshade').classList.toggle('on',on);
   document.getElementById('flipbtn').setAttribute('aria-expanded',on); document.getElementById('flipbtn').textContent=on?'⤿ Flip back':'⤾ Flip to bell';
   if(on) requestAnimationFrame(()=>requestAnimationFrame(drawBell));
 }
