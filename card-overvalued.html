@@ -816,7 +816,7 @@ var YS_SPECIALS=['PGR','AFG','CME','WRB','ORI','TRI'];
 /* ---------- visitor poll: "Do you own X?" then "Would you buy X at these levels?" (Buy / Hold / Sell).
    Votes go to a Google Sheet through a Google Apps Script web app (YS_VOTE_URL). Hidden while YS_VOTE_URL is empty.
    One vote per stock per month per browser. Results (last 90 days) show only from 10 votes up, as percentages. */
-var YS_VOTE_URL='';
+var YS_VOTE_URL='https://script.google.com/macros/s/AKfycbxQ0n4w56Ui5gPqjx1Ak8iqGA1kET4OrtCosxalw27SJRGWF1mNNEa2_KZvrfVE5jDr/exec';
 function ysPollKey(t){var d=new Date();return 'ysvote_'+t+'_'+d.getFullYear()+'-'+(d.getMonth()+1);}
 function ysGet(k){try{return window.localStorage.getItem(k);}catch(e){return null;}}
 function ysSet(k,v){try{window.localStorage.setItem(k,v);}catch(e){}}
