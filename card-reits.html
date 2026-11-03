@@ -715,8 +715,8 @@ function edgeSentence(rec,s){
   var y=yieldAtSigma(rec,s),v=incomeEdgeYears(rec,y);
   if(v===null||Math.abs(v)<0.05)return '';
   var yrs=Math.abs(v).toFixed(1);
-  return ', and it represents <b>'+(v>0?'':'\u2212')+yrs+' years of income edge</b>.'+
-    '<button type="button" class="labsPill" aria-expanded="false" aria-label="About income edge">Labs</button>'+
+  return ', and it represents <span style="white-space:nowrap"><b>'+(v>0?'':'\u2212')+yrs+' years of income edge</b>.'+
+    '<button type="button" class="labsPill" aria-expanded="false" aria-label="About income edge">Labs</button></span>'+
     '<span class="labsPop" hidden><b>Income edge.</b> Years of dividend growth captured on day one. Today\u2019s dividend yield already pays what a 0\u03c3 buyer only reaches after this many years of dividend raises. If negative: years you give up.</span>';
 }
 
