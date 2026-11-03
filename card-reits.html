@@ -249,6 +249,15 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .labsPill:hover,.labsPill[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
 .labsPop{display:block;margin:10px auto 0;max-width:52ch;font:400 13px/1.55 var(--mono);font-style:normal;text-align:left;color:var(--c-ink);background:var(--c-jade-soft);border-radius:8px;padding:9px 12px}
 .labsPop[hidden]{display:none}
+.ysPoll{max-width:52ch;margin:18px auto 0;padding:12px 14px;border:1px solid var(--c-rule);border-radius:12px;text-align:center}
+.ysPoll[hidden],.ysPoll [hidden]{display:none!important}
+.ysQ{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px}
+.ysQt{font:600 13px/1.4 var(--mono);color:var(--c-ink)}
+.ysBtns{display:inline-flex;gap:6px}
+.ysPoll button{font:600 12px/1 var(--mono);color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:999px;padding:6px 14px;cursor:pointer}
+.ysPoll button:hover{background:var(--c-jade);color:var(--c-paper)}
+.ysRes{font:600 13px/1.5 var(--mono);color:var(--c-ink)}
+.ysNote{font:11px/1.3 var(--mono);color:var(--c-muted);margin-top:8px}
 </style>
 </head>
 <body>
@@ -804,6 +813,45 @@ function prevExtremes(rec,a){
 }
 /* Stocks that pay outsized special dividends year after year: the card counts regular dividends only. */
 var YS_SPECIALS=['PGR','AFG','CME','WRB','ORI','TRI'];
+/* ---------- visitor poll: "Do you own X?" then "Would you buy X at these levels?" (Buy / Hold / Sell).
+   Votes go to a Google Sheet through a Google Apps Script web app (YS_VOTE_URL). Hidden while YS_VOTE_URL is empty.
+   One vote per stock per month per browser. Results (last 90 days) show only from 10 votes up, as percentages. */
+var YS_VOTE_URL='';
+function ysPollKey(t){var d=new Date();return 'ysvote_'+t+'_'+d.getFullYear()+'-'+(d.getMonth()+1);}
+function ysGet(k){try{return window.localStorage.getItem(k);}catch(e){return null;}}
+function ysSet(k,v){try{window.localStorage.setItem(k,v);}catch(e){}}
+function ysPollHTML(t){
+  t=(t||'').toUpperCase();
+  if(!YS_VOTE_URL||!t)return '';
+  var voted=!!ysGet(ysPollKey(t));
+  if(voted)setTimeout(function(){ysPollFetch(t,'','');},0);
+  return '<div class="ysPoll" data-t="'+esc(t)+'">'+
+    '<div class="ysQ ysQ1"'+(voted?' hidden':'')+'><span class="ysQt">Do you own '+esc(t)+'?</span><span class="ysBtns"><button type="button" data-yown="Y">Yes</button><button type="button" data-yown="N">No</button></span></div>'+
+    '<div class="ysQ ysQ2" hidden><span class="ysQt">Would you buy '+esc(t)+' at these levels?</span><span class="ysBtns"><button type="button" data-yv="Buy">Buy</button><button type="button" data-yv="Hold">Hold</button><button type="button" data-yv="Sell">Sell</button></span></div>'+
+    '<div class="ysRes"'+(voted?'':' hidden')+'>'+(voted?'Loading visitor results\u2026':'')+'</div>'+
+    '<div class="ysNote">Visitor poll, not investment advice.</div></div>';
+}
+function ysPollShow(t,txt){
+  var rs=document.querySelectorAll('.ysPoll[data-t="'+t+'"] .ysRes');
+  for(var i=0;i<rs.length;i++){rs[i].hidden=false;rs[i].textContent=txt;}
+}
+function ysPollFetch(t,own,v){
+  var u=YS_VOTE_URL+'?t='+encodeURIComponent(t)+(v?'&a=vote&own='+encodeURIComponent(own)+'&v='+encodeURIComponent(v):'');
+  fetch(u).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok){ysPollShow(t,v?'Thanks for voting.':'Results unavailable right now.');return;}
+    if(d.few){ysPollShow(t,(v?'Thanks for voting. ':'')+'Results show once more visitors have voted.');return;}
+    ysPollShow(t,'Visitors: '+d.own+'% own '+t+' \u00b7 '+d.buy+'% Buy \u00b7 '+d.hold+'% Hold \u00b7 '+d.sell+'% Sell');
+  }).catch(function(){ysPollShow(t,v?'Thanks for voting.':'Results unavailable right now.');});
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.ysPoll button');if(!b)return;
+  var box=b.closest('.ysPoll'),t=box.getAttribute('data-t');
+  if(b.hasAttribute('data-yown')){box.setAttribute('data-own',b.getAttribute('data-yown'));box.querySelector('.ysQ1').hidden=true;box.querySelector('.ysQ2').hidden=false;return;}
+  if(b.hasAttribute('data-yv')){
+    var v=b.getAttribute('data-yv');box.querySelector('.ysQ2').hidden=true;
+    ysSet(ysPollKey(t),v);ysPollShow(t,'Saving your vote\u2026');ysPollFetch(t,box.getAttribute('data-own')||'',v);
+  }
+});
 function yieldAtSigma(rec,s){
   if(rec.avg10y===null||!rec.oneSD)return null;
   if(!ysStats(rec,rec.avg10y))return rec.avg10y+s*rec.oneSD;
@@ -1053,7 +1101,7 @@ function buildCard(rec,a){
     tickHtml='<div class="tick" style="--tick-acc:'+tickAcc+'"><span class="dot"></span>'+esc(a.ticker)+'</div>';
   }
   var h=((PUBLIC_MODE&&STANDALONE_CARD)?'<div class="backBar"><a href="'+esc(BACK_URL)+'">\u2190 Back to Yield Sigma / Directory</a></div>':'');
-  h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch">Dividend Framework<span class="sep"></span>Yield Sigma™ valuation card</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
+  h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch">Yield Sigma™ valuation card</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
     '<div class="pricebox">'+tickHtml+
@@ -1074,7 +1122,7 @@ function buildCard(rec,a){
        '</div>'+
      '</div>'+
      '<input type="range" class="sigSlider" id="sigSlider" min="'+(-g.range).toFixed(2)+'" max="'+g.range.toFixed(2)+'" step="0.01" value="0" aria-label="Explore a hypothetical sigma">'+
-     '<p class="cap">'+sigmaCaption(rec,a)+'</p>'+
+     '<p class="cap">'+sigmaCaption(rec,a)+'</p>'+ysPollHTML(rec.ticker)+
      (a.sigmaCheck?'<div class="sub">Recomputing from yield, 10y average and 1 SD gives '+fmtNum(a.sigmaComputed,2)+'\u03c3 \u2014 worth a quick check against the source row.</div>':'')+
      '</section>';
 
