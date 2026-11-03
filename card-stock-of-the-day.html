@@ -763,9 +763,33 @@ function bellSVG(rec,a,T){
    average) sigma system only: yield = 10y average + sigma * 1 SD, and
    price = Div$ / yield. One consistent formula, always monotonic, and
    deliberately independent of the separate max-yield model. */
+/* Same method as the workbook: the 10-year average and 1 SD include the
+   current yield as the 11th reading, so a hypothetical yield moves them
+   too. The other 10 readings are backed out of today's average, 1 SD and
+   yield (sum and sum of squares), then the new yield is added back in. */
+var YS_N=11;
+function ysStats(rec,y){
+  if(rec.avg10y===null||!rec.oneSD||rec.yield===null||!isFinite(rec.yield))return null;
+  var n=YS_N,m=rec.avg10y,sd=rec.oneSD,y0=rec.yield;
+  var S=n*m-y0,Q=(n-1)*sd*sd+n*m*m-y0*y0;
+  var m2=(S+y)/n,v=(Q+y*y-n*m2*m2)/(n-1);
+  if(!(v>0))return null;
+  return {mean:m2,sd:Math.sqrt(v)};
+}
+function sigmaAtYield(rec,y){
+  var st=ysStats(rec,y);
+  if(st)return (y-st.mean)/st.sd;
+  if(rec.avg10y===null||!rec.oneSD)return null;
+  return (y-rec.avg10y)/rec.oneSD;
+}
 function yieldAtSigma(rec,s){
   if(rec.avg10y===null||!rec.oneSD)return null;
-  return rec.avg10y+s*rec.oneSD;
+  if(!ysStats(rec,rec.avg10y))return rec.avg10y+s*rec.oneSD;
+  var lo=1e-4,hi=Math.max(100,rec.avg10y*100);
+  var sl=sigmaAtYield(rec,lo),sh=sigmaAtYield(rec,hi);
+  if(sl===null||sh===null||s<sl||s>sh)return null;
+  for(var i=0;i<80;i++){var mid=(lo+hi)/2;if(sigmaAtYield(rec,mid)<s)lo=mid;else hi=mid;}
+  return (lo+hi)/2;
 }
 function priceAtSigma(rec,s){
   var y=yieldAtSigma(rec,s);
@@ -1150,7 +1174,7 @@ function applyPriceOverride(rec,price){
   if(rec.divDollar!==null&&price>0){
     var newYield=rec.divDollar/price*100;
     rec2.yield=newYield;
-    if(rec.avg10y!==null&&rec.oneSD)rec2.sigma=(newYield-rec.avg10y)/rec.oneSD;
+    if(rec.avg10y!==null&&rec.oneSD){var st2=ysStats(rec,newYield);if(st2){rec2.avg10y=st2.mean;rec2.oneSD=st2.sd;}rec2.sigma=(newYield-rec2.avg10y)/rec2.oneSD;}
     if(rec.tnxSpread&&rec.yield!==null){
       var origTnx=parseTnx(rec.tnxSpread);
       if(origTnx){
