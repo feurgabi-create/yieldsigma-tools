@@ -249,6 +249,10 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .labsPill:hover,.labsPill[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
 .labsPop{display:block;margin:10px auto 0;max-width:52ch;font:400 13px/1.55 var(--mono);font-style:normal;text-align:left;color:var(--c-ink);background:var(--c-jade-soft);border-radius:8px;padding:9px 12px}
 .labsPop[hidden]{display:none}
+.growthNote{margin-top:14px;font-size:12px;color:var(--c-muted);font-style:italic}
+.subLine{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:18px 0 4px;font:600 12px/1 var(--mono);letter-spacing:.04em;color:var(--c-muted)}
+.subpill{display:inline-flex;align-items:center;font:600 10.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:999px;padding:4px 10px;text-decoration:none}
+.subpill:hover{background:var(--c-jade);color:var(--c-paper)}
 .ysPoll{max-width:72ch;margin:18px auto 0;padding:12px 14px;border:1px solid var(--c-rule);border-radius:12px;text-align:center}
 .ysPoll[hidden],.ysPoll [hidden]{display:none!important}
 .ysQ{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px}
@@ -1196,17 +1200,17 @@ function buildCard(rec,a){
   if(path){
     var dispersion=null;
     if(rec.volatility!==null){
-      if(rec.volatility<21)dispersion={label:'Tight dispersion',text:'At this level, the yield has historically stayed close to its mean, so outcomes cluster near normal levels and revert quickly.'};
-      else if(rec.volatility<40)dispersion={label:'Moderate dispersion',text:'At this level, the yield has historically moved moderately away from its mean, so outcomes spread moderately around normal levels and revert at a moderate pace.'};
-      else dispersion={label:'Wide dispersion',text:'At this level, the yield has historically moved far from its mean, so outcomes spread widely around normal levels and revert slowly.'};
+      if(rec.volatility<21)dispersion={label:'Low Yield Sigma Volatility',text:'the dividend yield has stayed close to its 10-year average, so the stock price range is narrow and returns to normal quickly.'};
+      else if(rec.volatility<40)dispersion={label:'Moderate Yield Sigma Volatility',text:'the dividend yield has swung a moderate amount around its 10-year average, so the stock price range is medium and returns to normal at a moderate pace.'};
+      else dispersion={label:'High Yield Sigma Volatility',text:'the dividend yield has swung far from its 10-year average in the past, so the stock price range is wide and returns to normal slowly.'};
     }
     var startRate=Math.max(0,Math.min(20,rec.divGrowth10y===null?0:rec.divGrowth10y));
     h+='<details class="sec" open><summary><h3>10-year dividend growth path (illustrative)</h3></summary><div class="fanBlock">'+
-      '<p class="sub">Set a growth rate and drag the year: the staircase shows that year\u2019s real dividend at that rate. The curve on the right turns it into a price bell using this stock\u2019s own 10-year average yield and 1 SD, with the \u00b11\u03c3 \u201cnormal\u201d range highlighted \u2014 wider and flatter for a more volatile yield, tighter and taller for a steadier one.</p>'+
+      '<p class="sub">Set a growth rate and drag the year: the bars show the dividend amount for that year at that rate. The curve on the right turns it into a stock price range, using this stock\u2019s own 10-year average dividend yield and 1 SD, with the \u00b11\u03c3 normal range highlighted. A more volatile dividend yield gives a wider, flatter curve; a steadier one, tighter and taller.</p>'+
       '<div class="grid2">'+
         '<div><div class="panelLabel">Dividend per share, by year</div><div id="stairPanel"></div></div>'+
         '<div><div class="panelLabel">Implied price range that year</div>'+
-          (dispersion?'<p class="dispersion"><b>'+esc(dispersion.label)+'</b> (Yield Sigma Volatility '+esc(fmtPct(rec.volatility))+'): '+esc(dispersion.text)+'</p>':'')+
+          (dispersion?'<p class="dispersion"><b>'+esc(dispersion.label)+'</b> ('+esc(fmtPct(rec.volatility))+' dispersion): '+esc(dispersion.text)+'</p>':'')+
           '<div id="fanPanel"></div></div>'+
       '</div>'+
       '<div class="yearControl">'+
@@ -1214,9 +1218,12 @@ function buildCard(rec,a){
         '<input type="range" id="yearSlider" min="0" max="10" step="1" value="0" aria-label="Select a year">'+
         '<span class="yearReadout" id="yearReadout"></span>'+
       '</div>'+
-      '<div class="discl">This is not a forecast or a price target. It simply projects a chosen dividend growth rate forward and assumes yield eventually behaves the way it has historically \u2014 both are assumptions that may not hold. The rate defaults to this stock\u2019s dividend growth over the past 10 years; drag it anywhere from 0% to 20% to explore other scenarios. Treat it as an illustration of the framework, not investment guidance.</div>'+
+      '<div class="growthNote">Not a forecast or a price target.<button type="button" class="labsPill" aria-expanded="false" aria-label="About the growth path">Labs</button>'+
+        '<span class="labsPop" hidden style="margin:8px 0 0;max-width:none;font-size:12px">This projects a chosen dividend growth rate forward and assumes the dividend yield keeps behaving the way it has over the past 10 years. Both are assumptions that may not hold. The growth rate starts at this stock\u2019s dividend growth over the past 10 years; type it or use the arrows to try anything from 0% to 20%, and drag the slider to pick the year. An illustration of how Yield Sigma\u2122 works, not investment advice.</span></div>'+
     '</div></details>';
   }
+
+  h+='<div class="subLine">More Stats<a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div>';
 
   if(a.tnx){
     h+='<details class="sec" open><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
