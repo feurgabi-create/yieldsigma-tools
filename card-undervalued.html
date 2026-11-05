@@ -257,17 +257,17 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .flipBtn{font:500 12px/1.2 var(--mono);color:var(--c-ink);background:var(--c-paper);border:1px solid var(--c-rule);border-radius:999px;padding:5px 11px;cursor:pointer;white-space:nowrap}
 .flipBtn:hover{border-color:var(--c-ink)}
 .bellWrap{transition:min-height .6s ease}
-.bellWrap.flipped{min-height:420px}
+.bellWrap.flipped{min-height:340px}
 .flipBack{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;background:var(--c-paper);border:1px solid var(--c-rule);border-radius:10px;padding:10px 12px;opacity:0;pointer-events:none;transform-origin:100% 50%;transform:rotate(90deg) scale(.22);transition:transform 1.4s cubic-bezier(.45,.05,.25,1),opacity .7s ease}
 .flipBack.on{opacity:1;pointer-events:auto;transform:none}
 .fbHead{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;font:600 11px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
 .fbBox{position:relative;flex:1;min-height:180px;margin-top:6px}
 .fbBox canvas{position:absolute;inset:0;width:100%;height:100%}
 .fbNote{font:12px/1.5 var(--mono);color:var(--c-muted);margin-top:6px;text-align:left}
-.fbRead{font:12px/1.55 var(--mono);color:var(--c-ink);text-align:left;margin-top:6px;min-height:4.7em;background:var(--c-jade-soft);border-radius:8px;padding:7px 10px}
+.fbTitle{min-height:1.3em}.fbTitle.act{text-transform:none;letter-spacing:.02em;color:var(--c-ink)}
 #flipCv{cursor:crosshair}
 @media (prefers-reduced-motion:reduce){.flipBack{transition:opacity .2s}}
-@media(max-width:560px){.bellWrap.flipped{min-height:520px}.fbHead{font-size:10px}.fbNote{font-size:11px}.flipBtn{font-size:11px;padding:4px 9px}}
+@media(max-width:560px){.bellWrap.flipped{min-height:420px}.fbHead{font-size:10px}.fbTitle{min-height:3.9em}.fbNote{font-size:11px}.flipBtn{font-size:11px;padding:4px 9px}}
 .detToggle{display:block;margin:22px 0 6px;padding:0;background:none;border:0;cursor:pointer;font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink)}
 .detToggle:hover{color:var(--c-jade)}
 .labsLegend{margin-left:18px;white-space:nowrap}
@@ -861,31 +861,29 @@ function flipHTML(rec){
   var t=esc(rec.ticker);
   return '<button type="button" class="flipBtn" id="flipBtn" aria-expanded="false">⤾ Flip to history</button>'+
     '<div class="flipBack" id="flipBack" aria-hidden="true">'+
-      '<div class="fbHead"><span>'+t+' · months at each level · last 10 years</span><button type="button" class="flipBtn" id="flipBackBtn">⤿ Flip back</button></div>'+
+      '<div class="fbHead"><span class="fbTitle" id="fbTitle" data-cap="'+t+' · % of months in each ½σ step · last 10 years">'+t+' · % of months in each ½σ step · last 10 years</span><button type="button" class="flipBtn" id="flipBackBtn">⤿ Flip back</button></div>'+
       '<div class="fbBox"><canvas id="flipCv"></canvas></div>'+
-      '<div class="fbRead" id="fbRead"></div>'+
-      '<div class="fbNote">'+f[4]+' months, '+flipMonth(f[5])+' to '+flipMonth(f[5],f[4]-1)+'. The black curve is a bell fitted to '+t+'’s own readings. Bars are months in each ¼σ step; outlined blocks and percentages are the wider ½σ steps.</div>'+
+      '<div class="fbNote">'+f[4]+' months, '+flipMonth(f[5])+' to '+flipMonth(f[5],f[4]-1)+'. The black curve is a bell fitted to '+t+'’s own readings. Percentages are the share of months in each ½σ step.</div>'+
     '</div>';
 }
-function flipReadout(rec,v,src){
-  var f=YS_FLIP[rec.ticker],el=document.getElementById('fbRead');if(!f||!el)return;
-  var k=Math.floor(v/0.25+1e-9),lo=k*0.25,hi=lo+0.25,c=f[7][k-f[6]]||0,N=f[4],t=esc(rec.ticker);
-  var fs=function(x){return (x>0?'+':x<0?'\u2212':'')+Math.abs(x).toFixed(2)+'\u03c3';};
-  var nc=function(x){return 0.5*(1+flipErf(x/Math.SQRT2));};
-  var tb=(nc(Math.min(hi,9))-nc(Math.max(lo,-9)))*100;
-  var zone=lo>=1-1e-9?'undervalued':hi<=-1+1e-9?'overvalued':'normal range';
-  var h='<b>'+fs(lo)+' to '+fs(hi)+'</b> \u00b7 '+zone+(src==='today'?' \u00b7 today\u2019s level':'')+'<br>'+
-    t+' spent <b>'+c+' month'+(c===1?'':'s')+'</b> here in the last 10 years ('+(c/N*100).toFixed(1)+'%). A textbook bell puts '+tb.toFixed(1)+'% of months here.';
-  if(k>=4||k<=-5){
-    var e=null;(f[9]||[]).forEach(function(r){if(r[0]===k)e=r;});
-    if(!e)h+='<br>Not reached since '+flipMonth(f[8])+'.';
-    else if(!e[2])h+='<br>Only reached in the last 12 months, too recent to see what followed.';
-    else h+='<br>Last time here with a measurable outcome: <b>'+flipMonth(e[1])+'</b> \u2192 '+(e[3]>0?'+':e[3]<0?'\u2212':'')+Math.abs(e[3]).toFixed(1)+'% total return over the next '+e[2]+' months.';
+/* header readout for one ½σ block: share of months, and (beyond ±1σ) the last time here and what followed */
+function flipReadout(rec,v){
+  var f=YS_FLIP[rec.ticker],el=document.getElementById('fbTitle');if(!f||!el)return;
+  if(v===null){el.textContent=el.getAttribute('data-cap');el.classList.remove('act');return;}
+  var kb=Math.floor(v/0.5+1e-9),lo=kb*0.5,hi=lo+0.5,c=0,N=f[4];
+  for(var i=0;i<f[7].length;i++){if(Math.floor((f[6]+i)/2)===kb)c+=f[7][i];}
+  var fs=function(x){return (x>0?'+':x<0?'−':'')+(Math.abs(x)%1?Math.abs(x).toFixed(1):Math.abs(x).toFixed(0))+'σ';};
+  var s=fs(lo)+' to '+fs(hi)+' · '+Math.round(c/N*100)+'% of months';
+  if(lo>=1-1e-9||hi<=-1+1e-9){
+    var best=null,seen=false;
+    (f[9]||[]).forEach(function(r){if(Math.floor(r[0]/2)!==kb)return;seen=true;if(r[2]&&(!best||r[1]>best[1]))best=r;});
+    if(best)s+=' · last here '+flipMonth(best[1])+' → '+(best[3]>0?'+':best[3]<0?'−':'')+Math.abs(best[3]).toFixed(1)+'% in '+best[2]+' mo';
+    else if(seen)s+=' · last here: too recent to measure';
+    else s+=' · never reached since '+f[8].slice(0,4);
   }
-  el.innerHTML=h;
+  el.textContent=s;el.classList.add('act');
 }
-function flipErf(x){var s=x<0?-1:1;x=Math.abs(x);var t=1/(1+0.3275911*x);var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
-function drawFlip(rec,a,selV){
+function drawFlip(rec,a,blkV,dotV){
   var f=YS_FLIP[rec.ticker],cv=document.getElementById('flipCv');if(!f||!cv)return;
   var T=curTheme,band=T===THEME_DARK?'#7D8F83':'#8A9A8F',box=cv.parentElement,dpr=window.devicePixelRatio||1,W=box.clientWidth,H=box.clientHeight;
   if(!W||!H)return;
@@ -899,23 +897,27 @@ function drawFlip(rec,a,selV){
   var mx=0;for(k in cc)mx=Math.max(mx,cc[k]);
   var scaleMax=Math.max(mx,N*0.5*pdf(m))*1.1;
   var yv=function(c){return B-(B-Tp)*c/scaleMax;},col=function(lo,hi){return lo>=1-1e-9?T.jade:hi<=-1+1e-9?T.rust:band;};
+  var selK=blkV===null||blkV===undefined?null:Math.floor(blkV/0.5+1e-9);
   g.strokeStyle=T.rule;g.lineWidth=1;g.beginPath();g.moveTo(L,B+.5);g.lineTo(R,B+.5);g.stroke();
   g.setLineDash([5,4]);g.strokeStyle=band;[-1,1].forEach(function(v){g.beginPath();g.moveTo(xs(v)+.5,Tp-8);g.lineTo(xs(v)+.5,B);g.stroke();});g.setLineDash([]);
   var fs=W<480?9.5:11;
   Object.keys(cc).forEach(function(kk){var c=cc[kk],lo=kk*0.5,hi=lo+0.5;if(hi<=-3||lo>=3)return;var x0=xs(lo),x1=xs(hi),y=yv(c),cl=col(lo,hi);
     g.globalAlpha=.16;g.fillStyle=cl;g.fillRect(x0+1,y,x1-x0-2,B-y);g.globalAlpha=.7;g.strokeStyle=cl;g.lineWidth=1.5;g.strokeRect(x0+1,y,x1-x0-2,B-y);
     g.globalAlpha=1;g.fillStyle=T.ink;g.font='600 '+fs+'px '+mono;g.textAlign='center';g.textBaseline='bottom';g.fillText(Math.round(c/N*100)+'%',(x0+x1)/2,y-3);});
-  var nowB=now===null?null:Math.floor(now/0.25+1e-9),selB=selV===undefined||selV===null?null:Math.floor(selV/0.25+1e-9);
-  if(selB!==null&&selB!==nowB&&!cnt[selB]){var sx0=xs(selB*0.25),sx1=xs(selB*0.25+0.25);g.strokeStyle=T.ink;g.lineWidth=2;g.setLineDash([3,3]);g.strokeRect(sx0+1,B-14,sx1-sx0-2,14);g.setLineDash([]);}
+  var nowB=now===null?null:Math.floor(now/0.25+1e-9);
   Object.keys(cnt).forEach(function(kk){kk=+kk;var c=cnt[kk],lo=kk*0.25,hi=lo+0.25;if(hi<=-3||lo>=3)return;var x0=xs(lo),x1=xs(hi),y=yv(c);
     g.globalAlpha=.9;g.fillStyle=col(lo,hi);g.fillRect(x0+1,y,x1-x0-2,B-y);
-    if(kk===nowB||kk===selB){g.globalAlpha=1;g.strokeStyle=T.ink;g.lineWidth=kk===selB?2.2:1.4;g.strokeRect(x0+.5,y-.5,x1-x0-1,B-y+1);}
-    if(kk===selB){g.globalAlpha=1;g.fillStyle=T.ink;g.font='600 '+(fs-.5)+'px '+mono;g.textAlign='center';g.textBaseline='bottom';g.fillText(c+' mo',(x0+x1)/2,Math.min(y-3,yv(cc[Math.floor(kk/2)])-16));}});
+    if(kk===nowB){g.globalAlpha=1;g.strokeStyle=T.ink;g.lineWidth=1.4;g.strokeRect(x0+.5,y-.5,x1-x0-1,B-y+1);}});
+  g.globalAlpha=1;
+  if(selK!==null){var slo=selK*0.5,sx0=xs(slo),sx1=xs(slo+0.5),sy=cc[selK]?yv(cc[selK]):B-3;g.strokeStyle=T.ink;g.lineWidth=2;g.strokeRect(sx0+1,sy,sx1-sx0-2,B-sy);}
   g.globalAlpha=.75;g.strokeStyle=T.ink;g.lineWidth=2;g.beginPath();
   for(i=0;i<=240;i++){var x=-3+6*i/240,yy=yv(N*0.5*pdf(x));if(i)g.lineTo(xs(x),yy);else g.moveTo(xs(x),yy);}g.stroke();g.globalAlpha=1;
   if(now!==null){g.strokeStyle=T.ink;g.lineWidth=1.5;g.beginPath();g.moveTo(xs(now)+.5,Tp-10);g.lineTo(xs(now)+.5,B);g.stroke();
     g.fillStyle=T.ink;g.font='600 '+fs+'px '+mono;g.textAlign=xs(now)>R-90?'right':'left';g.textBaseline='top';
     g.fillText('today '+(now>0?'+':now<0?'−':'')+Math.abs(now).toFixed(2)+'σ',xs(now)+(g.textAlign==='right'?-5:5),Tp-10);}
+  if(dotV!==null&&dotV!==undefined){var dx=xs(dotV),dy=yv(N*0.5*pdf(dotV));
+    g.strokeStyle=T.muted;g.globalAlpha=.6;g.lineWidth=1;g.beginPath();g.moveTo(dx+.5,dy);g.lineTo(dx+.5,B);g.stroke();g.globalAlpha=1;
+    g.beginPath();g.arc(dx,dy,5,0,Math.PI*2);g.fillStyle=T.ink;g.fill();g.lineWidth=2;g.strokeStyle=T.paper;g.stroke();}
   if(f[1]){var rs=now!==null&&xs(now)<L+(W<480?150:200),sx=rs?R-2:L+2;g.textAlign=rs?'right':'left';g.textBaseline='top';g.fillStyle=T.ink;g.font='600 '+fs+'px '+mono;g.fillText('Curve shape: '+f[1],sx,Tp-24);
     g.fillStyle=T.muted;g.font=fs+'px '+mono;g.fillText('Score: '+(+f[0]).toFixed(1),sx,Tp-10);}
   g.font=(fs-.5)+'px '+mono;g.fillStyle=T.muted;g.textAlign='center';g.textBaseline='top';
@@ -929,11 +931,9 @@ function drawFlip(rec,a,selV){
 function wireFlip(rec,a){
   var btn=document.getElementById('flipBtn'),back=document.getElementById('flipBack'),bb=document.getElementById('flipBackBtn'),wrap=document.getElementById('bellWrap');
   if(!btn||!back)return;
-  var now=(a.sigma!==null?a.sigma:a.sigmaComputed),slideV=null,hovV=null,cv=document.getElementById('flipCv'),slider=document.getElementById('sigSlider');
-  /* what the back shows: hovered/tapped bar first, then the slider, then today */
-  function show(){var v=hovV!==null?hovV:slideV!==null?slideV:now,src=hovV!==null?'hover':slideV!==null?'slider':'today';
-    if(v===null)return;if(src!=='today'&&now!==null&&Math.floor(v/0.25+1e-9)===Math.floor(now/0.25+1e-9))src='today';
-    drawFlip(rec,a,src==='today'&&hovV===null&&slideV===null?null:v);flipReadout(rec,v,src);}
+  var slideV=null,hovV=null,cv=document.getElementById('flipCv'),slider=document.getElementById('sigSlider');
+  /* hover picks a ½σ block; the slider puts a dot on the curve; the header shows whichever is active (hover first) */
+  function show(){var v=hovV!==null?hovV:slideV;drawFlip(rec,a,v,slideV);flipReadout(rec,v);}
   function set(on){wrap.classList.toggle('flipped',on);back.classList.toggle('on',on);back.setAttribute('aria-hidden',on?'false':'true');btn.setAttribute('aria-expanded',on?'true':'false');
     hovV=null;slideV=null;if(on)requestAnimationFrame(function(){requestAnimationFrame(show);});}
   btn.addEventListener('click',function(){set(true);});
@@ -941,7 +941,7 @@ function wireFlip(rec,a){
   if(slider)slider.addEventListener('input',function(){if(!back.classList.contains('on'))return;slideV=+slider.value;show();});
   function pick(e){var g=cv._geo;if(!g)return;var r=cv.getBoundingClientRect(),x=e.clientX-r.left;
     if(x<g.L||x>g.R){if(hovV!==null){hovV=null;show();}return;}
-    var v=-3+(x-g.L)/(g.R-g.L)*6;v=Math.floor(v/0.25+1e-9)*0.25+0.125;if(hovV!==v){hovV=v;show();}}
+    var v=-3+(x-g.L)/(g.R-g.L)*6;v=Math.floor(v/0.5+1e-9)*0.5+0.25;if(hovV!==v){hovV=v;show();}}
   cv.addEventListener('mousemove',pick);
   cv.addEventListener('click',pick);
   cv.addEventListener('mouseleave',function(){if(hovV!==null){hovV=null;show();}});
