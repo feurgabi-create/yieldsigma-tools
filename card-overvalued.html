@@ -1161,7 +1161,7 @@ function buildCard(rec,a){
   if(l1){
     var anchorsDesc='Par is the price at which yield would match its 10-year average.'+
       (rec.ddm!==null?' DDM fair value discounts the dividend at the 10-year Treasury plus a standard risk spread, compounded with its growth rate.':'');
-    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the valuation anchors">i</button></summary>'+
+    h+='<details class="sec"><summary><h3>Where price sits against the valuation anchors</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the valuation anchors">i</button></summary>'+
        '<span class="labsPop" hidden style="margin:4px 0 10px;max-width:none;font-size:12px">'+anchorsDesc+'</span>'+l1+'</details>';
   }
 
@@ -1205,7 +1205,7 @@ function buildCard(rec,a){
     return '<div class="stat"><span class="l">'+esc(p[0])+'</span><span class="v">'+esc(p[1])+'</span></div>';
   }
   if(divStats.length||histStats.length){
-    h+='<details class="sec" open><summary><h3>Dividend and sigma detail</h3></summary><div class="grid2">'+
+    h+='<details class="sec"><summary><h3>Dividend and sigma detail</h3></summary><div class="grid2">'+
       '<div>'+divStats.map(statRow).join('')+'</div>'+
       '<div>'+histStats.map(statRow).join('')+'</div>'+
     '</div>'+
@@ -1221,7 +1221,7 @@ function buildCard(rec,a){
       else dispersion={label:'High Yield Sigma Volatility',text:'the dividend yield has swung far from its 10-year average in the past, so the stock price range is wide and returns to normal slowly.'};
     }
     var startRate=Math.max(0,Math.min(20,rec.divGrowth10y===null?0:rec.divGrowth10y));
-    h+='<details class="sec" open><summary><h3>10-year dividend growth path (illustrative)</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the growth path chart">i</button></summary>'+
+    h+='<details class="sec"><summary><h3>10-year dividend growth path (illustrative)</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the growth path chart">i</button></summary>'+
       '<span class="labsPop" hidden style="margin:4px 0 10px;max-width:none;font-size:12px">Set a growth rate and drag the year: the bars show the dividend amount for that year at that rate. The curve on the right turns it into a stock price range, using this stock\u2019s own 10-year average dividend yield and 1 SD, with the \u00b11\u03c3 normal range highlighted. A more volatile dividend yield gives a wider, flatter curve; a steadier one, tighter and taller.</span><div class="fanBlock">'+
       '<div class="grid2">'+
         '<div><div class="panelLabel">Dividend per share, by year</div><div id="stairPanel"></div></div>'+
@@ -1239,10 +1239,8 @@ function buildCard(rec,a){
     '</div></details>';
   }
 
-  h+='<div class="subLine">More Stats<a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div>';
-
   if(a.tnx){
-    h+='<details class="sec" open><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
+    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
        '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
        '<div class="tnx">'+
          '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
@@ -1255,6 +1253,7 @@ function buildCard(rec,a){
        '</details>';
   }
 
+  h+='<div class="subLine">More Stats<a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div>';
   h+='<footer class="foot"><span>Model output, not investment advice \u2014 dividend safety and payout ratio deserve their own check.</span><span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a><span class="labsLegend"><span class="labsPill labsTag">Labs</span>Proprietary metric, developed by <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></span></span><span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'<span class="pubFootLive"><span class="pubLive" id="pubLiveStamp" hidden></span><button type="button" class="linkbtn" id="pubRefresh" hidden>Refresh</button></span></span></footer>';
   return h;
 }
@@ -1505,7 +1504,12 @@ function renderCurrent(){
   var rec=priceOverride!==null?applyPriceOverride(parsed.rec,priceOverride):parsed.rec;
   var a=analyze(rec);
   a.maxAbs=Math.max(Math.abs(rec.sigma||0),Math.abs(a.sigmaComputed||0));
+  /* sections land closed; keep whatever the reader opened when the same stock re-renders (price edit, live refresh) */
+  var openSet=null;
+  if(card.getAttribute('data-tk')===rec.ticker){openSet={};Array.prototype.forEach.call(card.querySelectorAll('details.sec'),function(d){var t=d.querySelector('h3');if(t)openSet[t.textContent]=d.open;});}
   card.innerHTML=buildCard(rec,a);
+  card.setAttribute('data-tk',rec.ticker||'');
+  if(openSet)Array.prototype.forEach.call(card.querySelectorAll('details.sec'),function(d){var t=d.querySelector('h3');if(t&&openSet[t.textContent])d.open=true;});
   wireBell(rec,a);
   wireGrowthFan(rec);
   wirePriceInput();
