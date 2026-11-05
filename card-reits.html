@@ -184,9 +184,13 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
    and value overflow upward into the section description's own bottom
    margin above the ladder; nothing else in the ladder shifts. */
 .lmark.now{height:30px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start}
-.lmark.now .nowCallout{display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap}
+.lmark.now .nowCallout{display:flex;flex-direction:row;align-items:baseline;gap:6px;white-space:nowrap}
+.lmark.now .nowCallout.flip{flex-direction:row-reverse;transform:translateX(calc(-100% + 13px))}
 .lmark.now .l{line-height:1.2;margin:0}
-.lmark.now .v{font-weight:700;line-height:1.2;margin:1px 0 0}
+.lmark.now .v{font-weight:700;line-height:1.2;margin:0}
+.lmark.lside .v .l{display:inline;margin:0 0 0 6px;font-weight:400}
+.lmark.lside.flip .v{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:6px;transform:translateX(calc(-100% + 12px))}
+.lmark.lside.flip .v .l{margin:0}
 .lmark.now .nowArrow{flex:none;width:13px;height:9px;margin:3px 0 0 0;background:var(--c-ink);
   clip-path:polygon(0 0,100% 0,50% 100%);position:relative}
 .lmark.now .nowArrow::before{content:'';position:absolute;left:50%;top:-4px;width:2px;height:4px;background:var(--c-ink);transform:translateX(-50%)}
@@ -907,13 +911,19 @@ function ladder(points,T){
     points.map(function(p,i){
       if(p.now){
         return '<div class="lmark now" style="left:'+pct(p.v).toFixed(1)+'%">'+
-          '<div class="nowCallout">'+
-            '<div class="l">'+esc(p.label)+'</div>'+
+          '<div class="nowCallout'+(pct(p.v)>80?' flip':'')+'">'+
             '<div class="v">'+fmtMoney(p.v)+'</div>'+
+            '<div class="l">'+esc(p.label)+'</div>'+
             (p.diffLabel?'<div class="nowDiff">'+esc(p.diffLabel)+'</div>':'')+
           '</div>'+
           '<div class="nowArrow"></div>'+
         '</div>';
+      }
+      if(rows[i]>0){
+        /* on its own lower track: label sits beside the number, one line */
+        return '<div class="lmark lside'+(pct(p.v)>80?' flip':'')+'" style="left:'+pct(p.v).toFixed(1)+'%;--row:'+rows[i]+'">'+
+          '<div class="dot" style="background:'+(p.color||T.muted)+'"></div>'+
+          '<div class="v">'+fmtMoney(p.v)+'<span class="l">'+esc(p.label)+'</span></div></div>';
       }
       return '<div class="lmark" style="left:'+pct(p.v).toFixed(1)+'%;--row:'+rows[i]+'">'+
         '<div class="dot" style="background:'+(p.color||T.muted)+'"></div>'+
