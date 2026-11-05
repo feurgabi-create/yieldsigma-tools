@@ -253,6 +253,8 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .labsPill:hover,.labsPill[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
 .labsPop{display:block;margin:10px auto 0;max-width:52ch;font:400 13px/1.55 var(--mono);font-style:normal;text-align:left;color:var(--c-ink);background:var(--c-jade-soft);border-radius:8px;padding:9px 12px}
 .labsPop[hidden]{display:none}
+.labsPill.infoPill{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;padding:0;border-radius:50%;font:italic 700 10.5px/1 Georgia,serif;letter-spacing:0;text-transform:none;color:var(--c-muted);border-color:var(--c-muted);vertical-align:1px}
+.labsPill.infoPill:hover,.labsPill.infoPill[aria-expanded="true"]{background:var(--c-jade);border-color:var(--c-jade);color:var(--c-paper)}
 .growthNote{margin-top:14px;font-size:12px;color:var(--c-muted);font-style:italic}
 .subLine{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:18px 0 4px;font:600 12px/1 var(--mono);letter-spacing:.04em;color:var(--c-muted)}
 .subpill{display:inline-flex;align-items:center;font:600 10.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:999px;padding:4px 10px;text-decoration:none}
@@ -1155,7 +1157,7 @@ function buildCard(rec,a){
   if(l1){
     var anchorsDesc='Par is the price at which yield would match its 10-year average.'+
       (rec.ddm!==null?' DDM fair value discounts the dividend at the 10-year Treasury plus a standard risk spread, compounded with its growth rate.':'');
-    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3><button type="button" class="labsPill" aria-expanded="false" aria-label="About the valuation anchors">Labs</button></summary>'+
+    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the valuation anchors">i</button></summary>'+
        '<span class="labsPop" hidden style="margin:4px 0 10px;max-width:none;font-size:12px">'+anchorsDesc+'</span>'+l1+'</details>';
   }
 
@@ -1215,7 +1217,7 @@ function buildCard(rec,a){
       else dispersion={label:'High Yield Sigma Volatility',text:'the dividend yield has swung far from its 10-year average in the past, so the stock price range is wide and returns to normal slowly.'};
     }
     var startRate=Math.max(0,Math.min(20,rec.divGrowth10y===null?0:rec.divGrowth10y));
-    h+='<details class="sec" open><summary><h3>10-year dividend growth path (illustrative)</h3><button type="button" class="labsPill" aria-expanded="false" aria-label="About the growth path chart">Labs</button></summary>'+
+    h+='<details class="sec" open><summary><h3>10-year dividend growth path (illustrative)</h3><button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the growth path chart">i</button></summary>'+
       '<span class="labsPop" hidden style="margin:4px 0 10px;max-width:none;font-size:12px">Set a growth rate and drag the year: the bars show the dividend amount for that year at that rate. The curve on the right turns it into a stock price range, using this stock\u2019s own 10-year average dividend yield and 1 SD, with the \u00b11\u03c3 normal range highlighted. A more volatile dividend yield gives a wider, flatter curve; a steadier one, tighter and taller.</span><div class="fanBlock">'+
       '<div class="grid2">'+
         '<div><div class="panelLabel">Dividend per share, by year</div><div id="stairPanel"></div></div>'+
@@ -1228,7 +1230,7 @@ function buildCard(rec,a){
         '<input type="range" id="yearSlider" min="0" max="10" step="1" value="0" aria-label="Select a year">'+
         '<span class="yearReadout" id="yearReadout"></span>'+
       '</div>'+
-      '<div class="growthNote">Not a forecast or a price target.<button type="button" class="labsPill" aria-expanded="false" aria-label="About the growth path">Labs</button>'+
+      '<div class="growthNote">Not a forecast or a price target.<button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the growth path">i</button>'+
         '<span class="labsPop" hidden style="margin:8px 0 0;max-width:none;font-size:12px">This projects a chosen dividend growth rate forward and assumes the dividend yield keeps behaving the way it has over the past 10 years. Both are assumptions that may not hold. The growth rate starts at this stock\u2019s dividend growth over the past 10 years; type it or use the arrows to try anything from 0% to 20%, and drag the slider to pick the year. An illustration of how Yield Sigma\u2122 works, not investment advice.</span></div>'+
     '</div></details>';
   }
