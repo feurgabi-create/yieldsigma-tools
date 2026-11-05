@@ -253,6 +253,8 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .labsPill:hover,.labsPill[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
 .labsPop{display:block;margin:10px auto 0;max-width:52ch;font:400 13px/1.55 var(--mono);font-style:normal;text-align:left;color:var(--c-ink);background:var(--c-jade-soft);border-radius:8px;padding:9px 12px}
 .labsPop[hidden]{display:none}
+.detToggle{display:block;margin:22px 0 6px;padding:0;background:none;border:0;cursor:pointer;font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink)}
+.detToggle:hover{color:var(--c-jade)}
 .labsLegend{margin-left:18px;white-space:nowrap}
 @media(max-width:560px){.labsLegend{display:block;margin:8px 0 0;white-space:normal}}
 .labsPill.labsTag{cursor:default;margin:0 6px 0 0}
@@ -1148,6 +1150,8 @@ function buildCard(rec,a){
      (a.sigmaCheck?'<div class="sub">Recomputing from yield, 10y average and 1 SD gives '+fmtNum(a.sigmaComputed,2)+'\u03c3 \u2014 worth a quick check against the source row.</div>':'')+
      '</section>';
 
+  h+='<button type="button" class="detToggle" aria-expanded="false">Open detailed view \u25be</button>';
+
   var l1=ladder([
     {v:rec.par,label:'Par (yield parity)',color:T.gold},
     {v:rec.ddm,label:'DDM fair value',color:T.jade},
@@ -1510,6 +1514,7 @@ function renderCurrent(){
   card.innerHTML=buildCard(rec,a);
   card.setAttribute('data-tk',rec.ticker||'');
   if(openSet)Array.prototype.forEach.call(card.querySelectorAll('details.sec'),function(d){var t=d.querySelector('h3');if(t&&openSet[t.textContent])d.open=true;});
+  if(window.ysDetSync)window.ysDetSync();
   wireBell(rec,a);
   wireGrowthFan(rec);
   wirePriceInput();
@@ -2078,6 +2083,14 @@ window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:pa
 })();
 </script>
 <script>
+/* "Open detailed view": opens all sections at once (or closes all when all are open); each section still opens/closes on its own */
+window.ysDetSync=function(){var b=document.querySelector('.detToggle');if(!b)return;var ds=document.querySelectorAll('details.sec');var all=ds.length>0;
+  Array.prototype.forEach.call(ds,function(d){if(!d.open)all=false;});
+  b.textContent=all?'Close detailed view \u25b4':'Open detailed view \u25be';b.setAttribute('aria-expanded',all?'true':'false');};
+document.addEventListener('toggle',function(e){if(e.target&&e.target.matches&&e.target.matches('details.sec'))window.ysDetSync();},true);
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.detToggle');if(!b)return;
+  var ds=document.querySelectorAll('details.sec');var all=true;Array.prototype.forEach.call(ds,function(d){if(!d.open)all=false;});
+  Array.prototype.forEach.call(ds,function(d){d.open=!all;});window.ysDetSync();});
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.labsPill');if(!b)return;
   var sm=b.closest('summary');if(sm)e.preventDefault();
   var h=sm?sm.parentNode:(b.closest('.statBlock')||b.closest('p,div'));var p=h?h.querySelector('.labsPop'):null;
