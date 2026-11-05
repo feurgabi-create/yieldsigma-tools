@@ -1145,8 +1145,8 @@ function buildCard(rec,a){
   if(l1){
     var anchorsDesc='Par is the price at which yield would match its 10-year average.'+
       (rec.ddm!==null?' DDM fair value discounts the dividend at the 10-year Treasury plus a standard risk spread, compounded with its growth rate.':'');
-    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3></summary>'+
-       '<p class="desc" style="max-width:none">'+anchorsDesc+'</p>'+l1+'</details>';
+    h+='<details class="sec" open><summary><h3>Where price sits against the valuation anchors</h3><button type="button" class="labsPill" aria-expanded="false" aria-label="About the valuation anchors">Labs</button></summary>'+
+       '<span class="labsPop" hidden style="margin:4px 0 10px;max-width:none;font-size:12px">'+anchorsDesc+'</span>'+l1+'</details>';
   }
 
   var divStats=[
@@ -2052,7 +2052,9 @@ window.__card={SCHEMA_STOCKS:SCHEMA_STOCKS,SCHEMA_REITS:SCHEMA_REITS,parseRow:pa
 </script>
 <script>
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.labsPill');if(!b)return;
-  var h=b.closest('.statBlock')||b.closest('p,div');var p=h?h.querySelector('.labsPop'):null;if(!p)return;var open=p.hasAttribute('hidden');
+  var sm=b.closest('summary');if(sm)e.preventDefault();
+  var h=sm?sm.parentNode:(b.closest('.statBlock')||b.closest('p,div'));var p=h?h.querySelector('.labsPop'):null;
+  if(sm&&!h.open)h.open=true;if(!p)return;var open=p.hasAttribute('hidden');
   if(open)p.removeAttribute('hidden');else p.setAttribute('hidden','');b.setAttribute('aria-expanded',open?'true':'false');});
 </script>
 </body>
