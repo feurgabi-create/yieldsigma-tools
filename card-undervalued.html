@@ -276,6 +276,9 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .mcLeg i.bar{width:10px;height:10px;background:var(--c-jade);border-radius:2px}
 .mcLeg i.ln{width:14px;height:2px;background:var(--c-ink);vertical-align:3px}
 .mcChart{position:relative;flex:1;min-height:170px}
+.mcLeg{min-height:1.3em;white-space:nowrap;overflow:hidden}.mcLeg.act{color:var(--c-ink);font-weight:600}
+@media(max-width:560px){.mcLeg{white-space:normal;min-height:2.6em;align-items:flex-start}}
+#mcCv{cursor:crosshair}
 .mcChart canvas{position:absolute;inset:0;width:100%;height:100%}
 .mcFoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 14px}
 .mcFoot span{font:italic 11px/1.4 var(--mono);color:var(--c-muted)}
@@ -910,7 +913,7 @@ function miniCalcHTML(rec){
       '<div><span>Annualized return</span><b id="mcIrr">–</b><small>IRR · price + dividends</small></div>'+
       '<div><span>Yield on cost</span><b id="mcYoc">–</b><small id="mcYocL">dividends in year 10 ÷ amount invested</small></div>'+
     '</div>'+
-    '<div class="mcLeg"><span><i class="bar"></i>Dividend income each year</span><span><i class="ln"></i>Balance</span></div>'+
+    '<div class="mcLeg" id="mcLeg"><span><i class="bar"></i>Dividend income each year</span><span><i class="ln"></i>Balance</span></div>'+
     '<div class="mcChart"><canvas id="mcCv"></canvas></div>'+
     '<div class="mcFoot"><a class="mcLink" href="'+YS_CALC_URL+'" target="_blank" rel="noopener">Open the full compound calculator →</a>'+
       '<span>An illustration, not a forecast: rates are held constant; taxes and fees are ignored.</span></div>'+
@@ -935,7 +938,7 @@ function miniCalcRun(p){
   if(p.start>0&&flo*npv(hi)<=0){for(var k=0;k<200;k++){var mid=(lo+hi)/2,fm=npv(mid);if(fm*flo>0){lo=mid;flo=fm;}else hi=mid;}irr=(Math.pow(1+(lo+hi)/2,12)-1)*100;}
   rows.irr=irr;return rows;
 }
-function miniCalcDraw(rows){
+function miniCalcDraw(rows,sel){
   var cv=document.getElementById('mcCv');if(!cv)return;
   var T=curTheme,box=cv.parentElement,dpr=window.devicePixelRatio||1,W=box.clientWidth,H=box.clientHeight;if(!W||!H)return;
   cv.width=W*dpr;cv.height=H*dpr;var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
@@ -948,10 +951,13 @@ function miniCalcDraw(rows){
   for(var v=0;v<=mxI+1e-9;v+=ti){var y=B-(B-Tp)*v/mxI;g.strokeStyle=T.rule;g.globalAlpha=.6;g.beginPath();g.moveTo(L,y+.5);g.lineTo(R,y+.5);g.stroke();g.globalAlpha=1;g.fillStyle=T.jade;g.textAlign='right';g.fillText(short(v),L-6,y);}
   for(v=0;v<=mxB+1e-9;v+=tb){y=B-(B-Tp)*v/mxB;g.fillStyle=T.ink;g.textAlign='left';g.fillText(short(v),R+6,y);}
   var bw=(R-L)/n;
-  rows.forEach(function(r,i){var x=L+i*bw,h=(B-Tp)*r.inc/mxI;g.fillStyle=T.jade;g.globalAlpha=.85;g.fillRect(x+bw*.18,B-h,bw*.64,h);g.globalAlpha=1;});
+  if(sel!==null&&sel!==undefined){var cx=L+(sel+.5)*bw;g.strokeStyle=T.muted;g.globalAlpha=.7;g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(Math.round(cx)+.5,Tp);g.lineTo(Math.round(cx)+.5,B);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+  rows.forEach(function(r,i){var x=L+i*bw,h=(B-Tp)*r.inc/mxI;g.fillStyle=T.jade;g.globalAlpha=sel===undefined||sel===null||sel===i?.85:.45;g.fillRect(x+bw*.18,B-h,bw*.64,h);g.globalAlpha=1;
+    if(sel===i){g.strokeStyle=T.ink;g.lineWidth=2;g.strokeRect(x+bw*.18,B-h,bw*.64,h);}});
   g.strokeStyle=T.ink;g.lineWidth=2;g.beginPath();
   rows.forEach(function(r,i){var x=L+(i+.5)*bw,y=B-(B-Tp)*r.bal/mxB;if(i)g.lineTo(x,y);else g.moveTo(x,y);});g.stroke();
-  rows.forEach(function(r,i){var x=L+(i+.5)*bw,y=B-(B-Tp)*r.bal/mxB;g.beginPath();g.arc(x,y,2.5,0,Math.PI*2);g.fillStyle=T.ink;g.fill();});
+  rows.forEach(function(r,i){var x=L+(i+.5)*bw,y=B-(B-Tp)*r.bal/mxB;g.beginPath();g.arc(x,y,sel===i?5:2.5,0,Math.PI*2);g.fillStyle=T.ink;g.fill();if(sel===i){g.lineWidth=2;g.strokeStyle=T.paper;g.stroke();}});
+  cv._g={L:L,R:R,bw:bw,n:n};
   g.fillStyle=T.muted;g.textAlign='center';g.textBaseline='top';var step=n>20?5:n>10?2:1;
   rows.forEach(function(r,i){if(r.y%step===0||r.y===1)g.fillText('Yr '+r.y,L+(i+.5)*bw,B+6);});
 }
@@ -968,8 +974,21 @@ function wireMiniCalc(rec){
     document.getElementById('mcIrr').textContent=isFinite(rows.irr)?rows.irr.toFixed(2)+'%':'–';
     document.getElementById('mcYoc').textContent=p.start>0?(last.inc/p.start*100).toFixed(1)+'%':'–';
     document.getElementById('mcYocL').textContent='dividends in year '+Y+' ÷ amount invested';
-    miniCalcDraw(rows);
+    cur={rows:rows,start:p.start};hov=null;legend();
+    miniCalcDraw(rows,null);
   }
+  /* hover/tap a year: crosshair and outlined bar on the chart, that year's numbers in the legend row */
+  var cur=null,hov=null,leg=document.getElementById('mcLeg'),legHTML=leg.innerHTML,cv=document.getElementById('mcCv');
+  function legend(){
+    if(hov===null||!cur){leg.innerHTML=legHTML;leg.classList.remove('act');return;}
+    var r=cur.rows[hov],m=function(v){return '$'+Math.round(v).toLocaleString('en-US');};
+    leg.textContent='Year '+r.y+' \u00b7 income '+m(r.inc)+' \u00b7 balance '+m(r.bal)+(cur.start>0?' \u00b7 yield on cost '+(r.inc/cur.start*100).toFixed(1)+'%':'');
+    leg.classList.add('act');
+  }
+  function pick(e){var gm=cv._g;if(!gm||!cur)return;var x=e.clientX-cv.getBoundingClientRect().left,i=Math.floor((x-gm.L)/gm.bw);
+    if(x<gm.L||x>gm.R||i<0||i>=gm.n)i=null;if(i!==hov){hov=i;legend();miniCalcDraw(cur.rows,hov);}}
+  cv.addEventListener('mousemove',pick);cv.addEventListener('click',pick);
+  cv.addEventListener('mouseleave',function(){if(hov!==null){hov=null;legend();miniCalcDraw(cur.rows,null);}});
   function set(on){box.classList.toggle('on',on);box.setAttribute('aria-hidden',on?'false':'true');wrap.classList.toggle('mcOpen',on);
     if(on)requestAnimationFrame(function(){requestAnimationFrame(run);});}
   btn.addEventListener('click',function(){set(true);});
