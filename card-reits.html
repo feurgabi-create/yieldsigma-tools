@@ -1623,7 +1623,7 @@ function buildCard(rec,a){
 
   if(a.tnx){
     var sec=ysSectorSpread(rec);
-    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
+    h+='<details class="sec"><summary><h3>Yield spreads: 10-year Treasury and sector</h3></summary>'+
        '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
        '<div class="tnx">'+
          '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
