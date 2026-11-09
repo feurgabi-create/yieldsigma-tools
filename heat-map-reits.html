@@ -230,7 +230,7 @@ body.public-mode .pubFootLive{display:inline}
 /* ===== EDIT LINKS HERE =====
    Every page link used by this tool. If a page moves, change it here only. */
 var LINKS={
-  card:        "https://tools.stardustcapital.net/card.html?ticker=",
+  card:        "https://tools.yieldsigma.com/card-reits.html?ticker=",
   labs:        "https://www.stardustcapital.net/stardust-capital-labs",
   methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
   fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
@@ -1047,6 +1047,21 @@ if(PUBLIC_MODE){
   loadLiveUrls();
 }
 
+})();
+</script>
+<script>
+/* Opened over a Yield Sigma card (?embed=1): a click on a stock's card
+   link sends the ticker back to that card instead of opening a new tab. */
+(function(){
+  if(window.parent===window)return;
+  var on=false;try{on=new URLSearchParams(location.search).get('embed')==='1';}catch(e){}
+  if(!on)return;
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href*="ticker="]');if(!a)return;
+    var m=a.getAttribute('href').match(/[?&]ticker=([^&#]+)/);if(!m)return;
+    e.preventDefault();
+    window.parent.postMessage({ysPick:decodeURIComponent(m[1])},'*');
+  },true);
 })();
 </script>
 </body>

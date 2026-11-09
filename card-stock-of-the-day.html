@@ -82,6 +82,41 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .backBar{display:flex;justify-content:flex-start;margin-bottom:14px}
 .backBar a{font:600 12.5px var(--mono,inherit);color:var(--jade,#1F7A52);text-decoration:underline;text-underline-offset:3px;letter-spacing:.01em}
 .backBar a:hover{text-decoration-thickness:2px}
+/* hub nav: Tools menu (left), Find a stock + Directory (right) */
+.ysNav{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin:-24px 0 20px;position:relative;z-index:6}
+.ysNavL,.ysNavR{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.ysNav .backLink{font:600 12.5px var(--mono);color:var(--c-jade);text-decoration:underline;text-underline-offset:3px}
+.ysNav .subpill{cursor:pointer}
+.ysToolsWrap,.ysFind{position:relative}
+.ysMenu,.ysHits{position:absolute;top:calc(100% + 6px);display:none;background:var(--c-paper);border:1px solid var(--c-rule);border-radius:10px;box-shadow:0 14px 34px -14px rgba(10,25,20,.38);padding:6px;z-index:7}
+.ysMenu{left:0;width:250px}
+.ysHits{right:0;width:290px;max-height:320px;overflow:auto}
+.ysMenu.on,.ysHits.on{display:block}
+.ysMenu button,.ysMenu a,.ysHit{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;border-radius:7px;padding:8px 10px;font:500 12.5px/1.25 var(--mono);color:var(--c-ink);cursor:pointer;text-decoration:none}
+.ysMenu button:hover,.ysMenu a:hover,.ysHit:hover,.ysHit.act{background:var(--c-jade-soft)}
+.ysMenu small{font:600 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--c-muted)}
+.ysMenu button.soon{color:var(--c-muted);cursor:default}
+.ysMenu button.soon:hover{background:none}
+.ysMenu a.ysMenuSub{color:var(--c-jade);font-weight:600}
+.ysMenuSep{height:1px;background:var(--c-rule);margin:5px 4px}
+.ysFind input{width:160px;box-sizing:border-box;font:500 12px/1 var(--mono);color:var(--c-ink);background:transparent;border:1px solid var(--c-rule);border-radius:999px;padding:6px 12px;-webkit-appearance:none;appearance:none}
+.ysFind input::placeholder{color:var(--c-muted)}
+.ysFind input:focus{outline:none;border-color:var(--c-jade)}
+@media (pointer:coarse){.ysFind input{font-size:16px;padding:5px 12px}}
+.ysHit{justify-content:flex-start}
+.ysHit b{flex:none;min-width:54px;color:var(--c-jade);font-weight:700}
+.ysHit span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--c-muted)}
+.ysHit i{flex:none;font-style:normal;color:var(--c-muted);display:inline-flex}
+.ysHit.lock b{color:var(--c-muted)}
+.ysHitNote{padding:8px 10px;font:12px/1.45 var(--mono);color:var(--c-muted)}
+.ysHitNote a,.ysHitNote button{color:var(--c-jade);font:600 12px var(--mono);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
+.ysOv{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:var(--c-paper,#fbfaf6);transform-origin:left center;animation:ysTurn .38s cubic-bezier(.2,.7,.2,1)}
+@keyframes ysTurn{from{opacity:0;transform:perspective(1600px) rotateY(10deg) translateX(40px)}to{opacity:1;transform:none}}
+.ysOvBar{flex:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--c-rule,#d9ddd5);background:var(--c-paper,#fbfaf6)}
+.ysOvBar .subpill{cursor:pointer}
+.ysOvTitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--c-muted,#5d6b62);text-align:right}
+.ysOv iframe{flex:1;width:100%;border:0;background:#fff}
 .mast .labsBy{font-size:12px;color:var(--c-muted);margin-top:3px}
 .mast .labsBy a,.mast .labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
 .mast .labsBy a:hover{text-decoration:underline}
@@ -234,6 +269,9 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
   .side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule)}
   .stage{padding:14px}
   .card{padding:26px 18px 20px}
+  .ysNav{margin:-10px 0 18px}
+  .ysFind input{width:132px}
+  .ysHits{width:262px;max-width:calc(100vw - 40px)}
   .grid2{grid-template-columns:1fr;gap:8px}
   .ladder{height:auto}
   .ladder .track{display:none}
@@ -1462,7 +1500,7 @@ function buildCard(rec,a){
   }else{
     tickHtml='<div class="tick" style="--tick-acc:'+tickAcc+'"><span class="dot"></span>'+esc(a.ticker)+'</div>';
   }
-  var h=((PUBLIC_MODE&&STANDALONE_CARD)?'<div class="backBar"><a href="'+esc(BACK_URL)+'">\u2190 Back to Yield Sigma / Directory</a></div>':'');
+  var h=ysNavHtml(a);
   h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch">Yield Sigma™ valuation card</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
@@ -1862,8 +1900,184 @@ function renderCurrent(){
   wirePriceInput();
   wireTickPick();
   wirePubFooter();
+  wireYsNav(rec);
   updateUrlTicker(rec.ticker);
 }
+/* ===== Hub navigation: Tools menu, Find a stock, Directory =====
+   Every tool opens over the card as a page turn (an overlay with
+   "Back to the card"); a stock picked in the Directory or a heat map
+   comes back to this card. Any stock in the live feed can be shown here,
+   even one that is not in this page's own list (a "visit"). The search
+   box follows the Directory's member gate: names outside this card's
+   list and outside the Directory's free set show a lock and a
+   Subscribe link. */
+var YS_BASE='https://tools.yieldsigma.com/';
+var YS_SUBSTACK='https://gabe948456.substack.com/subscribe';
+var YS_FREE_BAND=20,YS_FREE_STEP=2;   /* keep in step with directory.html */
+var YS_FULL={},YS_FULL_LIST=[],YS_VISIT=[],ysDeepDone=false,ysOvEl=null;
+var YS_LOCK='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
+function ysZone(kind,s){
+  if(s===null||!isFinite(s))return null;
+  if(kind==='reits'){if(s>1.5)return 'under';if(s<0)return 'over';return 'normal';}
+  if(Math.abs(s)<1)return 'normal';
+  return s<0?'over':'under';
+}
+function ysMarkFree(rows,kind){
+  var under=rows.filter(function(r){return ysZone(kind,r.s)==='under';}).sort(function(p,q){return q.s-p.s;});
+  var over=rows.filter(function(r){return ysZone(kind,r.s)==='over';}).sort(function(p,q){return p.s-q.s;});
+  var normal=rows.filter(function(r){return ysZone(kind,r.s)==='normal';}).sort(function(p,q){return Math.abs(p.s)-Math.abs(q.s);});
+  [under,over,normal].forEach(function(list){list.slice(0,YS_FREE_BAND).forEach(function(r,i){if(i%YS_FREE_STEP===0)r.free=true;});});
+}
+function ysIndexFull(res){
+  try{
+    var full={},list=[],by={stocks:[],reits:[]};
+    res.lines.forEach(function(line,i){
+      var tag=res.tags[i]==='reits'?'reits':'stocks';
+      var rec=parseRow(line,schemaForKind(tag)).rec;if(!rec)return;
+      var a=analyze(rec);
+      var t=String(a.ticker||'').trim().toUpperCase();if(!t||t==='–'||full[t])return;
+      var s=a.sigma!==null?a.sigma:a.sigmaComputed;
+      var o={t:t,name:shortCompanyName(a.name)||t,line:line,tag:tag,s:(s!==null&&isFinite(s))?s:null,free:false};
+      full[t]=o;list.push(o);by[tag].push(o);
+    });
+    ysMarkFree(by.stocks,'stocks');ysMarkFree(by.reits,'reits');
+    list.sort(function(p,q){return p.t<q.t?-1:p.t>q.t?1:0;});
+    YS_FULL=full;YS_FULL_LIST=list;
+  }catch(e){/* search just stays on this card's own list */}
+}
+function ysTk(r){return r&&r.rec&&r.rec.ticker?String(r.rec.ticker).trim().toUpperCase():'';}
+function ysSyncPick(){var p=$('#pick'),pp=$('#pubPick');if(p)p.value=String(selectedIdx);if(pp)pp.value=String(selectedIdx);}
+function ysOpenTicker(t,force){
+  t=String(t||'').trim().toUpperCase();if(!t)return false;
+  for(var i=0;i<ROWS.length;i++){if(ysTk(ROWS[i])===t){selectedIdx=i;priceOverride=null;ysSyncPick();renderCurrent();return true;}}
+  var f=YS_FULL[t];if(!f||(!force&&!f.free))return false;
+  if(YS_VISIT.indexOf(t)<0)YS_VISIT.push(t);
+  var r=parseRow(f.line,schemaForKind(f.tag));r.kind=f.tag;r.visit=true;
+  ROWS.push(r);RAW_LINES.push(f.line);
+  selectedIdx=ROWS.length-1;priceOverride=null;ysSyncPick();renderCurrent();
+  return true;
+}
+/* ?ticker= for a name outside this page's list: open it once the live feed is in */
+function ysDeepLink(){
+  if(ysDeepDone)return;ysDeepDone=true;
+  var t=(INITIAL_TICKER_PARAM||'').trim().toUpperCase();
+  if(!t||ysTk(ROWS[selectedIdx])===t)return;
+  ysOpenTicker(t,true);
+}
+function ysNavHtml(a){
+  var t=esc(String(a.ticker||'').trim().toUpperCase());
+  var h='<nav class="ysNav" aria-label="Yield Sigma tools"><div class="ysNavL">';
+  if(PUBLIC_MODE&&STANDALONE_CARD)h+='<a class="backLink" href="'+esc(BACK_URL)+'">← Back to Yield Sigma</a>';
+  h+='<div class="ysToolsWrap"><button type="button" class="subpill" id="ysToolsBtn" aria-haspopup="true" aria-expanded="false">Tools ▾</button>'+
+    '<div class="ysMenu" id="ysMenu" role="menu">'+
+      '<button type="button" role="menuitem" data-go="hist">Full history<small>'+t+'</small></button>'+
+      '<button type="button" role="menuitem" data-go="calc">Compound calculator</button>'+
+      '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
+      '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
+      '<button type="button" role="menuitem" data-go="dir">Directory<small>All names</small></button>'+
+      '<div class="ysMenuSep"></div>'+
+      '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
+      '<button type="button" class="soon" disabled>Sector comparison<small>Soon</small></button>'+
+      '<div class="ysMenuSep"></div>'+
+      '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
+    '</div></div></div>'+
+    '<div class="ysNavR"><div class="ysFind"><input type="search" id="ysFindIn" placeholder="Find a stock" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
+      '<div class="ysHits" id="ysHits" role="listbox"></div></div>'+
+    '<button type="button" class="subpill" id="ysDirBtn">Directory</button></div></nav>';
+  return h;
+}
+function ysGo(k,t){
+  if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
+  else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
+  else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
+  else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');
+  else if(k==='hmR')ysPage(YS_BASE+'heat-map-reits.html?embed=1','Heat map · REITs');
+}
+function ysPage(url,title){
+  ysClosePage();
+  var ov=document.createElement('div');
+  ov.className='ysOv';ov.setAttribute('role','dialog');ov.setAttribute('aria-label',title);
+  var c=$('#card');if(c&&c.getAttribute('style'))ov.setAttribute('style',c.getAttribute('style'));
+  ov.innerHTML='<div class="ysOvBar"><button type="button" class="subpill" id="ysOvBack">← Back to the card</button><span class="ysOvTitle">'+esc(title)+'</span></div>'+
+    '<iframe src="'+esc(url)+'" title="'+esc(title)+'"></iframe>';
+  document.body.appendChild(ov);ysOvEl=ov;
+  document.documentElement.classList.add('ysOvOpen');
+  var b=ov.querySelector('#ysOvBack');b.addEventListener('click',ysClosePage);b.focus();
+}
+function ysClosePage(){
+  if(!ysOvEl)return;
+  ysOvEl.parentNode.removeChild(ysOvEl);ysOvEl=null;
+  document.documentElement.classList.remove('ysOvOpen');
+}
+function ysHits(q){
+  q=q.trim().toLowerCase();if(!q)return [];
+  var inList={},pool=[];
+  ROWS.forEach(function(r){var t=ysTk(r);if(t)inList[t]=true;});
+  if(YS_FULL_LIST.length)pool=YS_FULL_LIST;
+  else ROWS.forEach(function(r){var t=ysTk(r);if(t)pool.push({t:t,name:shortCompanyName(analyze(r.rec).name)||t,free:true});});
+  var out=[];
+  pool.forEach(function(o){
+    var tl=o.t.toLowerCase(),nl=String(o.name||'').toLowerCase(),sc;
+    if(tl===q)sc=0;else if(tl.indexOf(q)===0)sc=1;
+    else if((' '+nl).indexOf(' '+q)>=0)sc=2;else if(nl.indexOf(q)>=0)sc=3;else return;
+    out.push({o:o,sc:sc,ok:!!(inList[o.t]||o.free)});
+  });
+  out.sort(function(p,q2){return p.sc-q2.sc||(p.ok===q2.ok?0:p.ok?-1:1)||(p.o.t<q2.o.t?-1:1);});
+  return out.slice(0,8);
+}
+function wireYsNav(rec){
+  var t=String(rec.ticker||'').trim().toUpperCase();
+  var tb=$('#ysToolsBtn'),menu=$('#ysMenu'),dir=$('#ysDirBtn'),inp=$('#ysFindIn'),box=$('#ysHits');
+  if(tb&&menu){
+    tb.addEventListener('click',function(e){e.stopPropagation();var on=!menu.classList.contains('on');menu.classList.toggle('on',on);tb.setAttribute('aria-expanded',on?'true':'false');if(box)box.classList.remove('on');});
+    menu.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-go]');if(!b)return;menu.classList.remove('on');tb.setAttribute('aria-expanded','false');ysGo(b.getAttribute('data-go'),t);});
+  }
+  if(dir)dir.addEventListener('click',function(){ysGo('dir',t);});
+  if(!inp||!box)return;
+  var list=[],act=-1;
+  function paint(){
+    var q=inp.value.trim();
+    if(!q){box.classList.remove('on');box.innerHTML='';return;}
+    list=ysHits(q);
+    var h='';
+    list.forEach(function(x,i){
+      h+='<button type="button" role="option" class="ysHit'+(x.ok?'':' lock')+(i===act?' act':'')+'" data-i="'+i+'"><b>'+esc(x.o.t)+'</b><span>'+esc(x.o.name)+'</span>'+(x.ok?'':'<i title="Full card for members">'+YS_LOCK+'</i>')+'</button>';
+    });
+    if(!list.length)h='<div class="ysHitNote">No match. <button type="button" data-dir="1">Browse the Directory</button></div>';
+    if(!YS_FULL_LIST.length)h+='<div class="ysHitNote">Loading the full list…</div>';
+    box.innerHTML=h;box.classList.add('on');
+  }
+  function pick(i){
+    var x=list[i];if(!x)return;
+    if(x.ok){inp.value='';box.classList.remove('on');ysOpenTicker(x.o.t,true);return;}
+    box.innerHTML='<div class="ysHitNote"><b>'+esc(x.o.t)+'</b>’s full card is for members. <a href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">Subscribe on Substack ↗</a></div>';
+  }
+  inp.addEventListener('input',function(){act=-1;paint();});
+  inp.addEventListener('focus',function(){if(menu)menu.classList.remove('on');if(inp.value.trim())paint();});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!list.length)return;e.preventDefault();act=(act+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;paint();}
+    else if(e.key==='Enter'){e.preventDefault();if(act>=0)pick(act);else{for(var i=0;i<list.length;i++){if(list[i].ok){pick(i);return;}}if(list.length)pick(0);}}
+    else if(e.key==='Escape'){inp.value='';box.classList.remove('on');}
+  });
+  box.addEventListener('click',function(e){
+    var d=e.target.closest&&e.target.closest('[data-dir]');if(d){box.classList.remove('on');ysGo('dir',t);return;}
+    var b=e.target.closest&&e.target.closest('[data-i]');if(b){e.stopPropagation();pick(+b.getAttribute('data-i'));}
+  });
+}
+document.addEventListener('click',function(e){
+  var tgt=e.target;
+  if(!(tgt.closest&&tgt.closest('.ysToolsWrap'))){var m=$('#ysMenu'),b=$('#ysToolsBtn');if(m)m.classList.remove('on');if(b)b.setAttribute('aria-expanded','false');}
+  if(!(tgt.closest&&tgt.closest('.ysFind'))){var h=$('#ysHits');if(h)h.classList.remove('on');}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ysOvEl)ysClosePage();});
+/* a stock picked in the Directory or a heat map, sent from the page turned over the card */
+window.addEventListener('message',function(e){
+  if(!ysOvEl)return;
+  var fr=ysOvEl.querySelector('iframe');if(!fr||e.source!==fr.contentWindow)return;
+  var d=e.data;if(!d||typeof d.ysPick!=='string')return;
+  ysClosePage();
+  if(ysOpenTicker(d.ysPick,true)){var c=$('#card');if(c&&c.scrollIntoView)c.scrollIntoView({block:'start'});}
+});
 function wirePubFooter(){
   updatePubBarVisibility();
   if(LIVE_URL_STOCKS||LIVE_URL_REITS)setLiveStamp(liveStale);
@@ -2019,7 +2233,7 @@ function fetchLiveRows(stocksUrl,reitsUrl){
       lines=lines.concat(these);
       these.forEach(function(){tags.push(sources[i].kind);});
     });
-    return {lines:lines,tags:tags};
+    var res={lines:lines,tags:tags};ysIndexFull(res);return res;
   });
 }
 function saveLiveUrls(){
@@ -2121,6 +2335,7 @@ function refreshLiveData(){
       var hit=t&&byTicker[t.trim().toUpperCase()];
       if(hit){newLines.push(hit.line);newTags.push(hit.tag);}
     });
+    YS_VISIT.forEach(function(t){var hit=byTicker[t];if(hit&&newLines.indexOf(hit.line)<0){newLines.push(hit.line);newTags.push(hit.tag);}});
     if(!newLines.length)throw new Error('no matching tickers in live feed');
     var prevTicker=(ROWS[selectedIdx]&&ROWS[selectedIdx].rec&&ROWS[selectedIdx].rec.ticker)||null;
     handleRaw(newLines.join('\n'),newTags);
@@ -2138,6 +2353,7 @@ function refreshLiveData(){
     }
     liveLastUpdated=new Date();
     setLiveStamp(false);
+    ysDeepLink();
   }).catch(function(){
     setLiveStamp(true);
   });
