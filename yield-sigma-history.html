@@ -547,7 +547,7 @@ function revOdds(t,z){
   if(!ns||v==null||z==null||!isFinite(z)) return '—';
   const w=DATA[t].slice(-120).map(r=>r[1]).filter(x=>x!=null&&isFinite(x));
   const mu=w.length?w.reduce((a,b)=>a+b,0)/w.length:0;
-  if(Math.abs(z-mu)<1) return '<small style="font-size:13px">Near its 10-year average: nothing to revert</small>';
+  if(Math.abs(z)<1||Math.abs(z-mu)<1) return '—';
   const sc=+ns[0], sh=sc>=8?0:sc>=6?1:sc>=4?2:3, vo=v<21?0:v<40?1:2;
   return [['Strong','Strong','Moderate'],['Strong','Moderate','Weak'],['Moderate','Weak','Weak'],['Weak','Weak','Weak']][sh][vo];
 }
