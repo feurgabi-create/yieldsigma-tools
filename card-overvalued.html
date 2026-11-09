@@ -254,9 +254,8 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .stat .l{color:var(--c-muted)}
 .stat .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .tnx{display:flex;gap:0;margin-top:6px;border:1px solid var(--c-rule);border-radius:8px;overflow:hidden}
-.tnx>div{flex:1;padding:14px 12px 16px;text-align:center;border-left:1px solid var(--c-rule)}
-.tnx>div:first-child{border-left:0}
-@media(max-width:560px){.tnx{flex-wrap:wrap}.tnx>div{flex:1 1 50%;box-sizing:border-box}.tnx>div:nth-child(3){border-left:0}.tnx>div:nth-child(n+3){border-top:1px solid var(--c-rule)}}
+.tnx div{flex:1;padding:14px 12px 16px;text-align:center;border-left:1px solid var(--c-rule)}
+.tnx div:first-child{border-left:0}
 .tnx .l{font-size:10.5px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.03em}
 .tnx .v{font-size:16px;font-weight:700;margin-top:3px}
 .tnx .cap{font-size:10px;line-height:1.3;color:var(--c-muted);opacity:.75;margin-top:5px}
@@ -1630,14 +1629,12 @@ function buildCard(rec,a){
   }
 
   if(a.tnx){
-    var sec=ysSectorSpread(rec);
-    h+='<details class="sec"><summary><h3>Yield spreads: 10-year Treasury and sector</h3></summary>'+
+    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
        '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
        '<div class="tnx">'+
          '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
          '<div><div class="l">10y average</div><div class="v">'+esc(pctToBps(a.tnx.ten))+'</div><div class="cap">that same spread, averaged over the past decade</div></div>'+
          '<div><div class="l">Difference</div><div class="v">'+esc(pctToBps(a.tnx.diff))+'</div><div class="cap">now minus the 10y average</div></div>'+
-         (sec?'<div><div class="l">vs sector ('+esc(sec.etf)+')</div><div class="v">'+(sec.bps>=0?'+':'')+sec.bps+'bps</div><div class="cap">dividend yield less '+esc(sec.etf)+' dividend yield</div></div>':'')+
        '</div>'+
        '<p class="desc" style="max-width:none">'+(tnxDiffSign(a.tnx.diff)>=0?
          'A positive <i>Difference</i> means the stock is paying more over Treasuries than it typically has — cheaper relative to the risk-free alternative than its own history suggests.':
@@ -1956,16 +1953,6 @@ function ysIndexFull(res){
     list.sort(function(p,q){return p.t<q.t?-1:p.t>q.t?1:0;});
     YS_FULL=full;YS_FULL_LIST=list;
   }catch(e){/* search just stays on this card's own list */}
-}
-var YS_SECTOR=(function(){var m={},L={"XLV": "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH", "XLK": "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN", "XLP": "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT", "XLY": "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI", "XLF": "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS", "XLI": "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM", "XLB": "AMCR APD EMN NTR SCL SHW SON WLK", "XLE": "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM", "XLU": "AES ARTNA AVA AWR BEP BIP BKH CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG", "XLC": "CMCSA VZ WLY"};for(var e in L)L[e].split(' ').forEach(function(t){m[t.replace('_',' ')]=e;});return m;})();
-/* stock's dividend yield less its sector ETF's dividend yield (REITs: XLRE), from the live feed */
-function ysSectorSpread(rec){
-  var t=String(rec.ticker||'').trim().toUpperCase();if(!t||rec.yield===null||!isFinite(rec.yield))return null;
-  var me=YS_FULL[t];
-  var etf=(me&&me.tag==='reits')?'XLRE':YS_SECTOR[t];
-  if(!etf||etf===t)return null;
-  var e=YS_FULL[etf];if(!e||e.y===null||!isFinite(e.y))return null;
-  return {etf:etf,bps:Math.round((rec.yield-e.y)*100)};
 }
 function ysTk(r){return r&&r.rec&&r.rec.ticker?String(r.rec.ticker).trim().toUpperCase():'';}
 function ysSyncPick(){var p=$('#pick'),pp=$('#pubPick');if(p)p.value=String(selectedIdx);if(pp)pp.value=String(selectedIdx);}
