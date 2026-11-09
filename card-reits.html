@@ -1201,7 +1201,7 @@ function drawFlip(rec,a,blkV,dotV){
   if(dotV!==null&&dotV!==undefined){var dx=xs(dotV),dy=yv(N*0.5*pdf(dotV));
     g.strokeStyle=T.muted;g.globalAlpha=.6;g.lineWidth=1;g.beginPath();g.moveTo(dx+.5,dy);g.lineTo(dx+.5,B);g.stroke();g.globalAlpha=1;
     g.beginPath();g.arc(dx,dy,5,0,Math.PI*2);g.fillStyle=T.ink;g.fill();g.lineWidth=2;g.strokeStyle=T.paper;g.stroke();}
-  if(f[1]){var rs=now!==null&&xs(now)<L+(W<480?150:200),sx=rs?R-2:L+2;g.textAlign=rs?'right':'left';g.textBaseline='top';g.fillStyle=T.ink;g.font='600 '+fs+'px '+mono;g.fillText('Curve shape: '+f[1],sx,Tp-24);
+  if(f[1]){var rs=now!==null&&xs(now)<L+(W<480?150:200),fp=document.querySelector('.fhPill'),pw=fp?fp.offsetWidth:0,sx=rs?R-2-(pw&&W>=480?pw+10:0):L+2;g.textAlign=rs?'right':'left';g.textBaseline='top';g.fillStyle=T.ink;g.font='600 '+fs+'px '+mono;g.fillText('Curve shape: '+f[1],sx,Tp-24);
     g.fillStyle=T.muted;g.font=fs+'px '+mono;g.fillText('Score: '+(+f[0]).toFixed(1),sx,Tp-10);}
   g.font=(fs-.5)+'px '+mono;g.fillStyle=T.muted;g.textAlign='center';g.textBaseline='top';
   for(var v=-3;v<=3;v++)g.fillText((v>0?'+':v<0?'−':'')+Math.abs(v)+'σ',xs(v),B+5);
