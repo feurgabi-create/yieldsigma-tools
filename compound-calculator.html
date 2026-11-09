@@ -891,8 +891,34 @@ if(typeof S.revert!=='boolean')S.revert=false;
 if(typeof S.revLock!=='boolean')S.revLock=true;
 if(!S.pick)S.pick={scope:'all',band:25,step:2,cap:15};
 if(!isFinite(S.pick.cap))S.pick.cap=15;
+/* Opened from a Yield Sigma card: ?a=TICKER&cmp=1&start=&years=&y=&dg=&pg=&ri=
+   lands on the dividend tab with the comparison on, the card's stock in column A
+   and the visitor's numbers from the card's mini calculator. */
+var URLP=(function(){try{return new URLSearchParams(location.search);}catch(e){return null;}})();
+(function(){
+  if(!URLP||!URLP.get('a'))return;
+  S.mode='div';
+  if(URLP.get('cmp')==='1')S.compare=true;
+  var n=function(k){var v=parseFloat(URLP.get(k));return isFinite(v)?v:null;};
+  if(n('start')!==null&&n('start')>=0)S.start=n('start');
+  if(n('years')!==null&&n('years')>=1)S.years=Math.round(n('years'));
+})();
+function applyUrlPick(){
+  if(!URLP||!URLP.get('a'))return;
+  var t=URLP.get('a').trim().toUpperCase(),u=null;
+  U.forEach(function(x){if(x.ticker===t)u=x;});
+  if(!u)return;
+  u.open=true;applyPick('A',u);
+  var r=S.A,n=function(k){var v=parseFloat(URLP.get(k));return isFinite(v)?v:null;},ch=false;
+  if(n('y')!==null&&n('y')>0&&Math.abs(n('y')-r.yield)>0.051){r.yield=round2(n('y'));if(r.div)r.price=round2(r.div/(r.yield/100));ch=true;}
+  if(n('dg')!==null&&Math.abs(n('dg')-r.dgr)>0.051){r.dgr=round2(n('dg'));ch=true;}
+  if(n('pg')!==null&&Math.abs(n('pg')-r.pg)>0.051){r.pg=round2(n('pg'));ch=true;}
+  if(URLP.get('ri')==='0'){r.reinvest=false;}
+  if(ch)r.edited=true;
+  render();
+}
 render();
-loadUniverse();
+loadUniverse().then(applyUrlPick);
 })();
 </script>
 </body>

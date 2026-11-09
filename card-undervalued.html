@@ -321,6 +321,9 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 #mcCv{cursor:crosshair}
 .mcChart canvas{position:absolute;inset:0;width:100%;height:100%}
 .mcFoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 14px}
+.mcHr{display:flex;align-items:center;gap:8px}
+.mcFull{white-space:nowrap;letter-spacing:.04em}
+@media(max-width:560px){.mcHead>span:first-child{min-width:0}}
 .mcFoot span{font:italic 11px/1.4 var(--mono);color:var(--c-muted)}
 .mcLink{font:600 12px/1.2 var(--mono);color:var(--c-paper);background:var(--c-jade);border-radius:999px;padding:7px 14px;text-decoration:none}
 .mcLink:hover{filter:brightness(1.1)}
@@ -934,13 +937,13 @@ var YS_FLIP={"ABBV":[8.5,"Textbook",0.017,1.071,120,"2016-11",-7,[4,9,12,11,7,10
  * compound calculator (same model: price grows smoothly, dividend
  * raised once a year and paid quarterly, optionally reinvested).
  * ------------------------------------------------------------------ */
-var YS_CALC_URL='https://www.yieldsigma.com/dividend-framework/compound-calculator';
+var YS_CALC_URL='https://tools.yieldsigma.com/compound-calculator.html';
 function miniCalcHTML(rec){
   if(rec.yield===null||!(rec.yield>0))return '';
   var t=esc(rec.ticker),g=Math.max(0,Math.min(20,rec.divGrowth10y===null?0:rec.divGrowth10y));
   var f=function(lab,id,val,unit,step){return '<label class="mcF"><span>'+lab+'</span><span class="mcBox">'+(unit==='$'?'<i>$</i>':'')+'<input type="number" id="'+id+'" value="'+val+'" step="'+step+'" min="0">'+(unit!=='$'?'<i>'+unit+'</i>':'')+'</span></label>';};
   return '<div class="miniCalc" id="miniCalc" aria-hidden="true">'+
-    '<div class="mcHead"><span>'+t+' · compound calculator</span><button type="button" class="flipBtn" id="mcBack">⤿ Back</button></div>'+
+    '<div class="mcHead"><span>'+t+' · compound calculator</span><span class="mcHr"><a class="subpill mcFull" id="mcFull" href="'+YS_CALC_URL+'?a='+encodeURIComponent(rec.ticker||'')+'&cmp=1" target="_blank" rel="noopener">Full calculator \u2192</a><button type="button" class="flipBtn" id="mcBack">⤿ Back</button></span></div>'+
     '<div class="mcIn">'+
       f('Starting amount','mcStart',10000,'$',500)+
       f('Years','mcYears',10,'yrs',1)+
@@ -956,7 +959,7 @@ function miniCalcHTML(rec){
     '</div>'+
     '<div class="mcLeg" id="mcLeg"><span><i class="bar"></i>Dividend income each year</span><span><i class="ln"></i>Balance</span></div>'+
     '<div class="mcChart"><canvas id="mcCv"></canvas></div>'+
-    '<div class="mcFoot"><a class="mcLink" href="'+YS_CALC_URL+'" target="_blank" rel="noopener">Open the full compound calculator →</a>'+
+    '<div class="mcFoot">'+
       '<span>An illustration, not a forecast: rates are held constant; taxes and fees are ignored.</span></div>'+
   '</div>';
 }
@@ -1006,6 +1009,8 @@ function wireMiniCalc(rec){
   var btn=document.getElementById('mcOpen'),box=document.getElementById('miniCalc'),back=document.getElementById('mcBack'),wrap=box?box.parentElement:null;
   if(!btn||!box)return;
   var ids=['mcStart','mcYears','mcYield','mcDg','mcPg','mcRe'],el={};ids.forEach(function(k){el[k]=document.getElementById(k);});
+  var full=document.getElementById('mcFull');
+  if(full)full.addEventListener('click',function(){full.href=YS_CALC_URL+'?a='+encodeURIComponent(rec.ticker||'')+'&cmp=1&start='+encodeURIComponent(el.mcStart.value)+'&years='+encodeURIComponent(el.mcYears.value)+'&y='+encodeURIComponent(el.mcYield.value)+'&dg='+encodeURIComponent(el.mcDg.value)+'&pg='+encodeURIComponent(el.mcPg.value)+'&ri='+(el.mcRe.checked?1:0);});
   function run(){
     var p={start:Math.max(0,parseFloat(el.mcStart.value)||0),years:Math.max(1,parseFloat(el.mcYears.value)||1),yield:Math.max(0,parseFloat(el.mcYield.value)||0),
       dg:parseFloat(el.mcDg.value)||0,pg:parseFloat(el.mcPg.value)||0,re:el.mcRe.checked};
