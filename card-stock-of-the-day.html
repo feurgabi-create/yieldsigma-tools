@@ -997,6 +997,80 @@ function wireMiniCalc(rec){
   ids.forEach(function(k){el[k].addEventListener('input',run);el[k].addEventListener('change',run);});
   window.addEventListener('resize',function(){if(box.classList.contains('on'))run();});
 }
+/* ------------------------------------------------------------------ *
+ * Live history from the workbook (history.csv on the Gist, pushed after
+ * every monthly build). Replaces the built-in YS_FLIP / YS_EXT tables for
+ * every stock it covers, and adds stocks added to the workbook since.
+ * Loaded only when needed: a reading at or beyond +/-1.5 sigma (Previous
+ * extremes), a stock missing from the built-in tables, or a click on the
+ * history flip. If it can't be reached, the built-in tables stay.
+ * ------------------------------------------------------------------ */
+var YS_HIST_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/history.csv';
+var ysHist={state:0,cbs:[]};
+function ysHistParse(txt){
+  var lines=String(txt||'').split(/\r?\n/);if(lines.length<2||!/^ticker\t/.test(lines[0]))return 0;
+  var now=new Date(),cur=now.getFullYear()*12+now.getMonth(),n=0;
+  for(var li=1;li<lines.length;li++){
+    var f=lines[li].split('\t');if(f.length<10||!f[0])continue;
+    var t=f[0].trim().toUpperCase(),st=+f[3].slice(0,4)*12+(+f[3].slice(5,7)-1);
+    var z=f[7].split(',').map(function(v){return v===''?null:+v;}),p=f[8].split(',').map(function(v){return v===''?null:+v;}),d={};
+    f[9].split(',').forEach(function(x){var k=x.split(':');if(k.length===2&&k[1]!=='')d[k[0]]=+k[1];});
+    while(z.length&&st+z.length-1>=cur){z.pop();p.pop();}            /* completed months only */
+    while(z.length&&(z[z.length-1]==null||p[z.length-1]==null)){z.pop();p.length=z.length;}
+    for(var i=1;i<z.length;i++){if(z[i]==null)z[i]=z[i-1];if(p[i]==null)p[i]=p[i-1];}
+    if(z.length<24||z[0]==null||p[0]==null)continue;
+    var ym=function(i){var m=st+i;return Math.floor(m/12)+'-'+('0'+(m%12+1)).slice(-2);};
+    var D=[],lastD=0;for(i=0;i<z.length;i++){var yv=d[String(Math.floor((st+i)/12))];if(yv!=null)lastD=yv;D.push(lastD);}
+    var tr=function(a,b){var dv=0;for(var k=a+1;k<=b;k++)dv+=D[k]/12;return Math.round((p[b]/p[a]-1+dv/p[a])*1000)/10;};
+    /* history flip: last 10 years in 1/4-sigma steps, plus the last time at each level beyond +/-1 sigma */
+    var w=z.slice(-120),N=w.length,mu=0,sd=0,c={},kmin=1e9,kmax=-1e9;
+    w.forEach(function(v){mu+=v;});mu/=N;w.forEach(function(v){sd+=(v-mu)*(v-mu);});sd=Math.sqrt(sd/(N-1));
+    w.forEach(function(v){var k=Math.floor(v/0.25+1e-9);c[k]=(c[k]||0)+1;if(k<kmin)kmin=k;if(k>kmax)kmax=k;});
+    var cnt=[];for(var k=kmin;k<=kmax;k++)cnt.push(c[k]||0);
+    var seen={},l24={},l12={};
+    for(i=0;i<z.length;i++){var kk=Math.floor(z[i]/0.25+1e-9);if(!(kk>=4||kk<=-5))continue;seen[kk]=i;if(i+24<z.length)l24[kk]=i;else if(i+12<z.length)l12[kk]=i;}
+    var last=Object.keys(seen).map(Number).sort(function(a,b){return a-b;}).map(function(kk){
+      if(l24[kk]!=null)return [kk,ym(l24[kk]),24,tr(l24[kk],l24[kk]+24)];
+      if(l12[kk]!=null)return [kk,ym(l12[kk]),12,tr(l12[kk],l12[kk]+12)];
+      return [kk,ym(seen[kk]),0,null];});
+    var old=YS_FLIP[t]||[];
+    var sc=f[4]!==''?+f[4]:(old[0]!=null?old[0]:null),gr=f[5]||old[1]||'';
+    YS_FLIP[t]=[sc,gr,Math.round(mu*1000)/1000,Math.round(sd*1000)/1000,N,ym(z.length-N),kmin,cnt,ym(0),last];
+    /* previous extremes: peaks of stretches beyond +/-1 sigma, leaving out the last 24 months; top 2 per side */
+    var zz=z.slice(0,Math.max(0,z.length-24)),E=[],cu=null;
+    for(i=0;i<zz.length;i++){var sd2=zz[i]>=1?1:zz[i]<=-1?-1:0;
+      if(cu&&sd2===cu.side){cu.ei=i;if(Math.abs(zz[i])>Math.abs(cu.peak)){cu.peak=zz[i];cu.pm=ym(i);}}
+      else{if(cu){E.push(cu);cu=null;}if(sd2)cu={si:i,ei:i,side:sd2,peak:zz[i],pm:ym(i)};}}
+    if(cu)E.push(cu);
+    for(k=E.length-1;k>0;k--){var A=E[k-1],B=E[k];if(A.side===B.side&&B.si-A.ei-1<=3){A.ei=B.ei;if(Math.abs(B.peak)>Math.abs(A.peak)){A.peak=B.peak;A.pm=B.pm;}E.splice(k,1);}}
+    var top=function(s){return E.filter(function(e){return e.side===s;}).sort(function(a,b){return Math.abs(b.peak)-Math.abs(a.peak);}).slice(0,2).map(function(e){return [e.peak,e.pm];});};
+    YS_EXT[t]={h:top(1),l:top(-1)};
+    n++;
+  }
+  return n;
+}
+window.ysHistInfo=function(t){return {state:ysHist.state,flip:YS_FLIP[t]||null,ext:YS_EXT[t]||null};};
+function ysLoadHist(cb){
+  if(ysHist.state===2){if(cb)cb(true);return;}
+  if(ysHist.state===3){if(cb)cb(false);return;}
+  if(cb)ysHist.cbs.push(cb);
+  if(ysHist.state===1)return;
+  ysHist.state=1;
+  var done=function(ok){ysHist.state=ok?2:3;var l=ysHist.cbs;ysHist.cbs=[];l.forEach(function(f){try{f(ok);}catch(e){}});};
+  try{
+    fetch(YS_HIST_URL+'?h='+Math.floor(Date.now()/3600000),{cache:'no-store'})
+      .then(function(r){return r.ok?r.text():'';})
+      .then(function(txt){done(ysHistParse(txt)>=20);})
+      .catch(function(){done(false);});
+  }catch(e){done(false);}
+}
+/* after a render: load the history when this card needs it, then re-render once */
+function ysHistKick(rec,a){
+  if(ysHist.state!==0||!rec||!rec.ticker)return;
+  var t=rec.ticker.toUpperCase(),s=a.sigma!==null?a.sigma:a.sigmaComputed;
+  if(YS_FLIP[t]&&!(s!==null&&Math.abs(s)>=1.5))return;
+  setTimeout(function(){ysLoadHist(function(ok){if(ok)renderCurrent();});},600);
+}
 var FLIP_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function flipMonth(s,add){var y=+s.slice(0,4),m=+s.slice(5,7)-1+(add||0);y+=Math.floor(m/12);m=((m%12)+12)%12;return FLIP_MON[m]+' '+y;}
 function flipHTML(rec){
@@ -1078,7 +1152,9 @@ function wireFlip(rec,a){
   /* hover picks a ½σ block; the slider puts a dot on the curve; the header shows whichever is active (hover first) */
   function show(){var v=hovV!==null?hovV:slideV;drawFlip(rec,a,v,slideV);flipReadout(rec,v);}
   function set(on){wrap.classList.toggle('flipped',on);back.classList.toggle('on',on);back.setAttribute('aria-hidden',on?'false':'true');btn.setAttribute('aria-expanded',on?'true':'false');
-    hovV=null;slideV=null;if(on)requestAnimationFrame(function(){requestAnimationFrame(show);});}
+    hovV=null;slideV=null;if(on){requestAnimationFrame(function(){requestAnimationFrame(show);});
+      /* refresh from the workbook's latest history, if not loaded yet */
+      if(ysHist.state!==2)ysLoadHist(function(ok){if(ok&&back.classList.contains('on')){var ct=rec.ticker;var nt=YS_FLIP[ct];if(nt)show();}});}}
   btn.addEventListener('click',function(){set(true);});
   bb.addEventListener('click',function(){set(false);});
   if(slider)slider.addEventListener('input',function(){if(!back.classList.contains('on'))return;slideV=+slider.value;show();});
@@ -1780,6 +1856,7 @@ function renderCurrent(){
   wireFlip(rec,a);
   wireGrowthFan(rec);
   wireMiniCalc(rec);
+  ysHistKick(rec,a);
   wirePriceInput();
   wireTickPick();
   wirePubFooter();
