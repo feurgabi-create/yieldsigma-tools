@@ -193,8 +193,9 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .hero .cap b{font-weight:600}
 .hero .sub{font-size:12.5px;color:var(--c-muted);margin-top:8px}
 .zoneTag{display:inline-block;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
-.revOdds{margin:12px 0 0;font:600 12px/1.4 var(--mono);letter-spacing:.04em;color:var(--c-muted)}
-.revOdds b{color:var(--c-ink)}
+.roWrap{display:contents}
+.roWrap .labsPill{align-self:center;margin-left:-2px}
+.roWrap .labsPop{flex-basis:100%;margin:2px 0 0;max-width:none}
   color:var(--sig-acc);background:color-mix(in srgb, var(--sig-acc) 14%, transparent);border:1.5px solid var(--sig-acc);
   padding:6px 16px;border-radius:20px;margin-top:8px}
 
@@ -1128,7 +1129,8 @@ function revOddsHTML(rec,a){
   var sc=+f[0],shape=sc>=8?0:(sc>=6?1:(sc>=4?2:3));
   var v=rec.volatility,vol=v<21?0:(v<40?1:2);
   var T=[['Strong','Strong','Moderate'],['Strong','Moderate','Weak'],['Moderate','Weak','Weak'],['Weak','Weak','Weak']];
-  return '<div class="revOdds">Reversion odds: <b>'+T[shape][vol]+'</b>'+pill+pop+'</div>';
+  var tier=T[shape][vol];
+  return '<div class="roWrap"><span class="chip'+(tier==='Strong'?' good':'')+'">Reversion odds: '+tier+'</span>'+pill+pop+'</div>';
 }
 function ysHistKick(rec,a){
   if(ysHist.state!==0||!rec||!rec.ticker)return;
@@ -1534,14 +1536,14 @@ function buildCard(rec,a){
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
     '<div class="lbl">Price'+(priceOverride!==null?' <span class="pxAdj">· adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
-  h+='<div class="chips">'+chips.join('')+'</div>';
+  h+='<div class="chips">'+chips.join('')+revOddsHTML(rec,a)+'</div>';
 
   var color=a.rich?T.rust:T.jade;
   var g=bellGeom(a);
   var zoneTag=a.sigma===null?'':zoneWord(Math.abs(a.sigma),a.rich).toUpperCase();
   h+='<section class="hero"><div class="eyebrow">Current yield vs 10-year average, in standard deviations</div>'+
      '<div class="sig" style="--sig-acc:'+color+'">'+(a.sigma===null?'\u2013':(a.rich?'\u2212':'')+fmtNum(Math.abs(a.sigma),2)+'\u03c3')+'</div>'+
-     (zoneTag?'<div class="zoneTag" style="--sig-acc:'+color+'">'+esc(zoneTag)+'</div>':'')+revOddsHTML(rec,a)+
+     (zoneTag?'<div class="zoneTag" style="--sig-acc:'+color+'">'+esc(zoneTag)+'</div>':'')+
      '<div class="bellWrap" id="bellWrap">'+bellSVG(rec,a,T)+
        '<div class="bellProbe" id="bellProbe" style="display:none">'+
          '<div class="line"></div><div class="dot"></div><div class="bubble" id="bellBubble"></div>'+
