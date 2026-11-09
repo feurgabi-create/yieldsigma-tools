@@ -53,6 +53,8 @@ button,input{font:inherit;color:inherit}
 .note{font-size:11.5px;color:var(--muted);margin:0 0 14px}
 .note svg,.lock svg{vertical-align:-2px}
 .lockNote{white-space:nowrap}
+.subpill{display:inline-flex;align-items:center;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:999px;padding:1px 8px;margin-left:8px;text-decoration:none;font-weight:600;vertical-align:1px}
+.subpill:hover{background:var(--jade);color:var(--paper)}
 /* LIST_HEIGHT 0 = the full list, page grows with it. Any other number = the list
    scrolls inside a box that tall (headers stay put), so the page has one fixed
    height and the Google Sites embed is sized once. */
@@ -449,7 +451,7 @@ function render(){
     '<label class="chk"><input type="checkbox" id="long25"'+(STATE.long25?' checked':'')+'> 25+ years of growth</label>'+
   '</div>';
   h+='<p class="note">'+freeCount+' names in this list open their full sigma card. '+
-     '<span class="lockNote">'+LOCK_SVG+' marks a card reserved for members.</span></p>';
+     '<span class="lockNote">'+LOCK_SVG+' marks a card reserved for members.</span><a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></p>';
   h+='<div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'"><table class="dir"><thead><tr>'+
     headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+headCell('years','Years of growth',true)+
     headCell('price','Price',true)+headCell('div','Dividend / share',true)+'<th class="cardCol">Card</th>'+
