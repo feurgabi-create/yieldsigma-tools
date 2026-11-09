@@ -296,6 +296,7 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .flipBack.on{opacity:1;pointer-events:auto;transform:none}
 .fbHead{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;font:600 11px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
 .fbBox{position:relative;flex:1;min-height:180px;margin-top:6px}
+.fhPill{position:absolute;top:46px;right:14px;z-index:2;background:var(--c-paper)}
 .fbBox canvas{position:absolute;inset:0;width:100%;height:100%}
 .fbNote{font:12px/1.5 var(--mono);color:var(--c-muted);margin-top:6px;text-align:left}
 .fbTitle{min-height:1.3em}.fbTitle.act{text-transform:none;letter-spacing:.02em;color:var(--c-ink)}
@@ -1079,6 +1080,7 @@ function flipHTML(rec){
   return '<button type="button" class="flipBtn" id="flipBtn" aria-expanded="false">⤾ Flip to history</button>'+
     '<div class="flipBack" id="flipBack" aria-hidden="true">'+
       '<div class="fbHead"><span class="fbTitle" id="fbTitle" data-cap="'+t+' · % of months in each ½σ step · last 10 years">'+t+' · % of months in each ½σ step · last 10 years</span><button type="button" class="flipBtn" id="flipBackBtn">⤿ Flip back</button></div>'+
+      '<a class="subpill fhPill" href="https://tools.yieldsigma.com/yield-sigma-history.html?t='+encodeURIComponent(rec.ticker)+'" target="_blank" rel="noopener">Full history \u2192</a>'+
       '<div class="fbBox"><canvas id="flipCv"></canvas></div>'+
       '<div class="fbNote">'+f[4]+' months, '+flipMonth(f[5])+' to '+flipMonth(f[5],f[4]-1)+'. The black curve is a bell fitted to '+t+'’s own readings. Percentages are the share of months in each ½σ step.</div>'+
     '</div>';
