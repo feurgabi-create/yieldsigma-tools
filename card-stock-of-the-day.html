@@ -200,6 +200,7 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .sec summary{cursor:pointer;list-style:revert;margin-bottom:4px}
 .sec summary::marker{color:var(--c-muted);font-size:12px}
 .sec summary h3{display:inline}
+.sec summary .hmPill{margin-left:12px;vertical-align:2px}
 .sec h3{font:600 15px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--c-muted);margin:0 0 4px}
 .sec .desc{font-size:12.5px;color:var(--c-muted);margin:8px 0 18px;max-width:60ch}
 
@@ -1629,7 +1630,8 @@ function buildCard(rec,a){
   }
 
   if(a.tnx){
-    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3></summary>'+
+    var hmUrl=(ROWS[selectedIdx]&&ROWS[selectedIdx].kind==='reits')?'https://www.yieldsigma.com/heat-maps/heat-map-reits':'https://www.yieldsigma.com/heat-maps/heat-map-stocks';
+    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3><a class="subpill hmPill" href="'+hmUrl+'" target="_blank" rel="noopener">More macro context \u2192</a></summary>'+
        '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
        '<div class="tnx">'+
          '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
