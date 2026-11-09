@@ -795,6 +795,20 @@ function hmSectorHtml(complete){
   });
   return h+'</div>';
 }
+var HM_BANDS={pos:[[0,1],[1,1.5],[1.5,2],[2,99]],neg:[[-99,-2],[-2,-1.5],[-1.5,-1],[-1,0]]};
+/* Negative / Positive sigma: an equal number of names from each band of that side,
+   spread evenly within the band, so every shade is represented. */
+var HM_PER_BAND=8;
+function hmBandPick(complete){
+  var bands=HM_BANDS[HM_SIGN==='neg'?'neg':'pos'],out=[];
+  bands.forEach(function(b){
+    var inb=complete.filter(function(x){var s=x.a.sigma;return s!==null&&isFinite(s)&&s>=b[0]&&s<b[1]&&String(x.a.ticker||'').toUpperCase()!=='TNX';})
+      .sort(function(p,q){return p.a.sigma-q.a.sigma;});
+    if(inb.length<=HM_PER_BAND){out=out.concat(inb);return;}
+    for(var i=0;i<HM_PER_BAND;i++)out.push(inb[Math.round(i*(inb.length-1)/(HM_PER_BAND-1))]);
+  });
+  return out.sort(function(p,q){return p.a.sigma-q.a.sigma;});
+}
 function wireHmControls(){
   var c=document.querySelector('.hmCtl');if(!c)return;
   c.addEventListener('click',function(e){
@@ -905,6 +919,7 @@ function render(complete){
     .concat(sel.map.normal.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' normal');}))
     .concat(sel.map.under.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' under');}))
     .join('');
+  if(HM_VIEW!=='sector'&&HM_SIGN!=='all')allTiles=hmBandPick(complete).map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('');
   if(HM_VIEW==='sector')h+=hmSectorHtml(complete);
   else h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
   h+=matrixHtml(sel);
