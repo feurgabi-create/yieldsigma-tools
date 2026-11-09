@@ -195,9 +195,6 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .zoneTag{display:inline-block;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   color:var(--sig-acc);background:color-mix(in srgb, var(--sig-acc) 14%, transparent);border:1.5px solid var(--sig-acc);
   padding:6px 16px;border-radius:20px;margin-top:8px}
-.roWrap{display:contents}
-.roWrap .labsPill{align-self:center;margin-left:-2px}
-.roWrap .labsPop{flex-basis:100%;margin:2px 0 0;max-width:none}
 
 .sec{margin-top:36px;display:block}
 .sec summary{cursor:pointer;list-style:revert;margin-bottom:4px}
@@ -1115,23 +1112,6 @@ function ysLoadHist(cb){
   }catch(e){done(false);}
 }
 /* after a render: load the history when this card needs it, then re-render once */
-/* Reversion odds (Labs): bell curve score x Yield Sigma Volatility, shown only outside the
-   normal band (|sigma| 1+) and 1 sigma or more from the stock's own center (the mean of its last 10 years
-   of readings, where its curve is shifted to). */
-function revOddsHTML(rec,a){
-  var f=YS_FLIP[String(rec.ticker||'').toUpperCase()];
-  var s=a.sigma!==null?a.sigma:a.sigmaComputed;
-  if(!f||f[0]===null||f[0]===undefined||s===null||!isFinite(s)||rec.volatility===null||!isFinite(rec.volatility))return '';
-  var pop='<span class="labsPop" hidden>How strongly this stock’s dividend yield has pulled back to its 10-year average in the past. It combines two things: how closely its readings form a bell curve (the bell curve score) and how far its dividend yield usually swings (Yield Sigma Volatility). A textbook bell curve with a low volatility scores Strong. It describes the past, not a promise about the future.</span>';
-  var pill='<button type="button" class="labsPill" aria-expanded="false" aria-label="About Reversion odds">Labs</button>';
-  var mu=isFinite(f[2])?f[2]:0;
-  if(Math.abs(s)<1||Math.abs(s-mu)<1)return '';   /* only outside the normal band, and 1 sigma or more from its own center */
-  var sc=+f[0],shape=sc>=8?0:(sc>=6?1:(sc>=4?2:3));
-  var v=rec.volatility,vol=v<21?0:(v<40?1:2);
-  var T=[['Strong','Strong','Moderate'],['Strong','Moderate','Weak'],['Moderate','Weak','Weak'],['Weak','Weak','Weak']];
-  var tier=T[shape][vol];
-  return '<div class="roWrap"><span class="chip'+(tier==='Strong'?' good':'')+'">Reversion odds: <b>'+tier.toUpperCase()+'</b></span>'+pill+pop+'</div>';
-}
 function ysHistKick(rec,a){
   if(ysHist.state!==0||!rec||!rec.ticker)return;
   var t=rec.ticker.toUpperCase(),s=a.sigma!==null?a.sigma:a.sigmaComputed;
@@ -1536,10 +1516,7 @@ function buildCard(rec,a){
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
     '<div class="lbl">Price'+(priceOverride!==null?' <span class="pxAdj">· adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
-  /* Reversion odds takes the 200 dma chip's place so the row stays on one line */
-  var roHtml=revOddsHTML(rec,a);
-  if(roHtml)chips=chips.filter(function(c){return c.indexOf(' 200 dma</span>')<0;});
-  h+='<div class="chips">'+chips.join('')+roHtml+'</div>';
+  h+='<div class="chips">'+chips.join('')+'</div>';
 
   var color=a.rich?T.rust:T.jade;
   var g=bellGeom(a);
