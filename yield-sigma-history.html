@@ -340,9 +340,15 @@ Chart.register({id:'quietTip', beforeTooltipDraw(c){ if(c._quietTip) return fals
 const HZ=()=>+document.querySelector('input[name="hz"]:checked').value, RCOL=h=>h===24?7:4, PRED={};
 function predFor(t,h){ const k=t+'|'+h; if(PRED[k]) return PRED[k]; const A=DATA[t], c=RCOL(h), out=new Array(A.length).fill(null);
   for(let a=0;a<A.length;a++){ const m=a-h; if(m<60) continue; let sx=0,sy=0,sxx=0,sxy=0,n=0;
-    for(let k2=0;k2<m;k2++){ const y=A[k2][c]; if(y==null) continue; const x=A[k2][1]; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; n++; }
+    let lo=1e9, hi=-1e9, near=0; const zt=A[a][1];
+    for(let k2=0;k2<m;k2++){ const y=A[k2][c]; if(y==null) continue; const x=A[k2][1]; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; n++; if(x<lo) lo=x; if(x>hi) hi=x; if(Math.abs(x-zt)<=0.75) near++; }
     if(n<60) continue; const b=(n*sxy-sx*sy)/(n*sxx-sx*sx); if(!isFinite(b)) continue; const ne=n/h, w=ne/(ne+3); // smoothing: pull toward the stock's own average, harder when the record is short
-    out[a]=Math.round((sy/n+w*b*(A[a][1]-sx/n))*10)/10; }
+    /* guardrails: (1) a stock whose own record says the opposite of the whole universe (higher Yield Sigma, lower return) is inconclusive;
+       (2) no extrapolation beyond the readings the stock has actually had; (3) a common-sense cap of 60% (24 months) or 40% (12 months); (4) see below */
+    if(b*uniSlope(h)<0) continue;
+    if(near<12) continue;   /* (4) fewer than 12 past months within 0.75 sigma of today's reading: not enough evidence at this level */
+    const x=Math.max(lo,Math.min(hi,A[a][1])), cap=h===24?60:40;
+    out[a]=Math.round(Math.max(-cap,Math.min(cap,sy/n+w*b*(x-sx/n)))*10)/10; }
   return PRED[k]=out; }
 const UNI={};
 function uniSlope(h){ if(UNI[h]!=null) return UNI[h]; const c=RCOL(h); let sx=0,sy=0,sxx=0,sxy=0,n=0;
@@ -773,7 +779,7 @@ async function loadHistory(){
   for(const t in P){ PACK[t]=P[t]; if(N[t]) NORMS[t]=N[t]; if(!NAMES[t]&&NM[t]) NAMES[t]=NM[t]; }
   DATA=buildData(PACK);
   for(const t in P){ const old=EXTRA[t]||{}; EXTRA[t]=Object.assign({},old,{ar:histAR(P[t].z),eps:histEps(DATA[t]),vol:V[t]!=null?V[t]:(old.vol!=null?old.vol:null)}); }
-  for(const k in PRED) delete PRED[k];
+  for(const k in PRED) delete PRED[k]; for(const k in UNI) delete UNI[k];
   const keep=sel.value, want=(new URLSearchParams(location.search).get('t')||'').toUpperCase();
   sel.innerHTML=''; Object.keys(DATA).sort().forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=NAMES[t]?t+' · '+NAMES[t]:t; sel.appendChild(o); });
   sel.value=DATA[want]?want:(DATA[keep]?keep:Object.keys(DATA)[0]);
