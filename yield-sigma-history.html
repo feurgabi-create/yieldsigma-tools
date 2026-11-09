@@ -562,7 +562,7 @@ function strip(t){
      <div class="stat"><span class="k">Dividend yield</span><span class="v">${(live?LIVE.y[t]:last[2]).toFixed(2)}%</span></div>
      <div class="stat"><span class="k">Stock price</span><span class="v">$${(live?LIVE.px[t]:last[3]).toFixed(2)}</span></div>
      <div class="stat prop"><span class="k">Bell curve shape <button type="button" class="labs" data-leg="cs" aria-label="About this proprietary metric">Labs</button></span><span class="v">${NORMS[t]?NORMS[t][1]+' <small>'+NORMS[t][0].toFixed(1)+'</small>':'—'}</span></div>
-     <div class="stat prop"><span class="k">Yield Sigma Volatility <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>
+     <div class="stat prop"><span class="k">Yield Sigma Volatility <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Low':EXTRA[t].vol<40?'Moderate':'High')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>
      <div class="stat prop"><span class="k">Reversion odds <button type="button" class="labs" data-leg="ro" aria-label="About this proprietary metric">Labs</button></span><span class="v">${revOdds(t,z)}</span></div>`;
 }
 
