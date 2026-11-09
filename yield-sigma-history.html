@@ -136,6 +136,7 @@ table.log tr.open td{font-weight:600}
   <div class="legend" id="propleg" hidden>
     <div class="lg" id="leg-cs"><b>Bell curve shape and score</b> · How closely this stock's Yield Sigma™ readings, over its full history, form a normal bell curve. Graded Textbook (8–10), Defined (6–8), Loose (4–6) or Not normalizing (below 4), with the score beside it. The better the shape, the more reliably readings far from 0 have come back.</div>
     <div class="lg" id="leg-vd"><b>Yield Sigma Volatility</b> · How much the dividend yield typically swings relative to its own 10-year baseline (1σ ÷ average yield). A lower percentage means the yield is tightly anchored and snaps back faster; a higher percentage indicates large cyclical swings.</div>
+    <div class="lg" id="leg-ro"><b>Reversion odds</b> · How strongly this stock’s dividend yield has pulled back to its 10-year average in the past. It combines two things: how closely its readings form a bell curve (the bell curve score) and how far its dividend yield usually swings (Yield Sigma Volatility). A textbook bell curve with a low volatility scores Strong. It describes the past, not a promise about the future.</div>
     <div class="lgf">Proprietary metrics by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a> for <a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a>.</div>
   </div>
 
@@ -539,6 +540,17 @@ async function loadLive(){
   }
   if(Object.keys(got).length){ LIVE.px=got; LIVE.y=gy; LIVE.sg=gs; LIVE.at=new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); strip(sel.value); }
 }
+/* Reversion odds: bell curve score x Yield Sigma Volatility, shown when the reading sits
+   1 sigma or more from the stock's own center (mean of its last 10 years of readings). Same rule as the card. */
+function revOdds(t,z){
+  const ns=NORMS[t], v=EXTRA[t]&&EXTRA[t].vol;
+  if(!ns||v==null||z==null||!isFinite(z)) return '—';
+  const w=DATA[t].slice(-120).map(r=>r[1]).filter(x=>x!=null&&isFinite(x));
+  const mu=w.length?w.reduce((a,b)=>a+b,0)/w.length:0;
+  if(Math.abs(z-mu)<1) return '<small style="font-size:13px">Near its 10-year average: nothing to revert</small>';
+  const sc=+ns[0], sh=sc>=8?0:sc>=6?1:sc>=4?2:3, vo=v<21?0:v<40?1:2;
+  return [['Strong','Strong','Moderate'],['Strong','Moderate','Weak'],['Moderate','Weak','Weak'],['Weak','Weak','Weak']][sh][vo];
+}
 function strip(t){
   const rows=VIEW(t), last=rows[rows.length-1];
   const live=LIVE.px[t]!=null&&LIVE.sg[t]!=null&&LIVE.y[t]!=null;
@@ -550,7 +562,8 @@ function strip(t){
      <div class="stat"><span class="k">Dividend yield</span><span class="v">${(live?LIVE.y[t]:last[2]).toFixed(2)}%</span></div>
      <div class="stat"><span class="k">Stock price</span><span class="v">$${(live?LIVE.px[t]:last[3]).toFixed(2)}</span></div>
      <div class="stat prop"><span class="k">Bell curve shape <button type="button" class="labs" data-leg="cs" aria-label="About this proprietary metric">Labs</button></span><span class="v">${NORMS[t]?NORMS[t][1]+' <small>'+NORMS[t][0].toFixed(1)+'</small>':'—'}</span></div>
-     <div class="stat prop"><span class="k">Yield Sigma Volatility <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>`;
+     <div class="stat prop"><span class="k">Yield Sigma Volatility <button type="button" class="labs" data-leg="vd" aria-label="About this proprietary metric">Labs</button></span><span class="v">${EXTRA[t].vol==null?'—':(EXTRA[t].vol<21?'Tight':EXTRA[t].vol<40?'Moderate':'Wide')+' '+EXTRA[t].vol.toFixed(1)+'%'}</span></div>
+     <div class="stat prop"><span class="k">Reversion odds <button type="button" class="labs" data-leg="ro" aria-label="About this proprietary metric">Labs</button></span><span class="v">${revOdds(t,z)}</span></div>`;
 }
 
 function draw(){
