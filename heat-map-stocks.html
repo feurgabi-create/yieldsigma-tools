@@ -90,6 +90,29 @@ textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--rule);b
 .tile.under .tk{color:var(--jade)}
 .tile.over .tk{color:var(--rust)}
 .tile .sg{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.tile.under.s1{background:color-mix(in srgb, var(--jade-soft) 45%, var(--field));border-color:color-mix(in srgb, var(--jade) 22%, transparent)}
+.tile.under.s3{background:color-mix(in srgb, var(--jade) 24%, var(--jade-soft));border-color:color-mix(in srgb, var(--jade) 55%, transparent)}
+.tile.over.s1{background:color-mix(in srgb, var(--rust-soft) 45%, var(--field));border-color:color-mix(in srgb, var(--rust) 22%, transparent)}
+.tile.over.s3{background:color-mix(in srgb, var(--rust) 22%, var(--rust-soft));border-color:color-mix(in srgb, var(--rust) 55%, transparent)}
+.tile.s3 .sg{color:var(--ink)}
+.legend .sqs{display:inline-flex;gap:2px;margin-right:6px}
+.legend .sqs .sq{margin:0}
+.legend .sq.under.s1{background:color-mix(in srgb, var(--jade-soft) 45%, var(--field))}
+.legend .sq.under.s3{background:color-mix(in srgb, var(--jade) 24%, var(--jade-soft))}
+.legend .sq.over.s1{background:color-mix(in srgb, var(--rust-soft) 45%, var(--field))}
+.legend .sq.over.s3{background:color-mix(in srgb, var(--rust) 22%, var(--rust-soft))}
+.hmCtl{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:-8px 0 18px;font-size:11.5px}
+.hmGrp{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hmLbl{color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;margin-right:2px}
+.hmBtn{font:600 11px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--rule);border-radius:999px;padding:6px 11px;cursor:pointer}
+.hmBtn:hover{border-color:var(--jade)}
+.hmBtn.on{background:var(--jade);border-color:var(--jade);color:var(--paper)}
+.hmSec{margin:0 0 16px}
+.hmSecHd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid var(--rule)}
+.hmSecHd b{font:500 16px/1.2 var(--serif);color:var(--ink)}
+.hmSecHd span{color:var(--muted)}
+.hmSecHd .hmAvg{margin-left:auto;font-variant-numeric:tabular-nums}
+.hmSecTiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
 
 .tile .wash{position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%) translateY(4px);
   background:var(--ink);color:var(--paper);font-size:11px;line-height:1.5;padding:9px 11px;border-radius:7px;
@@ -734,11 +757,59 @@ function setStatus(msg,isErr){
    subdomain in a new tab (that card build pulls the full live universe,
    so any ticker shown here resolves). */
 var CARD_URL=LINKS.card;
+var HM_GROUPS=[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
+function HM_SHADE(s,zone){var a=Math.abs(s);return a<1.5?1:(a<2?2:3);}
+/* ---- Live play: shades, sign filter, sector view ---- */
+var HM_VIEW='spread', HM_SIGN='all';
+var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
+function hmShade(s,zone){
+  if(s===null||!isFinite(s)||zone==='normal')return '';
+  var d=HM_SHADE(s,zone);return ' s'+d;
+}
+function hmPass(x){var s=x.a.sigma;if(HM_SIGN==='all')return true;if(s===null||!isFinite(s))return false;return HM_SIGN==='neg'?s<0:s>=0;}
+function hmControlsHtml(){
+  function b(grp,val,cur,label){return '<button type="button" class="hmBtn'+(val===cur?' on':'')+'" data-'+grp+'="'+val+'" aria-pressed="'+(val===cur)+'">'+label+'</button>';}
+  return '<div class="hmCtl"><span class="hmGrp"><span class="hmLbl">View</span>'+b('view','spread',HM_VIEW,'Spread')+b('view','sector',HM_VIEW,'By sector')+'</span>'+
+    '<span class="hmGrp"><span class="hmLbl">Show</span>'+b('sign','all',HM_SIGN,'All')+b('sign','neg',HM_SIGN,'Negative σ')+b('sign','pos',HM_SIGN,'Positive σ')+'</span></div>';
+}
+function hmSectorHtml(complete){
+  var rows=HM_GROUPS.map(function(g){return {name:g[0],etf:g[1],items:[]};});
+  var other={name:HM_OTHER,etf:'',items:[]};
+  complete.forEach(function(x){
+    var t=String(x.a.ticker||'').trim().toUpperCase();if(!t||t==='TNX')return;
+    var gi=HM_GMAP[t];(gi===undefined?other:rows[gi]).items.push(x);
+  });
+  if(other.items.length)rows.push(other);
+  rows.forEach(function(r){
+    var v=r.items.map(function(x){return x.a.sigma;}).filter(function(s){return s!==null&&isFinite(s);});
+    r.avg=v.length?v.reduce(function(p,q){return p+q;},0)/v.length:null;
+  });
+  rows.sort(function(p,q){if(p.name===HM_OTHER)return 1;if(q.name===HM_OTHER)return -1;return (p.avg===null?9:p.avg)-(q.avg===null?9:q.avg);});
+  var asc=function(p,q){return p.a.sigma-q.a.sigma;};
+  var h='<div class="hmSectors">';
+  rows.forEach(function(r){
+    var it=r.items.filter(hmPass).sort(asc);if(!it.length)return;
+    h+='<div class="hmSec"><div class="hmSecHd"><b>'+esc(r.name)+'</b>'+(r.etf?' <span>'+esc(r.etf)+'</span>':'')+
+      (r.avg!==null?'<span class="hmAvg">avg '+(r.avg>0?'+':'')+r.avg.toFixed(2)+'σ · '+r.items.length+(r.items.length===1?' name':' names')+'</span>':'')+'</div>'+
+      '<div class="hmSecTiles">'+it.map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('')+'</div></div>';
+  });
+  return h+'</div>';
+}
+function wireHmControls(){
+  var c=document.querySelector('.hmCtl');if(!c)return;
+  c.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('.hmBtn');if(!b)return;
+    if(b.dataset.view)HM_VIEW=b.dataset.view;
+    if(b.dataset.sign)HM_SIGN=b.dataset.sign;
+    render(LAST_COMPLETE);
+  });
+}
 function tileHtml(x,zoneClass){
   var rec=x.rec,a=x.a;
   var name=shortCompanyName(a.name)||a.ticker;
   var full=esc(a.name||a.ticker);
   var href=CARD_URL+encodeURIComponent(a.ticker||'');
+  zoneClass+=hmShade(a.sigma,String(zoneClass).trim());
   return '<a class="tile '+zoneClass+'" href="'+esc(href)+'" target="_blank" rel="noopener" aria-label="Open the '+esc(a.ticker)+' sigma card">'+
     '<div class="tk">'+esc(a.ticker)+'</div>'+
     '<div class="sg">'+fmtNum(a.sigma,2)+'\u03c3</div>'+
@@ -753,9 +824,9 @@ function tileHtml(x,zoneClass){
 }
 function legendHtml(sel){
   return '<div class="legend">'+
-    '<span class="li"><span class="sq over"></span>Overvalued</span>'+
+    '<span class="li"><span class="sqs"><span class="sq over s3"></span><span class="sq over"></span><span class="sq over s1"></span></span>Overvalued</span>'+
     '<span class="li"><span class="sq normal"></span>Normal</span>'+
-    '<span class="li"><span class="sq under"></span>Undervalued</span>'+
+    '<span class="li"><span class="sqs"><span class="sq under s1"></span><span class="sq under"></span><span class="sq under s3"></span></span>Undervalued</span>'+
   '</div>';
 }
 function matrixHtml(sel){
@@ -826,14 +897,16 @@ function render(complete){
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — Stocks</h2><div class="sub">'+esc(sub)+'</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="asof"><a class="dirPill" href="https://www.yieldsigma.com/directory" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
   h+=legendHtml(sel);
+  h+=hmControlsHtml();
   /* Display order: most overvalued through Normal to most undervalued,
      low sigma to high sigma; colFlowTiles lays it out column by column. */
   var ascS=function(p,q){return p.a.sigma-q.a.sigma;};
-  var allTiles=sel.map.over.slice().sort(ascS).map(function(x){return tileHtml(x,' over');})
-    .concat(sel.map.normal.slice().sort(ascS).map(function(x){return tileHtml(x,' normal');}))
-    .concat(sel.map.under.slice().sort(ascS).map(function(x){return tileHtml(x,' under');}))
+  var allTiles=sel.map.over.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' over');})
+    .concat(sel.map.normal.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' normal');}))
+    .concat(sel.map.under.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' under');}))
     .join('');
-  h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
+  if(HM_VIEW==='sector')h+=hmSectorHtml(complete);
+  else h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
   h+=matrixHtml(sel);
   h+='<footer class="foot"><span>Model output, not investment advice \u2014 each name\u2019s own dividend safety and payout ratio deserve their own check.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
      '<span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+
@@ -841,6 +914,7 @@ function render(complete){
   sheet.innerHTML=h;
   colFlowTiles();
   mapStatusText();
+  wireHmControls();
   wirePubFooter();
   wireMoreStats();
 }
