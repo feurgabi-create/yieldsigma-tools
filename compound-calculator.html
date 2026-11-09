@@ -714,7 +714,7 @@ function render(){
   var cxBal=crossover('value'),cxInc=div?crossover('flow'):null;
   (cxBal||[]).concat(cxInc||[]).forEach(function(c){c.text=sideLabel(c.lead)+' ahead, yr '+c.y;});
   var h='<header class="head"><div><h2>Compound Growth Calculator</h2>'+
-    '<div class="sub">Dividend Framework</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="sub">Yield Sigma\u2122</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="tabs" role="tablist"><button type="button" class="tab'+(div?' on':'')+'" data-mode="div">Dividend growth</button>'+
     '<button type="button" class="tab'+(!div?' on':'')+'" data-mode="fixed">Fixed return</button></div></header>';
   h+='<div class="body"><div class="inputs" id="inputs">'+inputsHtml()+'</div><div class="out">';
