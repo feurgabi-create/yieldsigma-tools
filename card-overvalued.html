@@ -1913,7 +1913,7 @@ function renderCurrent(){
    Subscribe link. */
 var YS_BASE='https://tools.yieldsigma.com/';
 var YS_SUBSTACK='https://gabe948456.substack.com/subscribe';
-var YS_FREE_BAND=20,YS_FREE_STEP=2;   /* keep in step with directory.html */
+var YS_FREE_BAND=40,YS_FREE_STEP=2;   /* keep in step with directory.html */
 var YS_FULL={},YS_FULL_LIST=[],YS_VISIT=[],ysDeepDone=false,ysOvEl=null;
 var YS_LOCK='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 function ysZone(kind,s){
@@ -1935,7 +1935,7 @@ function ysIndexFull(res){
       var tag=res.tags[i]==='reits'?'reits':'stocks';
       var rec=parseRow(line,schemaForKind(tag)).rec;if(!rec)return;
       var a=analyze(rec);
-      var t=String(a.ticker||'').trim().toUpperCase();if(!t||t==='–'||full[t])return;
+      var t=String(a.ticker||'').trim().toUpperCase();if(!t||t==='–'||t==='TNX'||full[t])return;
       var s=a.sigma!==null?a.sigma:a.sigmaComputed;
       var o={t:t,name:shortCompanyName(a.name)||t,line:line,tag:tag,s:(s!==null&&isFinite(s))?s:null,free:false};
       full[t]=o;list.push(o);by[tag].push(o);

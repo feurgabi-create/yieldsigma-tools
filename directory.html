@@ -353,7 +353,7 @@ function fetchLiveRows(stocksUrl,reitsUrl){
 var LIVE_URL_STOCKS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/stocks.csv";
 var LIVE_URL_REITS="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/reits.csv";
 var CARD_URL=LINKS.card;
-var FREE_BAND=20;   // how far down each band's ranking the free links reach
+var FREE_BAND=40;   // how far down each band's ranking the free links reach
 var FREE_STEP=2;    // 2 = every other name (ranks 1, 3, 5 ...)
 var LIST_HEIGHT=0;  // 0 = full length; otherwise list box height in pixels
 
@@ -376,7 +376,7 @@ function buildRows(lines,tags){
     var p=parseRow(line,kind==='reits'?SCHEMA_REITS:SCHEMA_STOCKS);
     var rec=p.rec;if(!rec)return;
     var a=analyzeRow(rec);
-    if(!a.ticker||a.ticker==='–')return;
+    if(!a.ticker||a.ticker==='–'||a.ticker.trim().toUpperCase()==='TNX')return;
     out[kind].push({
       name:((a.name||'').trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord).join(' ').replace(/,+$/,''))||a.ticker,
       ticker:a.ticker.trim().toUpperCase(),
