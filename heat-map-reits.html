@@ -785,11 +785,11 @@ function hmSectorHtml(complete){
   return h+'</div>';
 }
 var HM_BANDS={pos:[[0,1.5],[1.5,2],[2,2.5],[2.5,99]],neg:[[-99,-1],[-1,-0.5],[-0.5,0]]};
-/* Negative / Positive sigma: an equal number of names from each band of that side,
+/* Spread view (All, Negative, Positive sigma): an equal number of names from each band,
    spread evenly within the band, so every shade is represented. */
 var HM_PER_BAND=8;
 function hmBandPick(complete){
-  var bands=HM_BANDS[HM_SIGN==='neg'?'neg':'pos'],out=[];
+  var bands=HM_SIGN==='neg'?HM_BANDS.neg:(HM_SIGN==='pos'?HM_BANDS.pos:HM_BANDS.neg.concat(HM_BANDS.pos)),out=[];
   bands.forEach(function(b){
     var inb=complete.filter(function(x){var s=x.a.sigma;return s!==null&&isFinite(s)&&s>=b[0]&&s<b[1]&&String(x.a.ticker||'').toUpperCase()!=='TNX';})
       .sort(function(p,q){return p.a.sigma-q.a.sigma;});
@@ -894,7 +894,7 @@ function render(complete){
   }
   LAST_COMPLETE=complete;
   var sel=buildSelection(complete);
-  var shown=sel.map.under.length+sel.map.normal.length+sel.map.over.length;
+  var shown=hmBandPick(complete).length;
   var sub=shown+' representative REITs from the dividend-growers universe of '+complete.length+'+.';
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — REITs</h2><div class="sub">'+esc(sub)+'</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="asof"><a class="dirPill" href="https://www.yieldsigma.com/directory" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
@@ -907,7 +907,7 @@ function render(complete){
     .concat(sel.map.normal.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' normal');}))
     .concat(sel.map.under.filter(hmPass).sort(ascS).map(function(x){return tileHtml(x,' under');}))
     .join('');
-  if(HM_VIEW!=='sector'&&HM_SIGN!=='all')allTiles=hmBandPick(complete).map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('');
+  if(HM_VIEW!=='sector')allTiles=hmBandPick(complete).map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('');
   if(HM_VIEW==='sector')h+=hmSectorHtml(complete);
   else h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
   h+=matrixHtml(sel);
