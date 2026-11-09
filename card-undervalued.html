@@ -1912,6 +1912,7 @@ function renderCurrent(){
    list and outside the Directory's free set show a lock and a
    Subscribe link. */
 var YS_BASE='https://tools.yieldsigma.com/';
+var YS_DIR='https://www.yieldsigma.com/directory';
 var YS_SUBSTACK='https://gabe948456.substack.com/subscribe';
 var YS_FREE_BAND=40,YS_FREE_STEP=2;   /* keep in step with directory.html */
 var YS_FULL={},YS_FULL_LIST=[],YS_VISIT=[],ysDeepDone=false,ysOvEl=null;
@@ -1974,7 +1975,7 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="calc">Compound calculator</button>'+
       '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
-      '<button type="button" role="menuitem" data-go="dir">Directory<small>All names</small></button>'+
+      '<a role="menuitem" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory<small>All names \u2197</small></a>'+
       '<div class="ysMenuSep"></div>'+
       '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
       '<button type="button" class="soon" disabled>Sector comparison<small>Soon</small></button>'+
@@ -1983,11 +1984,11 @@ function ysNavHtml(a){
     '</div></div></div>'+
     '<div class="ysNavR"><div class="ysFind"><input type="search" id="ysFindIn" placeholder="Find a stock" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
       '<div class="ysHits" id="ysHits" role="listbox"></div></div>'+
-    '<button type="button" class="subpill" id="ysDirBtn">Directory</button></div></nav>';
+    '<a class="subpill" id="ysDirBtn" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory</a></div></nav>';
   return h;
 }
 function ysGo(k,t){
-  if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
+  if(k==='dir')window.open(YS_DIR,'_blank','noopener');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
   else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
   else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');
@@ -2032,7 +2033,6 @@ function wireYsNav(rec){
     tb.addEventListener('click',function(e){e.stopPropagation();var on=!menu.classList.contains('on');menu.classList.toggle('on',on);tb.setAttribute('aria-expanded',on?'true':'false');if(box)box.classList.remove('on');});
     menu.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-go]');if(!b)return;menu.classList.remove('on');tb.setAttribute('aria-expanded','false');ysGo(b.getAttribute('data-go'),t);});
   }
-  if(dir)dir.addEventListener('click',function(){ysGo('dir',t);});
   if(!inp||!box)return;
   var list=[],act=-1;
   function paint(){
@@ -2043,7 +2043,7 @@ function wireYsNav(rec){
     list.forEach(function(x,i){
       h+='<button type="button" role="option" class="ysHit'+(x.ok?'':' lock')+(i===act?' act':'')+'" data-i="'+i+'"><b>'+esc(x.o.t)+'</b><span>'+esc(x.o.name)+'</span>'+(x.ok?'':'<i title="Full card for members">'+YS_LOCK+'</i>')+'</button>';
     });
-    if(!list.length)h='<div class="ysHitNote">No match. <button type="button" data-dir="1">Browse the Directory</button></div>';
+    if(!list.length)h='<div class="ysHitNote">No match. <a href="'+YS_DIR+'" target="_blank" rel="noopener">Browse the Directory</a></div>';
     if(!YS_FULL_LIST.length)h+='<div class="ysHitNote">Loading the full list…</div>';
     box.innerHTML=h;box.classList.add('on');
   }
@@ -2060,7 +2060,6 @@ function wireYsNav(rec){
     else if(e.key==='Escape'){inp.value='';box.classList.remove('on');}
   });
   box.addEventListener('click',function(e){
-    var d=e.target.closest&&e.target.closest('[data-dir]');if(d){box.classList.remove('on');ysGo('dir',t);return;}
     var b=e.target.closest&&e.target.closest('[data-i]');if(b){e.stopPropagation();pick(+b.getAttribute('data-i'));}
   });
 }

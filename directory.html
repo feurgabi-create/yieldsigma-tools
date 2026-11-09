@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dividend Framework Universe</title>
+<title>Yield Sigma™ directory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -95,6 +95,7 @@ table.dir td.none{text-align:center;color:var(--muted);padding:30px}
 /* ===== EDIT LINKS HERE =====
    Every page link used by this tool. If a page moves, change it here only. */
 var LINKS={
+  home:        "https://www.yieldsigma.com",
   card:        "https://tools.yieldsigma.com/card-undervalued.html?ticker=",
   labs:        "https://www.stardustcapital.net/stardust-capital-labs",
   methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
@@ -439,7 +440,7 @@ function render(){
   }
   var rows=visibleRows();
   var freeCount=all.filter(function(r){return r.free;}).length;
-  var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.framework)+'" target="_blank" rel="noopener">Dividend Framework</a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
+  var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.home)+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">\u2122</sup></a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     '<div class="sub">'+DATA.stocks.length+' dividend growers · '+DATA.reits.length+' REITs</div></div>'+
     '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
   h+='<div class="controls">'+
