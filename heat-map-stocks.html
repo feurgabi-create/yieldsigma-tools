@@ -69,6 +69,9 @@ textarea{width:100%;min-height:150px;padding:10px;border:1px solid var(--rule);b
 .pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
 .pageHead .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
 .pageHead .asof{font-size:11.5px;color:var(--muted);text-align:right}
+.dirPill{display:inline-flex;align-items:center;font:600 10.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--jade);border:1px solid var(--jade);border-radius:999px;padding:4px 9px;margin-bottom:22px;text-decoration:none}
+.dirPill:hover{background:var(--jade);color:var(--paper)}
+@media(max-width:600px){.pageHead .asof{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left}.dirPill{margin:0}}
 
 .legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-size:11.5px;color:var(--muted)}
 .legend .li{display:inline-flex;align-items:center;gap:6px}
@@ -821,7 +824,7 @@ function render(complete){
   var shown=sel.map.under.length+sel.map.normal.length+sel.map.over.length;
   var sub=shown+' representative stocks from the dividend-growers universe of '+complete.length+'+.';
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — Stocks</h2><div class="sub">'+esc(sub)+'</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
+    '<div class="asof"><a class="dirPill" href="https://www.yieldsigma.com/directory" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
   h+=legendHtml(sel);
   /* Display order: most overvalued through Normal to most undervalued,
      low sigma to high sigma; colFlowTiles lays it out column by column. */
