@@ -84,6 +84,10 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .backBar a:hover{text-decoration-thickness:2px}
 /* hub nav: Tools menu (left), Find a stock + Directory (right) */
 .ysNav{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin:-24px 0 20px;position:relative;z-index:6}
+.ysToolsBtn{display:inline-flex;align-items:center;gap:9px;font:600 12.5px/1 var(--mono);color:var(--c-paper);background:var(--c-jade);border:1px solid var(--c-jade);border-radius:20px;padding:7px 14px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.ysToolsBtn:hover{filter:brightness(1.12)}
+.ysToolsBtn i{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.ysToolsBtn[aria-expanded="true"] i{transform:translateY(2px) rotate(-135deg)}
 .ysNavL,.ysNavR{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
 .ysNav .backLink{font:600 12.5px var(--mono);color:var(--c-jade);text-decoration:underline;text-underline-offset:3px}
 .ysNav .subpill{cursor:pointer}
@@ -1994,7 +1998,7 @@ function ysNavHtml(a){
   var t=esc(String(a.ticker||'').trim().toUpperCase());
   var h='<nav class="ysNav" aria-label="Yield Sigma tools"><div class="ysNavL">';
   if(PUBLIC_MODE&&STANDALONE_CARD)h+='<a class="backLink" href="'+esc(BACK_URL)+'">← Back to Yield Sigma</a>';
-  h+='<div class="ysToolsWrap"><button type="button" class="subpill" id="ysToolsBtn" aria-haspopup="true" aria-expanded="false">Tools ▾</button>'+
+  h+='<div class="ysToolsWrap"><button type="button" class="ysToolsBtn" id="ysToolsBtn" aria-haspopup="true" aria-expanded="false">All tools<i aria-hidden="true"></i></button>'+
     '<div class="ysMenu" id="ysMenu" role="menu">'+
       '<button type="button" role="menuitem" data-go="hist">Full history<small>'+t+'</small></button>'+
       '<button type="button" role="menuitem" data-go="calc">Compound calculator</button>'+
