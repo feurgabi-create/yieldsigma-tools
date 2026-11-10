@@ -1512,7 +1512,7 @@ function buildCard(rec,a){
     var d=parseDirection(rec.direction);
     if(d){
       var magTxt=d.mag!==null?trimZ(Math.abs(d.mag).toFixed(3)):'';
-      chips.push('<span class="chip '+(d.up?'signal-up':'signal-down')+'"><span class="sigmaSym">\u03c3</span> Trend '+(d.up?'\u2191':'\u2193')+' '+magTxt+' <small>short-term</small></span>');
+      chips.push('<span class="chip '+(d.up?'signal-up':'signal-down')+'"><span class="sigmaSym">\u03c3</span> Trend '+(d.up?'\u2191':'\u2193')+' '+magTxt+'</span>');
     }else{
       // No arrow glyph and no parseable number \u2014 genuinely nothing to
       // show direction-wise, so skip the chip rather than dumping raw text
