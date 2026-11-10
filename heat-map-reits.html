@@ -328,7 +328,8 @@ var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','o
  'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
  {k:'affo', label:'AFFO per share (diluted)', type:'money'},
  {k:'pAffo', label:'P/AFFO', type:'num'},
- 'payoutRatio','divGrowth3y'];
+ 'payoutRatio','divGrowth3y',
+ 'direction'];   /* AI: Direction, from the REIT snapshot (ModuleYSSnap v2) */
 var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
 var ALL_SCHEMA_KEYS=(function(){
   var seen={},keys=[];
