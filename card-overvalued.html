@@ -99,7 +99,15 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .ysMenu button.soon:hover{background:none}
 .ysMenu a.ysMenuSub{color:var(--c-jade);font-weight:600}
 .ysMenuSep{height:1px;background:var(--c-rule);margin:5px 4px}
-.ysFind input{width:160px;box-sizing:border-box;font:500 12px/1 var(--mono);color:var(--c-ink);background:transparent;border:1px solid var(--c-rule);border-radius:999px;padding:6px 12px;-webkit-appearance:none;appearance:none}
+.ysFind input{width:200px;box-sizing:border-box;font:500 12px/1 var(--mono);color:var(--c-ink);background:transparent;border:1px solid var(--c-rule);border-radius:999px;padding:6px 30px 6px 12px;-webkit-appearance:none;appearance:none}
+.ysFind input::-webkit-search-cancel-button{display:none}
+.ysFind.filtered input::placeholder{color:var(--c-jade);font-weight:600;opacity:1}
+.ysFiltBtn{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:24px;height:22px;border:0;border-radius:999px;background:none;color:var(--c-jade);font:700 12px/1 var(--mono);cursor:pointer;padding:0}
+.ysFiltBtn:hover,.ysFiltBtn[aria-expanded="true"]{background:var(--c-jade-soft)}
+.tickRow{display:flex;align-items:center;justify-content:flex-end;gap:8px 10px;flex-wrap:wrap;position:relative;z-index:6;text-align:left}
+.ysHitHd{padding:6px 10px 4px;font:600 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
+.ysHit.on{color:var(--c-jade);font-weight:700}
+.ysHit em{flex:none;font-style:normal;color:var(--c-jade)}
 .ysFind input::placeholder{color:var(--c-muted)}
 .ysFind input:focus{outline:none;border-color:var(--c-jade)}
 @media (pointer:coarse){.ysFind input{font-size:16px;padding:5px 12px}}
@@ -1513,7 +1521,7 @@ function buildCard(rec,a){
   h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch">Yield Sigma™ valuation card</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
-    '<div class="pricebox">'+tickHtml+
+    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+'</div>'+
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
     '<div class="lbl">Price'+(priceOverride!==null?' <span class="pxAdj">· adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
@@ -1992,10 +2000,16 @@ function ysNavHtml(a){
       '<div class="ysMenuSep"></div>'+
       '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
     '</div></div></div>'+
-    '<div class="ysNavR"><div class="ysFind"><input type="search" id="ysFindIn" placeholder="Find a stock" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
-      '<div class="ysHits" id="ysHits" role="listbox"></div></div>'+
-    '<a class="subpill" id="ysDirBtn" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory</a></div></nav>';
+    '</nav>';
   return h;
+}
+/* Find a stock box, beside the ticker dropdown. Typing searches every
+   name; the ▾ inside fills the dropdown with a filtered top 20. */
+function ysFindHtml(){
+  var f=ysFiltDef(YS_FILTER);
+  return '<div class="ysFind'+(f?' filtered':'')+'"><input type="search" id="ysFindIn" placeholder="'+esc(f?f.label:'Find a stock')+'" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
+    '<button type="button" class="ysFiltBtn" id="ysFiltBtn" aria-haspopup="true" aria-expanded="false" aria-label="Filter the list" title="Filter the list">▾</button>'+
+    '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
 function ysGo(k,t){
   if(k==='dir')window.open(YS_DIR,'_blank','noopener');
@@ -2036,9 +2050,47 @@ function ysHits(q){
   out.sort(function(p,q2){return p.sc-q2.sc||(p.ok===q2.ok?0:p.ok?-1:1)||(p.o.t<q2.o.t?-1:1);});
   return out.slice(0,8);
 }
+/* ===== List filters: each fills the ticker dropdown with its top 20 ===== */
+var YS_FILTERS=[
+  {k:'hi',label:'Highest σ',v:function(r,a){return a.s;},desc:true},
+  {k:'yld',label:'Highest dividend yield',v:function(r){return r.yield;},desc:true},
+  {k:'move',label:'Biggest σ move this week',v:function(r){var d=parseDirection(r.direction||'');return d&&d.mag!==null?Math.abs(d.mag):null;},desc:true},
+  {k:'lo',label:'Lowest σ',v:function(r,a){return a.s;},desc:false},
+  {k:'low52',label:'Near 52-week low',v:function(r){return (r.price!==null&&r.low52w)?(r.price-r.low52w)/r.low52w:null;},desc:false},
+  {k:'dma',label:'Furthest below 200 dma',v:function(r){return r.ma200diff;},desc:false},
+  {k:'kings',label:'Kings & Aristocrats',v:function(r,a){return (r.divGrowthYears!==null&&r.divGrowthYears>=25)?a.s:null;},desc:true}
+];
+var YS_FILTER=null;   /* set from AUTO_PICK once that is defined, below */
+function ysFiltDef(k){for(var i=0;i<YS_FILTERS.length;i++)if(YS_FILTERS[i].k===k)return YS_FILTERS[i];return null;}
+function ysFiltKind(){return (AUTO_PICK&&AUTO_PICK.kind)||SAMPLE_DATA_TYPE||'stocks';}
+function ysFiltPick(lines,tags,k){
+  var f=ysFiltDef(k),kind=ysFiltKind(),picks=[],seen={};
+  if(!f)return {lines:[],tags:[]};
+  lines.forEach(function(line,i){
+    var tag=tags[i]==='reits'?'reits':'stocks';if(tag!==kind)return;
+    var rec=parseRow(line,schemaForKind(tag)).rec;if(!rec)return;
+    var a=analyze(rec),t=String(a.ticker||'').trim().toUpperCase();
+    if(!t||t==='TNX'||seen[t])return;seen[t]=true;
+    a.s=a.sigma!==null?a.sigma:a.sigmaComputed;
+    var v=f.v(rec,a);if(v===null||v===undefined||!isFinite(v))return;
+    picks.push({line:line,tag:tag,v:v});
+  });
+  picks.sort(function(p,q){return f.desc?q.v-p.v:p.v-q.v;});
+  picks=picks.slice(0,20);
+  return {lines:picks.map(function(p){return p.line;}),tags:picks.map(function(p){return p.tag;})};
+}
+function ysApplyFilter(k){
+  if(!YS_FULL_LIST.length)return false;
+  var fp=ysFiltPick(YS_FULL_LIST.map(function(o){return o.line;}),YS_FULL_LIST.map(function(o){return o.tag;}),k);
+  if(!fp.lines.length)return false;
+  YS_FILTER=k;YS_VISIT=[];
+  handleRaw(fp.lines.join('\n'),fp.tags);
+  filterPickerByType();
+  return true;
+}
 function wireYsNav(rec){
   var t=String(rec.ticker||'').trim().toUpperCase();
-  var tb=$('#ysToolsBtn'),menu=$('#ysMenu'),dir=$('#ysDirBtn'),inp=$('#ysFindIn'),box=$('#ysHits');
+  var tb=$('#ysToolsBtn'),menu=$('#ysMenu'),dir=$('#ysDirBtn'),inp=$('#ysFindIn'),box=$('#ysHits'),fb=$('#ysFiltBtn');
   if(tb&&menu){
     tb.addEventListener('click',function(e){e.stopPropagation();var on=!menu.classList.contains('on');menu.classList.toggle('on',on);tb.setAttribute('aria-expanded',on?'true':'false');if(box)box.classList.remove('on');});
     menu.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-go]');if(!b)return;menu.classList.remove('on');tb.setAttribute('aria-expanded','false');ysGo(b.getAttribute('data-go'),t);});
@@ -2062,7 +2114,25 @@ function wireYsNav(rec){
     if(x.ok){inp.value='';box.classList.remove('on');ysOpenTicker(x.o.t,true);return;}
     box.innerHTML='<div class="ysHitNote"><b>'+esc(x.o.t)+'</b>’s full card is for members. <a href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">Subscribe on Substack ↗</a></div>';
   }
-  inp.addEventListener('input',function(){act=-1;paint();});
+  var fMode=false;
+  function paintFilters(){
+    var h='<div class="ysHitHd">Fill the list with</div>';
+    var L=YS_FULL_LIST.map(function(o){return o.line;}),G=YS_FULL_LIST.map(function(o){return o.tag;});
+    YS_FILTERS.forEach(function(f){if(L.length&&f.k!==YS_FILTER&&!ysFiltPick(L,G,f.k).lines.length)return;h+='<button type="button" role="option" class="ysHit'+(f.k===YS_FILTER?' on':'')+'" data-f="'+f.k+'">'+esc(f.label)+(f.k===YS_FILTER?'<em>✓</em>':'')+'</button>';});
+    if(!YS_FULL_LIST.length)h+='<div class="ysHitNote">Loading the full list…</div>';
+    box.innerHTML=h;box.classList.add('on');fMode=true;if(fb)fb.setAttribute('aria-expanded','true');
+  }
+  function closeBox(){box.classList.remove('on');fMode=false;if(fb)fb.setAttribute('aria-expanded','false');}
+  if(fb)fb.addEventListener('click',function(e){
+    e.stopPropagation();if(menu)menu.classList.remove('on');
+    if(fMode&&box.classList.contains('on')){closeBox();return;}
+    inp.value='';paintFilters();
+  });
+  box.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-f]');if(!b)return;
+    e.stopPropagation();closeBox();ysApplyFilter(b.getAttribute('data-f'));
+  });
+  inp.addEventListener('input',function(){act=-1;fMode=false;if(fb)fb.setAttribute('aria-expanded','false');paint();});
   inp.addEventListener('focus',function(){if(menu)menu.classList.remove('on');if(inp.value.trim())paint();});
   inp.addEventListener('keydown',function(e){
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!list.length)return;e.preventDefault();act=(act+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;paint();}
@@ -2306,6 +2376,7 @@ function updatePubBarVisibility(){
    from the full live feed on every load and refresh, so the list always
    matches today's readings. Empty = locked list (Keep one, or a hand pick). */
 var AUTO_PICK=null;try{var _ap="{\"low\":true,\"n\":20,\"kind\":\"stocks\"}";if(_ap&&_ap.charAt(0)==='{')AUTO_PICK=JSON.parse(_ap);}catch(e){AUTO_PICK=null;}
+YS_FILTER=(AUTO_PICK&&AUTO_PICK.n>1)?(AUTO_PICK.low?'lo':'hi'):null;
 function autoPickFrom(res){
   var picks=[];
   res.lines.forEach(function(line,i){
@@ -2331,7 +2402,8 @@ function refreshLiveData(){
       if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
     });
     var newLines=[],newTags=[];
-    if(AUTO_PICK){var ap=autoPickFrom(res);newLines=ap.lines;newTags=ap.tags;}
+    if(YS_FILTER){var fp=ysFiltPick(res.lines,res.tags,YS_FILTER);newLines=fp.lines;newTags=fp.tags;}
+    else if(AUTO_PICK){var ap=autoPickFrom(res);newLines=ap.lines;newTags=ap.tags;}
     else ROWS.forEach(function(r){
       var t=r.rec.ticker;
       var hit=t&&byTicker[t.trim().toUpperCase()];
