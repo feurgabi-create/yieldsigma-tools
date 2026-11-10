@@ -153,6 +153,11 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .pricebox{text-align:right;padding-top:10px}
 .pricebox .px{font:600 clamp(26px,3.6vw,36px)/1.15 var(--serif);font-variant-numeric:tabular-nums;margin-top:8px}
 .pricebox .lbl{font-size:11.5px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+/* name and the Find + ticker row share the top line; a long name wraps in its own column */
+.mast{align-items:flex-start}
+.mast>div:first-child{flex:1 1 260px;min-width:0}
+.pricebox{flex:none;padding-top:2px}
+@media (min-width:640px){.mast{flex-wrap:nowrap}}
 .pxEdit{display:flex;align-items:baseline;justify-content:flex-end;gap:1px;margin-top:8px}
 .pxSign{font:600 clamp(22px,3vw,30px)/1.15 var(--serif);color:var(--c-ink)}
 .pxInput{font:600 clamp(26px,3.6vw,36px)/1.15 var(--serif);font-variant-numeric:tabular-nums;color:var(--c-ink);background:transparent;border:0;border-bottom:1.5px dashed var(--c-rule);text-align:right;width:6.5ch;padding:0 1px 1px;-moz-appearance:textfield}
@@ -2007,7 +2012,8 @@ function ysNavHtml(a){
    name; the ▾ inside fills the dropdown with a filtered top 20. */
 function ysFindHtml(){
   var f=ysFiltDef(YS_FILTER);
-  return '<div class="ysFind'+(f?' filtered':'')+'"><input type="search" id="ysFindIn" placeholder="'+esc(f?f.label:'Find a stock')+'" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
+  var ph=f?f.label:'Find a stock';
+  return '<div class="ysFind'+(f?' filtered':'')+'"><input type="search" id="ysFindIn" style="width:calc('+Math.max(ph.length,14)+'ch + 46px)" placeholder="'+esc(ph)+'" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
     '<button type="button" class="ysFiltBtn" id="ysFiltBtn" aria-haspopup="true" aria-expanded="false" aria-label="Filter the list" title="Filter the list">▾</button>'+
     '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
