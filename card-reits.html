@@ -84,8 +84,8 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .backBar a:hover{text-decoration-thickness:2px}
 /* hub nav: Tools menu (left), Find a stock + Directory (right) */
 .ysNav{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin:-24px 0 20px;position:relative;z-index:6}
-.ysToolsBtn{display:inline-flex;align-items:center;gap:9px;font:600 12.5px/1 var(--mono);color:var(--c-paper);background:var(--c-jade);border:1px solid var(--c-jade);border-radius:20px;padding:7px 14px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.12)}
-.ysToolsBtn:hover{filter:brightness(1.12)}
+.ysToolsBtn{display:inline-flex;align-items:center;gap:9px;font:600 12.5px/1 var(--mono);color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:20px;padding:7px 14px;cursor:pointer}
+.ysToolsBtn:hover,.ysToolsBtn[aria-expanded="true"]{background:var(--c-jade);color:var(--c-paper)}
 .ysToolsBtn i{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
 .ysToolsBtn[aria-expanded="true"] i{transform:translateY(2px) rotate(-135deg)}
 .ysNavL,.ysNavR{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
