@@ -156,7 +156,7 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .pricebox .px{font:600 clamp(26px,3.6vw,36px)/1.15 var(--serif);font-variant-numeric:tabular-nums;margin-top:8px}
 .pricebox .lbl{font-size:11.5px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
 /* name and the Find + ticker row share the top line; a long name wraps in its own column */
-.mast{align-items:flex-start}
+.mast{align-items:flex-start;padding-top:14px}
 .mast>div:first-child{flex:1 1 260px;min-width:0}
 .pricebox{flex:none;padding-top:2px}
 @media (min-width:640px){.mast{flex-wrap:nowrap}}
@@ -1530,7 +1530,7 @@ function buildCard(rec,a){
     '</div>'+
     '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+'</div>'+
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
-    '<div class="lbl">Price'+(priceOverride!==null?' <span class="pxAdj">· adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
+    '<div class="lbl">'+(priceOverride!==null?'<span class="pxAdj">adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
   h+='<div class="chips">'+chips.join('')+'</div>';
 
