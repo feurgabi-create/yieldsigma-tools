@@ -16,33 +16,35 @@
 @media (min-width:901px){
 html.tiles,html.tiles body{height:100%;overflow:hidden}
 html.tiles .stage{padding:0!important;height:100vh}
-html.tiles .card{max-width:none!important;height:100vh;box-sizing:border-box;padding:10px 18px 6px!important;display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  grid-template-rows:auto auto minmax(0,1fr) auto;
-  grid-template-areas:"nav nav" "mast mast" "colL colR" "foot foot";
-  gap:8px 12px;overflow:hidden;border-radius:0!important;box-shadow:none!important}
-html.tiles .ysNav{grid-area:nav;margin:0!important}
-html.tiles .chips{grid-area:nav;justify-self:center;align-self:center;margin:0!important;z-index:7}
-html.tiles .mast{grid-area:mast;padding:0 0 8px!important;align-items:center}
+html.tiles body{background:var(--c-paper,#fff)!important}
+html.tiles .card{max-width:1680px!important;margin:0 auto;height:100vh;box-sizing:border-box;padding:12px 22px 8px!important;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"colL colR";
+  gap:0 34px;overflow:hidden;border-radius:0!important;box-shadow:none!important}
+/* two pages side by side: the card cut in half under the valuation anchors */
+html.tiles .ysNav{margin:0 0 6px!important}
+html.tiles .chips{margin:8px 0 2px!important}
+html.tiles .mast{padding:0 0 8px!important;align-items:center}
+html.tiles .tcolR>.ysNavR{align-self:flex-end;margin:0 0 2px}
 html.tiles .mast .name{font-size:28px}
 html.tiles .mast .exch,html.tiles .mast .labsBy{display:inline-block;margin-right:10px}
 html.tiles .tcolL{grid-area:colL}
 html.tiles .tcolR{grid-area:colR}
 html.tiles .tcolL,html.tiles .tcolR{display:flex;flex-direction:column;gap:8px;min-height:0}
 html.tiles .tcolL>.hero{flex:1 1 auto}
+html.tiles .tcolL>.ysNav,html.tiles .tcolL>.mast,html.tiles .tcolL>.chips,html.tiles .tcolR>.foot,html.tiles .tcolR>.subLine,html.tiles .tcolR>.ysNavR{flex:none}
 html.tiles .tcolL>.t-anch{flex:0 0 auto}
 html.tiles .tcolR>.t-det{flex:0 1 auto}
 html.tiles .tcolR>.t-grow{flex:1 1 auto;min-height:150px}
 html.tiles .tcolR>.t-tnx{flex:0 1 auto}
 .tcolL,.tcolR{display:contents}
-html.tiles .foot{grid-area:foot;margin:0!important;padding-top:4px!important;font-size:10px;gap:2px 16px}
+html.tiles .foot{margin:0!important;padding-top:4px!important;font-size:10px;gap:2px 16px}
 html.tiles .foot>span{line-height:1.35}
 html.tiles .detToggle{display:none!important}
 html.tiles .hero,html.tiles details.sec{margin:0!important;border:1px solid var(--c-rule);border-radius:10px;padding:10px 14px;min-height:0;overflow:auto;background:var(--c-paper);scrollbar-width:thin}
 html.tiles details.sec>summary{list-style:none;margin:0 0 6px}
 html.tiles details.sec>summary::-webkit-details-marker{display:none}
 html.tiles details.sec>summary h3{font-size:12px}
-html.tiles .subLine{grid-area:foot;justify-self:end;align-self:start;margin:0!important;font-size:11px}
+html.tiles .subLine{margin:0!important;font-size:11px;align-self:flex-end}
 /* card main elements */
 html.tiles .hero{display:flex;flex-direction:column;align-items:center}
 html.tiles .hero .eyebrow{font-size:11.5px;margin-bottom:2px}
@@ -2114,8 +2116,10 @@ function ysApplyTiles(){
     var L=document.createElement('div'),R=document.createElement('div');L.className='tcolL';R.className='tcolR';
     var hero=card.querySelector('.hero'),an=card.querySelector('.t-anch'),de=card.querySelector('.t-det'),gr=card.querySelector('.t-grow'),tx=card.querySelector('.t-tnx');
     if(hero){hero.parentNode.insertBefore(L,hero);hero.parentNode.insertBefore(R,hero);}
-    [hero,an].forEach(function(x){if(x)L.appendChild(x);});
-    [de,gr,tx].forEach(function(x){if(x)R.appendChild(x);});
+    var nav=card.querySelector('.ysNav'),mast=card.querySelector('.mast'),chips=card.querySelector('.chips'),
+        tv=card.querySelector('.ysNavR'),sub=card.querySelector('.subLine'),foot=card.querySelector('.foot');
+    [nav,mast,chips,hero,an].forEach(function(x){if(x)L.appendChild(x);});
+    [tv,de,gr,tx,sub,foot].forEach(function(x){if(x)R.appendChild(x);});
   }
   ysFitGrow();
 }
