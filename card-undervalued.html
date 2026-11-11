@@ -44,9 +44,8 @@ html.tiles .t-anch .lmark.now{height:40px}
 html.tiles .t-anch .lmark.now .v{margin:0}
 html.tiles .tcolR>.t-det{flex:0 0 auto}
 html.tiles .tcolR>.t-grow{flex:0 0 auto}
-html.tiles .tcolR>.t-tnx{flex:1 1 auto;display:flex;flex-direction:column}
+html.tiles .tcolR>.t-tnx{flex:0 0 auto;display:flex;flex-direction:column}
 html.tiles .t-tnx[open]{display:flex}
-html.tiles .t-tnx .tnx{flex:1}
 html.tiles .t-tnx .tnx>div{display:flex;flex-direction:column;justify-content:center}
 .tcolL,.tcolR{display:contents}
 html.tiles .foot{margin:0!important;padding-top:4px!important;font-size:10px;gap:2px 16px}
@@ -2152,10 +2151,11 @@ function ysFitGrow(){
     /* growth path charts: a set height that reads well, not the whole leftover space */
     var h=Math.round(Math.max(110,Math.min(240,window.innerHeight*0.17-62,window.innerWidth*0.1)));
     sp.style.height=h+'px';fp.style.height=h+'px';
-    requestAnimationFrame(function(){var tx=document.querySelector('.tcolR>.t-tnx'),g=tx&&tx.querySelector('.tnx');if(!g)return;g.style.minHeight='';
-      /* not enough room on the right page: give up some of the top offset rather than cut the Treasury tile */
-      var over=tx.scrollHeight-tx.clientHeight;if(over>0&&det){var m=parseFloat(det.style.marginTop)||0;if(m>0)det.style.setProperty('margin-top',Math.max(0,Math.round(m-over-2))+'px','important');}
-      requestAnimationFrame(function(){var last=tx.lastElementChild,free=tx.getBoundingClientRect().bottom-16-last.getBoundingClientRect().bottom;if(free>4)g.style.minHeight=(g.offsetHeight+free-4)+'px';});});
+    requestAnimationFrame(function(){var R=document.querySelector('.tcolR');if(!R)return;
+      /* not enough room on the right page: give up some of the top offset first */
+      var over=R.scrollHeight-R.clientHeight;if(over>0&&det){var m=parseFloat(det.style.marginTop)||0;if(m>0)det.style.setProperty('margin-top',Math.max(0,Math.round(m-over-2))+'px','important');}
+      /* room to spare: the growth charts take it */
+      requestAnimationFrame(function(){var free=R.getBoundingClientRect().bottom-R.lastElementChild.getBoundingClientRect().bottom;if(free>4){var h2=Math.round(Math.min(h+free-4,480));sp.style.height=h2+'px';fp.style.height=h2+'px';}});});
   });
 }
 window.addEventListener('resize',function(){if(YS_TILES)ysFitGrow();});
