@@ -174,6 +174,13 @@ function place(){
 }
 function front(id){var i=S.zo.indexOf(id);if(i<3){S.zo.splice(i,1);S.zo.push(id);place();}}
 
+/* a click inside a tile's page lands in its iframe, which the desk never hears about:
+   watch which iframe has focus and bring that tile to the front */
+var lastFocusTile=null;
+function focusCheck(){var f=document.activeElement,tile=f&&f.tagName==='IFRAME'&&f.closest('.tile');var id=tile?tile.dataset.id:null;if(id&&id!==lastFocusTile)front(id);lastFocusTile=id;}
+window.addEventListener('blur',function(){setTimeout(focusCheck,0);});
+setInterval(focusCheck,200);
+
 /* snapping: to the screen edges and to the edges of the other tiles */
 function snapV(v,others){for(var i=0;i<others.length;i++)if(Math.abs(v-others[i])<SNAP)return others[i];return Math.round(v*2)/2;}
 function edges(id,axis){var o=[0,100];IDS.forEach(function(j){if(j===id)return;var a=S.L[j];if(axis==='x'){o.push(a[0],a[0]+a[2]);}else{o.push(a[1],a[1]+a[3]);}});return o;}
