@@ -30,15 +30,24 @@ html.tiles .mast .exch,html.tiles .mast .labsBy{display:inline-block;margin-righ
 html.tiles .tcolL{grid-area:colL}
 html.tiles .tcolR{grid-area:colR}
 html.tiles .tcolL,html.tiles .tcolR{display:flex;flex-direction:column;gap:8px;min-height:0}
-html.tiles .tcolL>.hero{flex:0 0 auto}
+html.tiles .tcolL>.hero{flex:1 1 auto;justify-content:space-evenly}
 html.tiles .tcolL>.ysNav,html.tiles .tcolL>.mast,html.tiles .tcolL>.chips,html.tiles .tcolL>.foot,html.tiles .tcolL>.subLine,html.tiles .tcolR>.ysNavR{flex:none}
 html.tiles .tcolR>.t-tnx{margin-bottom:0}
-html.tiles .tcolL>.t-anch{flex:1 1 auto;display:flex;flex-direction:column}
-html.tiles .t-anch[open]{display:flex}
-html.tiles .t-anch .ladder{margin:auto 6px!important}
+html.tiles .tcolL>.t-anch{flex:0 0 auto;padding:14px 22px 16px}
+html.tiles .t-anch .ladder{height:calc(40px + 50px + var(--rows,0) * 46px);margin:8px 64px 0 44px!important}
+html.tiles .t-anch .lmark:not(.now):not(.lside){display:flex;flex-direction:column;align-items:center}
+html.tiles .t-anch .ladder .track{top:40px}
+html.tiles .t-anch .lmark .dot{margin-top:28px;width:13px;height:13px}
+html.tiles .t-anch .lmark .v{font-size:16px;margin-top:calc(6px + var(--row,0) * 46px)}
+html.tiles .t-anch .lmark .l{font-size:12.5px}
+html.tiles .t-anch .lmark.now{height:40px}
+html.tiles .t-anch .lmark.now .v{margin:0}
 html.tiles .tcolR>.t-det{flex:0 0 auto}
-html.tiles .tcolR>.t-grow{flex:1 1 auto;min-height:150px}
-html.tiles .tcolR>.t-tnx{flex:0 1 auto}
+html.tiles .tcolR>.t-grow{flex:0 0 auto}
+html.tiles .tcolR>.t-tnx{flex:1 1 auto;display:flex;flex-direction:column}
+html.tiles .t-tnx[open]{display:flex}
+html.tiles .t-tnx .tnx{flex:1}
+html.tiles .t-tnx .tnx>div{display:flex;flex-direction:column;justify-content:center}
 .tcolL,.tcolR{display:contents}
 html.tiles .foot{margin:0!important;padding-top:4px!important;font-size:10px;gap:2px 16px}
 html.tiles .foot>span{line-height:1.35}
@@ -53,7 +62,7 @@ html.tiles .hero{display:flex;flex-direction:column;align-items:center}
 html.tiles .hero .eyebrow{font-size:11.5px;margin-bottom:2px}
 html.tiles .hero .sig{font-size:clamp(54px,6.2vw,96px)!important}
 html.tiles .zoneTag{font-size:12px;padding:4px 12px;margin-top:4px}
-html.tiles .bellWrap{width:100%;max-width:min(820px,60vh);margin:4px auto 0!important;flex:none}
+html.tiles .bellWrap{width:100%;max-width:clamp(380px,calc((100vh - 900px) * 2.9),900px);margin:4px auto 0!important;flex:none}
 html.tiles .bellWrap>svg{display:block;width:100%;height:auto;max-height:25vh}
 html.tiles .sigSlider{margin-top:6px!important;flex:none}
 html.tiles .hero .cap{font-size:14.5px;margin-top:8px!important;flex:none}
@@ -70,12 +79,14 @@ html.tiles .t-grow .yearControl{margin-top:2px}
 html.tiles .t-grow .panelLabel{display:inline-block;margin-right:10px}
 html.tiles .t-grow .mcOpenBtn{display:inline-flex;margin:0 0 4px;padding:4px 10px;font-size:11px}
 html.tiles .t-tnx .bpsNote{margin:0 0 6px}
-html.tiles .tnx div{padding:4px 6px 5px}
-html.tiles .tnx .v{font-size:15px;margin-top:1px}
-html.tiles .tnx .cap{margin-top:2px}
-html.tiles .t-tnx .desc{margin:6px 0 0;font-size:12px;line-height:1.45}
-html.tiles .t-tnx .bpsNote{font-size:10.5px}
-html.tiles .t-tnx .tnx .cap{font-size:9.5px}
+html.tiles .tnx>div{padding:clamp(8px,1.4vh,22px) 12px}
+html.tiles .tnx>div>div{flex:0 0 auto;border-left:0;padding:0}
+html.tiles .tnx .l{font-size:clamp(10.5px,1.1vh,13px)}
+html.tiles .tnx .v{font-size:clamp(18px,min(2.7vh,2vw),40px);margin-top:clamp(4px,.8vh,12px);letter-spacing:-.01em}
+html.tiles .tnx .cap{margin-top:clamp(4px,.8vh,12px);max-width:22ch;align-self:center}
+html.tiles .t-tnx .desc{margin:clamp(4px,.8vh,12px) 0 0;font-size:clamp(12px,1.05vh,14px);line-height:1.5}
+html.tiles .t-tnx .bpsNote{font-size:11.5px}
+html.tiles .t-tnx .tnx .cap{font-size:clamp(11px,1vh,13px)}
 html.tiles .t-anch{padding-right:22px}
 html.tiles #stairPanel,html.tiles #fanPanel{position:relative}
 html.tiles #stairPanel svg,html.tiles #fanPanel svg{position:absolute;left:0;top:0;width:100%;height:100%}
@@ -2135,15 +2146,16 @@ function ysFitGrow(){
   if(!sp||!fp)return;
   if(!YS_TILES){sp.style.height='';fp.style.height='';return;}
   requestAnimationFrame(function(){
-    var tile=sp.closest('details.sec');if(!tile)return;
+    /* right page starts at the line under the left page's header */
     var det=document.querySelector('.tcolR>.t-det'),chips=document.querySelector('.tcolL>.chips');
     if(det&&chips){det.style.setProperty('margin-top','0px','important');var dl=chips.getBoundingClientRect().top-10-det.getBoundingClientRect().top;if(dl>0)det.style.setProperty('margin-top',Math.round(dl)+'px','important');}
-    sp.style.height='0px';fp.style.height='0px';
-    var tb=tile.getBoundingClientRect().bottom-12,cb=0;      /* room left once everything else is in */
-    Array.prototype.forEach.call(tile.children,function(c){var r=c.getBoundingClientRect();if(r.height)cb=Math.max(cb,r.bottom);});
-    var free=tb-cb;
-    var h=Math.max(90,Math.floor(free-4));
+    /* growth path charts: a set height that reads well, not the whole leftover space */
+    var h=Math.round(Math.max(110,Math.min(240,window.innerHeight*0.17-62,window.innerWidth*0.1)));
     sp.style.height=h+'px';fp.style.height=h+'px';
+    requestAnimationFrame(function(){var tx=document.querySelector('.tcolR>.t-tnx'),g=tx&&tx.querySelector('.tnx');if(!g)return;g.style.minHeight='';
+      /* not enough room on the right page: give up some of the top offset rather than cut the Treasury tile */
+      var over=tx.scrollHeight-tx.clientHeight;if(over>0&&det){var m=parseFloat(det.style.marginTop)||0;if(m>0)det.style.setProperty('margin-top',Math.max(0,Math.round(m-over-2))+'px','important');}
+      requestAnimationFrame(function(){var last=tx.lastElementChild,free=tx.getBoundingClientRect().bottom-16-last.getBoundingClientRect().bottom;if(free>4)g.style.minHeight=(g.offsetHeight+free-4)+'px';});});
   });
 }
 window.addEventListener('resize',function(){if(YS_TILES)ysFitGrow();});
