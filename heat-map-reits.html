@@ -752,6 +752,7 @@ var HM_GROUPS=[["Residential", "", "NXRT MAA UDR ESS CPT AMH INVH ELS UMH SUI"],
 function HM_SHADE(s,zone){if(zone==='under')return s<2?1:(s<2.5?2:3);return s>-0.5?1:(s>-1?2:3);}
 /* ---- Live play: shades, sign filter, sector view ---- */
 var HM_VIEW='spread', HM_SIGN='all';
+try{if(new URLSearchParams(location.search).get('view')==='sector')HM_VIEW='sector';}catch(e){}
 var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
 function hmShade(s,zone){
   if(s===null||!isFinite(s)||zone==='normal')return '';

@@ -1897,6 +1897,8 @@ function wireGrowthFan(rec){
    same card. Only on the published page (PUBLIC_MODE) — the editor
    shouldn't rewrite its own URL while you're pasting/testing data. */
 function updateUrlTicker(ticker){
+  /* inside the Yield Sigma workspace: tell the other tiles which stock is on the card */
+  if(ticker&&window.parent!==window){try{window.parent.postMessage({ysTicker:String(ticker).trim().toUpperCase()},'*');}catch(e){}}
   if(!PUBLIC_MODE||!ticker)return;
   try{
     var params=new URLSearchParams(window.location.search);
@@ -2006,6 +2008,7 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
       '<a role="menuitem" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory<small>All names \u2197</small></a>'+
+      (window.parent===window?'<a role="menuitem" href="https://tools.yieldsigma.com/workspace.html?t='+t+'" target="_blank" rel="noopener">Workspace<small>All tools, one screen \u2197</small></a>':'')+
       '<div class="ysMenuSep"></div>'+
       '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
       '<button type="button" class="soon" disabled>Sector comparison<small>Soon</small></button>'+
@@ -2162,6 +2165,12 @@ document.addEventListener('click',function(e){
   if(!(tgt.closest&&tgt.closest('.ysFind'))){var h=$('#ysHits');if(h)h.classList.remove('on');}
 });
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ysOvEl)ysClosePage();});
+/* workspace: a stock picked in another tile */
+window.addEventListener('message',function(e){
+  if(e.source!==window.parent||window.parent===window)return;
+  var d=e.data;if(!d||typeof d.ysSelect!=='string')return;
+  if(d.ysSelect.toUpperCase()!==ysTk(ROWS[selectedIdx]))ysOpenTicker(d.ysSelect,true);
+});
 /* a stock picked in the Directory or a heat map, sent from the page turned over the card */
 window.addEventListener('message',function(e){
   if(!ysOvEl)return;

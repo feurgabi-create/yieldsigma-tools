@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yield Sigma™ workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Yield Sigma(TM) workspace, Stardust Capital Labs (Nov 2026)
+   Four live tools on one screen. Each tile runs the full tool from tools.yieldsigma.com.
+   - drag the center lines to resize, double-click a line to even it out
+   - drag a tile by its title bar onto another tile to swap them
+   - expand a tile to full screen with its corner button
+   - the card, history and calculator follow the same stock
+   - "Copy link" copies a link that opens this exact view (layout, stock, heat map tab)
+   Each visitor's layout is kept in their own browser; a link someone sends overrides it. */
+:root{
+  --bg:#FFFFFF; --panel:#EEF2ED; --ink:#13241A; --muted:#5E6F63; --rule:#D2DBD1; --jade:#1F7A52; --jade-soft:#E2EFE7;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace; --serif:'Newsreader',Georgia,serif;
+  --cx:50%; --cy:50%; --bar:40px; --gap:6px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30; --jade:#4CC28A; --jade-soft:#1E3328; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30; --jade:#4CC28A; --jade-soft:#1E3328; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--panel);color:var(--ink);font:13px/1.4 var(--mono);overflow:hidden}
+a{color:var(--jade)}
+.top{height:var(--bar);display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--rule)}
+.top h1{margin:0;font:500 19px/1 var(--serif);white-space:nowrap}
+.top h1 a{color:var(--ink);text-decoration:none}
+.top .by{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.top .by a{font-weight:600;text-decoration:none}
+.top .sp{flex:1}
+.pill{font:600 11.5px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:999px;padding:6px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.pill:hover{background:var(--jade);color:var(--bg)}
+.link{font:500 11.5px/1 var(--mono);color:var(--muted);background:none;border:0;cursor:pointer;padding:6px 4px;text-decoration:underline;text-underline-offset:3px}
+.grid{position:absolute;left:0;right:0;top:var(--bar);bottom:0;padding:var(--gap);display:grid;
+  grid-template-columns:calc(var(--cx) - var(--gap)) calc(100% - var(--cx) - var(--gap));
+  grid-template-rows:calc(var(--cy) - var(--gap)) calc(100% - var(--cy) - var(--gap));
+  gap:var(--gap)}
+.tile{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.tile.drop{outline:2px dashed var(--jade);outline-offset:-2px}
+.tile.max{position:fixed;left:var(--gap);right:var(--gap);top:calc(var(--bar) + var(--gap));bottom:var(--gap);z-index:20;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.th{flex:none;height:34px;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-bottom:1px solid var(--rule);background:var(--bg);cursor:grab;user-select:none}
+.th:active{cursor:grabbing}
+.th b{font:600 12px/1 var(--mono);letter-spacing:.02em}
+.th .grip{color:var(--muted);font-size:13px;letter-spacing:-2px}
+.th .sp{flex:1}
+.tabs{display:inline-flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden}
+.tabs button{font:600 11px/1 var(--mono);color:var(--muted);background:none;border:0;padding:5px 10px;cursor:pointer}
+.tabs button.on{background:var(--jade);color:var(--bg)}
+.ib{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--muted);cursor:pointer;font:600 14px/1 var(--mono);text-decoration:none}
+.ib:hover{background:var(--jade-soft);color:var(--jade)}
+.tile iframe{flex:1;width:100%;border:0;display:block;background:var(--bg)}
+.vline,.hline{position:absolute;z-index:10}
+.vline{top:var(--bar);bottom:0;width:12px;left:calc(var(--cx) - 6px);cursor:col-resize}
+.hline{left:0;right:0;height:12px;top:50%;cursor:row-resize}
+.vline::after,.hline::after{content:'';position:absolute;background:transparent;border-radius:3px;transition:background .15s}
+.vline::after{left:4px;width:4px;top:40%;bottom:40%}
+.hline::after{top:4px;height:4px;left:40%;right:40%}
+.vline:hover::after,.hline:hover::after,body.dragging .vline::after,body.dragging .hline::after{background:var(--jade)}
+body.dragging iframe,body.moving iframe{pointer-events:none}
+body.dragging{cursor:col-resize}
+.toast{position:fixed;left:50%;top:calc(var(--bar) + 10px);transform:translateX(-50%);background:var(--ink);color:var(--bg);font:600 12px/1 var(--mono);padding:9px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40}
+.toast.on{opacity:1}
+@media (max-width:760px){
+  html,body{overflow:auto}
+  .top{position:sticky;top:0;z-index:30}
+  .top .by{display:none}
+  .top{gap:8px;padding:0 10px}
+  .top h1{font-size:16px}
+  .top .lg{display:none}
+  .grid{position:static;display:block;padding:var(--gap)}
+  .tile{height:86vh;margin-bottom:var(--gap)}
+  .vline,.hline{display:none}
+  .th{cursor:default}
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1><a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a> workspace</h1>
+  <span class="by">by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a></span>
+  <span class="sp"></span>
+  <button type="button" class="link" id="reset">Reset layout</button>
+  <button type="button" class="pill" id="share">Copy link<span class="lg"> to this view</span></button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="vline" id="vline" title="Drag to resize · double-click to even out"></div>
+<div class="hline" id="hline" title="Drag to resize · double-click to even out"></div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+var BASE='https://tools.yieldsigma.com/';
+try{if(location.hostname==='tools.yieldsigma.com')BASE='';}catch(e){}
+var TOOLS={
+  card:{title:'Sigma card',src:function(t){return BASE+'card-undervalued.html'+(t?'?ticker='+encodeURIComponent(t):'');}},
+  history:{title:'History',src:function(t){return BASE+'yield-sigma-history.html'+(t?'?t='+encodeURIComponent(t):'');}},
+  calc:{title:'Compound calculator',src:function(t){return BASE+'compound-calculator.html'+(t?'?a='+encodeURIComponent(t):'');}},
+  heat:{title:'Heat maps',src:function(t,hm){
+    if(hm==='reits')return BASE+'heat-map-reits.html?embed=1';
+    if(hm==='macro')return BASE+'heat-map-stocks.html?embed=1&view=sector';
+    return BASE+'heat-map-stocks.html?embed=1';}}
+};
+var DEF={o:['card','history','calc','heat'],cx:50,cy:50,max:'',hm:'stocks',t:''};
+var KEY='ysWorkspace.v1';
+var S=JSON.parse(JSON.stringify(DEF));
+
+/* saved layout, then a shared link on top of it */
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv)for(var k in DEF)if(sv[k]!==undefined)S[k]=sv[k];}catch(e){}
+var q;try{q=new URLSearchParams(location.search);}catch(e){q=null;}
+if(q&&[...q.keys()].length){
+  var o=(q.get('o')||'').split(',').filter(function(x){return TOOLS[x];});
+  if(o.length===4&&new Set(o).size===4)S.o=o;
+  var n=function(k,lo,hi){var v=parseFloat(q.get(k));return isFinite(v)?Math.min(hi,Math.max(lo,v)):null;};
+  if(n('cx',15,85)!==null)S.cx=n('cx',15,85);
+  if(n('cy',15,85)!==null)S.cy=n('cy',15,85);
+  S.max=TOOLS[q.get('max')]?q.get('max'):'';
+  if(['stocks','reits','macro'].indexOf(q.get('hm'))>=0)S.hm=q.get('hm');
+  if(q.get('t'))S.t=q.get('t').trim().toUpperCase().slice(0,12);
+}
+function valid(){
+  if(!Array.isArray(S.o)||S.o.length!==4||new Set(S.o).size!==4||S.o.some(function(x){return !TOOLS[x];}))S.o=DEF.o.slice();
+  S.cx=Math.min(85,Math.max(15,+S.cx||50));S.cy=Math.min(85,Math.max(15,+S.cy||50));
+  if(!TOOLS[S.max])S.max='';
+  if(['stocks','reits','macro'].indexOf(S.hm)<0)S.hm='stocks';
+}
+valid();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+var grid=document.getElementById('grid'),vline=document.getElementById('vline'),hline=document.getElementById('hline');
+var root=document.documentElement,EL={},FR={};
+var AREAS=['1 / 1','1 / 2','2 / 1','2 / 2'];
+
+function header(id){
+  var h='<div class="th" draggable="true" data-id="'+id+'"><span class="grip" aria-hidden="true">⋮⋮</span><b>'+TOOLS[id].title+'</b><span class="sp"></span>';
+  if(id==='heat'){
+    h+='<span class="tabs" role="tablist">'+['stocks','reits','macro'].map(function(k){
+      return '<button type="button" data-hm="'+k+'"'+(S.hm===k?' class="on"':'')+'>'+(k==='stocks'?'Stocks':k==='reits'?'REITs':'Macro')+'</button>';}).join('')+'</span>';
+  }
+  h+='<a class="ib" data-open="'+id+'" href="#" target="_blank" rel="noopener" title="Open on its own page" aria-label="Open on its own page">↗</a>';
+  h+='<button type="button" class="ib" data-max="'+id+'" title="Expand" aria-label="Expand">⤢</button></div>';
+  return h;
+}
+function build(){
+  S.o.forEach(function(id){
+    var d=document.createElement('section');d.className='tile';d.dataset.id=id;
+    d.innerHTML=header(id);
+    var f=document.createElement('iframe');f.title=TOOLS[id].title;f.loading='eager';
+    f.src=TOOLS[id].src(S.t,S.hm);
+    d.appendChild(f);grid.appendChild(d);EL[id]=d;FR[id]=f;
+  });
+  place();
+}
+function place(){
+  root.style.setProperty('--cx',S.cx+'%');
+  S.o.forEach(function(id,i){var p=AREAS[i].split(' / ');EL[id].style.gridRow=p[0];EL[id].style.gridColumn=p[1];});
+  for(var id in EL){
+    EL[id].classList.toggle('max',S.max===id);
+    var b=EL[id].querySelector('[data-max]');b.textContent=S.max===id?'⤡':'⤢';b.title=S.max===id?'Back to the grid':'Expand';
+    var a=EL[id].querySelector('[data-open]');a.href=TOOLS[id].src(S.t,S.hm).replace('?embed=1&','?').replace('?embed=1','');
+  }
+  // the horizontal line sits at cy of the grid area
+  var gh=grid.clientHeight,top=grid.offsetTop;
+  hline.style.top=(top+gh*S.cy/100-6)+'px';
+  root.style.setProperty('--cy',S.cy+'%');
+  save();
+}
+window.addEventListener('resize',place);
+
+/* resize lines */
+function dragLine(el,axis){
+  function mv(e){
+    var p=e.touches?e.touches[0]:e,r=grid.getBoundingClientRect();
+    if(axis==='x')S.cx=Math.min(85,Math.max(15,(p.clientX-r.left)/r.width*100));
+    else S.cy=Math.min(85,Math.max(15,(p.clientY-r.top)/r.height*100));
+    place();
+  }
+  function up(){document.body.classList.remove('dragging');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up);}
+  el.addEventListener('mousedown',function(e){e.preventDefault();document.body.classList.add('dragging');document.body.style.cursor=axis==='x'?'col-resize':'row-resize';document.addEventListener('mousemove',mv);document.addEventListener('mouseup',function f(){document.body.style.cursor='';document.removeEventListener('mouseup',f);});document.addEventListener('mouseup',up);});
+  el.addEventListener('touchstart',function(){document.body.classList.add('dragging');document.addEventListener('touchmove',mv,{passive:true});document.addEventListener('touchend',up);},{passive:true});
+  el.addEventListener('dblclick',function(){if(axis==='x')S.cx=50;else S.cy=50;place();});
+}
+dragLine(vline,'x');dragLine(hline,'y');
+
+/* swap tiles by dragging the title bar */
+var dragId=null;
+grid.addEventListener('dragstart',function(e){var th=e.target.closest&&e.target.closest('.th');if(!th)return;dragId=th.dataset.id;document.body.classList.add('moving');try{e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move';}catch(x){}});
+grid.addEventListener('dragend',function(){dragId=null;document.body.classList.remove('moving');for(var id in EL)EL[id].classList.remove('drop');});
+grid.addEventListener('dragover',function(e){var t=e.target.closest&&e.target.closest('.tile');if(!t||!dragId)return;e.preventDefault();for(var id in EL)EL[id].classList.toggle('drop',EL[id]===t&&id!==dragId);});
+grid.addEventListener('drop',function(e){
+  var t=e.target.closest&&e.target.closest('.tile');if(!t||!dragId)return;e.preventDefault();
+  var a=S.o.indexOf(dragId),b=S.o.indexOf(t.dataset.id);
+  if(a>=0&&b>=0&&a!==b){var x=S.o[a];S.o[a]=S.o[b];S.o[b]=x;place();}
+  dragId=null;document.body.classList.remove('moving');for(var id in EL)EL[id].classList.remove('drop');
+});
+
+/* tile buttons */
+grid.addEventListener('click',function(e){
+  var m=e.target.closest&&e.target.closest('[data-max]');
+  if(m){S.max=S.max===m.dataset.max?'':m.dataset.max;place();return;}
+  var h=e.target.closest&&e.target.closest('[data-hm]');
+  if(h&&h.dataset.hm!==S.hm){
+    S.hm=h.dataset.hm;
+    EL.heat.querySelectorAll('[data-hm]').forEach(function(b){b.classList.toggle('on',b.dataset.hm===S.hm);});
+    FR.heat.src=TOOLS.heat.src(S.t,S.hm);place();
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.max){S.max='';place();}});
+
+/* linked tiles: card, history and calculator follow one stock */
+window.addEventListener('message',function(e){
+  var d=e.data;if(!d)return;
+  var t=typeof d.ysTicker==='string'?d.ysTicker:typeof d.ysPick==='string'?d.ysPick:null;
+  if(!t)return;
+  var src=null;for(var id in FR)if(FR[id].contentWindow===e.source)src=id;
+  if(!src)return;
+  t=t.trim().toUpperCase();
+  if(t===S.t&&src!=='heat')return;
+  S.t=t;place();
+  ['card','history','calc'].forEach(function(id){
+    if(id===src)return;
+    try{FR[id].contentWindow.postMessage({ysSelect:t},'*');}catch(x){}
+  });
+  if(src==='heat'){ toast(t+' loaded in the card, history and calculator'); }
+});
+
+/* share and reset */
+var tEl=document.getElementById('toast'),tTm=null;
+function toast(msg){tEl.textContent=msg;tEl.classList.add('on');clearTimeout(tTm);tTm=setTimeout(function(){tEl.classList.remove('on');},2200);}
+function shareUrl(){
+  var p=new URLSearchParams();
+  if(S.t)p.set('t',S.t);
+  p.set('o',S.o.join(','));
+  p.set('cx',Math.round(S.cx));p.set('cy',Math.round(S.cy));
+  if(S.max)p.set('max',S.max);
+  if(S.hm!=='stocks')p.set('hm',S.hm);
+  return 'https://tools.yieldsigma.com/workspace.html?'+p.toString();
+}
+document.getElementById('share').addEventListener('click',function(){
+  var u=shareUrl();
+  function fb(){var ta=document.createElement('textarea');ta.value=u;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Link copied');}catch(x){toast(u);}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(function(){toast('Link copied');},fb);else fb();
+});
+document.getElementById('reset').addEventListener('click',function(){
+  var keepT=S.t;S=JSON.parse(JSON.stringify(DEF));S.t=keepT;
+  grid.innerHTML='';EL={};FR={};build();toast('Layout reset');
+});
+
+build();
+})();
+</script>
+</body>
+</html>

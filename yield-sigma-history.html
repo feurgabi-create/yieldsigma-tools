@@ -696,6 +696,10 @@ function draw(){
   strip(t); epTable(t); fanCap(t,showFan); drawBell();
 }
 sel.addEventListener('change', draw);
+/* Yield Sigma workspace: report the stock shown, and follow a stock picked in another tile */
+sel.addEventListener('change',()=>{ if(window.parent!==window){ try{window.parent.postMessage({ysTicker:sel.value},'*');}catch(e){} } });
+window.addEventListener('message',e=>{ if(window.parent===window||e.source!==window.parent) return; const d=e.data; if(!d||typeof d.ysSelect!=='string') return;
+  const t=d.ysSelect.toUpperCase(); if(DATA[t]&&sel.value!==t){ sel.value=t; draw(); } });
 loadLive(); setInterval(loadLive,15*60*1000);
 ['showEp','showFan'].forEach(id=>document.getElementById(id).addEventListener('change',draw));
 document.querySelectorAll('input[name="rng"]').forEach(r=>r.addEventListener('change',draw));

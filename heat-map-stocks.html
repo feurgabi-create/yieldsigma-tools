@@ -763,6 +763,7 @@ var HM_GROUPS=[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PR
 function HM_SHADE(s,zone){var a=Math.abs(s);return a<1.5?1:(a<2?2:3);}
 /* ---- Live play: shades, sign filter, sector view ---- */
 var HM_VIEW='spread', HM_SIGN='all';
+try{if(new URLSearchParams(location.search).get('view')==='sector')HM_VIEW='sector';}catch(e){}
 var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
 function hmShade(s,zone){
   if(s===null||!isFinite(s)||zone==='normal')return '';

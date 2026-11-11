@@ -917,8 +917,23 @@ function applyUrlPick(){
   if(ch)r.edited=true;
   render();
 }
+/* Yield Sigma workspace: a stock picked in another tile goes into column A */
+var wsPending=null;
+function wsApply(){
+  if(!wsPending)return;var t=wsPending,u=null;
+  U.forEach(function(x){if(x.ticker===t)u=x;});
+  if(!u)return;
+  wsPending=null;
+  if(S.A&&S.A.ticker===t)return;
+  u.open=true;applyPick('A',u);render();
+}
+window.addEventListener('message',function(e){
+  if(window.parent===window||e.source!==window.parent)return;
+  var d=e.data;if(!d||typeof d.ysSelect!=='string')return;
+  wsPending=d.ysSelect.trim().toUpperCase();wsApply();
+});
 render();
-loadUniverse().then(applyUrlPick);
+loadUniverse().then(applyUrlPick).then(wsApply);
 })();
 </script>
 </body>
