@@ -3,7 +3,84 @@
 <head>
 <meta charset="utf-8">
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
-<style>html.ws body{background:var(--c-paper,#fff)!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}</style>
+<style>html.ws body{background:var(--c-paper,#fff)!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
+/* ===== Tile view (Nov 2026): the whole card on one screen, no scrolling. Toggle top right; ?view=tiles opens it. ===== */
+.tvBtn{display:inline-flex;align-items:center;gap:9px;font:600 12px/1 var(--mono);color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:20px;padding:6px 8px 6px 13px;cursor:pointer}
+.tvBtn .sw{width:28px;height:16px;border-radius:999px;background:var(--c-rule);position:relative;transition:background .15s}
+.tvBtn .sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tvBtn[aria-pressed="true"] .sw{background:var(--c-jade)}
+.tvBtn[aria-pressed="true"] .sw::after{left:14px}
+@media (max-width:900px){.tvBtn{display:none}}
+@media (min-width:901px){
+html.tiles,html.tiles body{height:100%;overflow:hidden}
+html.tiles .stage{padding:0!important;height:100vh}
+html.tiles .card{max-width:none!important;height:100vh;box-sizing:border-box;padding:10px 18px 6px!important;display:grid;
+  grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.95fr);
+  grid-template-rows:auto auto minmax(0,.9fr) minmax(0,.75fr) minmax(0,1.25fr) auto;
+  grid-template-areas:"nav nav nav" "mast mast mast" "hero anch det" "hero tnx det" "grow grow det" "foot foot foot";
+  gap:8px 12px;overflow:hidden;border-radius:0!important;box-shadow:none!important}
+html.tiles .ysNav{grid-area:nav;margin:0!important}
+html.tiles .mast{grid-area:mast;padding:0 0 8px!important;align-items:center}
+html.tiles .mast .name{font-size:30px}
+html.tiles .mast .exch,html.tiles .mast .labsBy{display:inline-block;margin-right:10px}
+html.tiles .chips{grid-area:nav;justify-self:center;margin:0!important;align-self:center;z-index:7}
+html.tiles .chips .chip{padding:4px 10px;font-size:12px}
+html.tiles .hero{grid-area:hero}
+html.tiles .t-anch{grid-area:anch}
+html.tiles .t-tnx{grid-area:tnx}
+html.tiles .t-det{grid-area:det}
+html.tiles .t-grow{grid-area:grow}
+html.tiles .foot{grid-area:foot;margin:0!important;padding-top:4px!important;font-size:10.5px}
+html.tiles .hero,html.tiles details.sec{margin:0!important;border:1px solid var(--c-rule);border-radius:10px;padding:8px 12px 10px;min-height:0;overflow:hidden;background:var(--c-paper)}
+html.tiles details.sec>summary{list-style:none;margin:0 0 6px;pointer-events:auto}
+html.tiles details.sec>summary::-webkit-details-marker{display:none}
+html.tiles details.sec>summary h3{font-size:12px}
+html.tiles .detToggle,html.tiles .subLine,html.tiles .hero .cap,html.tiles .hero .sub,html.tiles .sigSlider,html.tiles .bpsNote,html.tiles .t-tnx .desc,html.tiles .tnx .cap,html.tiles .growthNote,html.tiles .t-anch .desc{display:none!important}
+html.tiles .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+html.tiles .hero .eyebrow{font-size:11px;margin-bottom:2px}
+html.tiles .hero .sig{font-size:clamp(54px,6.4vw,92px)!important}
+html.tiles .zoneTag{font-size:12px;padding:4px 12px;margin-top:4px}
+html.tiles .bellWrap{width:100%;margin-top:4px!important;flex:1;min-height:0}
+html.tiles .bellWrap svg{max-height:100%}
+html.tiles .ysPoll{margin-top:4px!important;padding:5px 12px!important;flex:none}
+html.tiles .ysPoll .ysNote{display:none}
+html.tiles .t-tnx summary .hmPill{margin-left:8px}
+html.tiles .t-tnx .tnx{margin-top:2px}
+html.tiles .t-tnx .tnx .v{font-size:15px}
+html.tiles .t-tnx .tnx div{padding:6px 6px 7px}
+html.tiles .grid2{gap:14px}
+html.tiles .t-det .grid2{grid-template-columns:1fr;gap:0}
+html.tiles .t-det .stat,html.tiles .t-det .row{padding-top:5px!important;padding-bottom:5px!important;font-size:12px}
+html.tiles .tnx div{padding:8px 6px 9px}
+html.tiles .t-grow .dispersion{margin:0 0 4px;font-size:11px}
+html.tiles .t-grow .panelLabel{margin-bottom:2px}
+html.tiles .yearControl{margin-top:4px}
+html.tiles .ladder{margin-top:2px}
+html.tiles .bellWrap{display:flex;flex-direction:column}
+html.tiles .bellWrap>svg{flex:1;min-height:0;width:100%;height:100%}
+html.tiles .bellProbe{display:none!important}
+html.tiles .t-anch{padding-right:22px}
+html.tiles .t-grow{display:flex;flex-direction:column}
+html.tiles .t-grow[open]{display:flex}
+html.tiles .t-grow>.grid2{flex:1;min-height:0}
+html.tiles .t-grow>.grid2>div{display:flex;flex-direction:column;min-height:0}
+html.tiles #stairPanel,html.tiles #fanPanel{flex:1;min-height:0;position:relative}
+html.tiles #stairPanel svg,html.tiles #fanPanel svg{position:absolute;left:0;top:0;width:100%;height:100%}
+html.tiles .mcOpenBtn{align-self:flex-start;margin:2px 0 4px}
+html.tiles .foot{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;gap:14px}
+html.tiles .foot>span{overflow:hidden;text-overflow:ellipsis}
+html.tiles .foot .labsLegend{display:none}
+}
+@media (min-width:901px) and (max-height:800px){
+html.tiles .mast .name{font-size:25px}
+html.tiles .pricebox .px{font-size:30px}
+html.tiles .hero .eyebrow,html.tiles .t-grow .panelLabel{display:none}
+html.tiles .t-tnx .tnx .l{font-size:9.5px}
+html.tiles .t-tnx .tnx div{padding:4px 6px 5px}
+html.tiles details.sec>summary{margin-bottom:3px}
+html.tiles .card{gap:6px 12px}
+}
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sigma Yield Card</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1911,6 +1988,10 @@ function updateUrlTicker(ticker){
 }
 
 function renderCurrent(){
+  renderCurrentBase();
+  ysApplyTiles();
+}
+function renderCurrentBase(){
   var card=$('#card');
   applyThemeVars();
   if(!ROWS.length){card.innerHTML='<div class="empty">Paste a data row on the left to build a card.</div>';return;}
@@ -2017,9 +2098,50 @@ function ysNavHtml(a){
       '<div class="ysMenuSep"></div>'+
       '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
     '</div></div></div>'+
+    '<div class="ysNavR"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(YS_TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button></div>'+
     '</nav>';
   return h;
 }
+/* ===== Tile view: state, toggle, and fitting the sections into tiles ===== */
+var YS_TILES=false;
+try{var _vq=new URLSearchParams(location.search).get('view');if(_vq==='tiles')YS_TILES=true;else if(_vq===null&&localStorage.getItem('ysCardView')==='tiles')YS_TILES=true;}catch(e){}
+function ysApplyTiles(){
+  var root=document.documentElement;root.classList.toggle('tiles',YS_TILES);
+  var card=document.getElementById('card');if(!card)return;
+  var b=document.getElementById('tvBtn');if(b)b.setAttribute('aria-pressed',YS_TILES?'true':'false');
+  card.querySelectorAll('details.sec').forEach(function(d){
+    var t=(d.querySelector('summary h3')||{}).textContent||'';
+    d.classList.toggle('t-anch',/valuation anchors/i.test(t));
+    d.classList.toggle('t-det',/sigma detail/i.test(t));
+    d.classList.toggle('t-grow',/growth path/i.test(t));
+    d.classList.toggle('t-tnx',/Treasury/i.test(t));
+    if(YS_TILES)d.open=true;
+  });
+  ysFitGrow();
+}
+/* tile view: the growth path charts take whatever height the tile has left */
+function ysFitGrow(){
+  var sp=document.getElementById('stairPanel'),fp=document.getElementById('fanPanel');
+  if(!sp||!fp)return;
+  if(!YS_TILES){sp.style.height='';fp.style.height='';return;}
+  requestAnimationFrame(function(){
+    var tile=sp.closest('details.sec'),yc=tile&&tile.querySelector('.yearControl');if(!tile)return;
+    sp.style.height='0px';fp.style.height='0px';
+    var tb=tile.getBoundingClientRect().bottom-10,ych=yc?yc.getBoundingClientRect().height+8:0;
+    [sp,fp].forEach(function(p){var h=Math.max(60,Math.floor(tb-ych-p.getBoundingClientRect().top));p.style.height=h+'px';});
+  });
+}
+window.addEventListener('resize',function(){if(YS_TILES)ysFitGrow();});
+function ysSetTiles(on){
+  YS_TILES=!!on;
+  try{localStorage.setItem('ysCardView',YS_TILES?'tiles':'card');}catch(e){}
+  try{var p=new URLSearchParams(location.search);if(YS_TILES)p.set('view','tiles');else p.delete('view');history.replaceState(null,'',location.pathname+(p.toString()?'?'+p.toString():'')+location.hash);}catch(e){}
+  renderCurrent();
+  window.dispatchEvent(new Event('resize'));
+}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#tvBtn');if(b)ysSetTiles(!YS_TILES);});
+/* in tile view the section titles don't fold the tiles */
+document.addEventListener('click',function(e){if(!YS_TILES)return;var sm=e.target.closest&&e.target.closest('details.sec>summary');if(sm&&!e.target.closest('button,a'))e.preventDefault();},true);
 /* Find a stock box, beside the ticker dropdown. Typing searches every
    name; the ▾ inside fills the dropdown with a filtered top 20. */
 function ysFindHtml(){
