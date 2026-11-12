@@ -525,6 +525,15 @@ function episodes(z,T,s){
   }
   return out;
 }
+/* median months back to 0 sigma, counting moves not back yet as still running
+   (product-limit estimate); null when fewer than half have come back */
+function kmMedian(eps){
+  var ev=eps.map(function(e){return {t:e.mo!==null?e.mo:e.avail,d:e.mo!==null};}).sort(function(p,q){return p.t-q.t||(q.d-p.d);});
+  var S=1,n=ev.length,i=0;
+  while(i<ev.length){var t=ev[i].t,d=0,c=0;while(i<ev.length&&ev[i].t===t){if(ev[i].d)d++;else c++;i++;}
+    if(d){S*=1-d/n;if(S<=0.5)return t;}n-=d+c;}
+  return null;
+}
 function withHist(U){return U.filter(function(x){return !!D.hist[x.k];});}
 function levelTable(U,s){
   var H=withHist(U);
@@ -533,7 +542,7 @@ function levelTable(U,s){
     H.forEach(function(x){var e=episodes(D.hist[x.k].z,T,s);if(e.length)names++;all=all.concat(e);});
     var res=all.filter(function(e){return e.mo!==null;}).map(function(e){return e.mo;});
     var within=function(h){var base=all.filter(function(e){return e.avail>=h;});var ok=base.filter(function(e){return e.mo!==null&&e.mo<=h;}).length;return base.length?{p:pctOf(ok,base.length),n:base.length}:null;};
-    return {T:T,eps:all.length,names:names,med:median(res),w6:within(6),w12:within(12),w24:within(24),open:all.filter(function(e){return e.mo===null;}).length};
+    return {T:T,eps:all.length,names:names,med:kmMedian(all),w6:within(6),w12:within(12),w24:within(24),open:all.filter(function(e){return e.mo===null;}).length};
   });
 }
 function leaders(U,T,s){
@@ -696,14 +705,14 @@ function normHtml(U,LT){
   if(r2&&r2.eps){lead='<p class="lead">From '+lvl(r2.T,SIDE)+', '+(r2.w24?'<b>'+r2.w24.p+'%</b> of moves were back at 0σ within 24 months':'')+(r2.med!==null?'; the typical trip back took <b>'+Math.round(r2.med)+' months</b>':'')+'. '+r2.eps+' times across '+r2.names+' names'+(r2.open?', '+r2.open+' still away':'')+'.</p>';}
   var rows=LT.map(function(r){
     var c=function(w){return w?w.p+'%<span class="n">of '+w.n+'</span>':'–';};
-    return '<tr'+(r.T===THR?' class="sel"':'')+'><td class="'+(SIDE>0?'u':'o')+'">'+lvl(r.T,SIDE)+(SIDE>0?' or higher':' or lower')+'</td><td>'+r.eps+'<span class="n">'+r.names+' names</span></td><td>'+c(r.w6)+'</td><td>'+c(r.w12)+'</td><td>'+c(r.w24)+'</td><td>'+(r.med===null?'–':Math.round(r.med))+'</td><td>'+r.open+'</td></tr>';
+    return '<tr'+(r.T===THR?' class="sel"':'')+'><td class="'+(SIDE>0?'u':'o')+'">'+lvl(r.T,SIDE)+(SIDE>0?' or higher':' or lower')+'</td><td>'+r.eps+'<span class="n">'+r.names+' names</span></td><td>'+c(r.w6)+'</td><td>'+c(r.w12)+'</td><td>'+c(r.w24)+'</td><td>'+(r.med===null?(r.eps?'over half not back':'–'):Math.round(r.med))+'</td><td>'+r.open+'</td></tr>';
   }).join('');
   var Ld=leaders(U,THR,SIDE);
   var li=function(arr,f){return arr.length?'<ol>'+arr.map(function(e){return '<li>'+tkLink(e.x)+'<span class="nm">'+nm(e.x)+'</span><span class="val">'+f(e)+'</span></li>';}).join('')+'</ol>':'<p class="none">None at this level.</p>';};
   var mo=function(e){return Math.round(e.med)+' mo<span class="m" style="font-weight:500"> · '+e.n+'×</span>';};
   var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(v===cur?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
   return '<section class="sec" id="norm"><h3>Normalizing: how fast sigma comes back</h3>'+
-    '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. The further out, the more often and the faster it has come back: that is the level at which normalizing has been fastest. “Still away” counts moves not back yet.</p>'+
+    '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. Read down the table to see at which level normalizing has been fastest. “Still away” counts moves not back yet; the median counts them too, as trips still running.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span>'+
       '<span class="grp"><span class="lbl">Level for the lists</span>'+LEVELS.map(function(T){return btn('thr',String(T),String(THR),lvl(T,SIDE));}).join('')+'</span></div>'+
     lead+
@@ -720,11 +729,11 @@ function sectorHtml(U){
   rows.forEach(function(r){
     var N=r.items.length;r.avg=r.items.reduce(function(s,x){return s+x.a.sigma;},0)/N;
     r.u=r.items.filter(function(x){return x.a.sigma>=1;}).length;r.o=r.items.filter(function(x){return x.a.sigma<=-1;}).length;
-    var mos=[],good=0,gn=0;r.items.forEach(function(x){var h=D.hist[x.k];if(!h)return;episodes(h.z,THR,SIDE).forEach(function(e){if(e.mo!==null)mos.push(e.mo);});if(h.grade){gn++;if(h.grade==='Textbook'||h.grade==='Defined')good++;}});
-    r.med=median(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
+    var mos=[],good=0,gn=0;r.items.forEach(function(x){var h=D.hist[x.k];if(!h)return;mos=mos.concat(episodes(h.z,THR,SIDE));if(h.grade){gn++;if(h.grade==='Textbook'||h.grade==='Defined')good++;}});
+    r.med=kmMedian(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
   });
   rows.sort(function(p,q){return q.avg-p.avg;});
-  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td>'+(r.med===null?'–':Math.round(r.med)+'<span class="n">'+r.n+' times</span>')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' times</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). Reliable shape: share of names graded Textbook or Defined.</p>'+
     '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average σ</th><th>Undervalued</th><th>Overvalued</th><th>Median months to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
