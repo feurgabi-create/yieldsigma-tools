@@ -137,6 +137,16 @@ table.matrix tr.secHead td{font:600 11px var(--mono);letter-spacing:.03em;color:
 table.matrix thead th .zr{display:block;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
 table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
 
+.labsTag{display:inline-block;font:600 9px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--jade);border:1px solid var(--jade);border-radius:999px;padding:3px 7px;margin-left:8px;vertical-align:2px}
+.pvTop{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,2fr);gap:14px;align-items:stretch;margin:4px 0 22px}
+.pvBig{border:1px solid var(--jade);border-radius:12px;padding:18px 18px 16px;background:var(--jade-soft);display:flex;flex-direction:column;justify-content:center}
+.pvBig .v{font:500 58px/1 var(--serif);color:var(--jade);font-variant-numeric:tabular-nums}
+.pvBig .l{font-size:12px;color:var(--ink);margin-top:8px}
+.pvTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pvTiles .st .v{font-size:24px}
+.pvTiles .st .v small{margin:0 2px}
+table.tb tr.thin td{opacity:.5}
+@media(max-width:700px){.pvTop{grid-template-columns:1fr}}
 .foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .foot .full{flex-basis:100%}
 
@@ -451,7 +461,7 @@ function lvl(T,s){return (s>0?'+':'−')+T+'σ';}
 function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
 
 var D={stocks:[],reits:[],hist:{},fund:{},prof:{}};
-var UNI='stocks',SIDE=1,THR=2;
+var UNI='stocks',SIDE=1,THR=2,PSIDE=1,PBY='tier';
 var LEVELS=[1,1.5,2,2.5,3];
 var LIVE_AT=null;
 
@@ -464,18 +474,21 @@ function get(url,asJson){
 function parseHist(txt){
   var L=String(txt||'').split(/\r?\n/),out={};if(!/^ticker\t/.test(L[0]||''))return out;
   var H=L[0].split('\t'),ix=function(n){return H.indexOf(n);};
-  var iT=ix('ticker'),iTy=ix('type'),iF=ix('first'),iS=ix('shape'),iG=ix('grade'),iZ=ix('z');
+  var iT=ix('ticker'),iTy=ix('type'),iF=ix('first'),iS=ix('shape'),iG=ix('grade'),iZ=ix('z'),iP=ix('p'),iD=ix('d');
   var now=new Date(),cur=now.getFullYear()*12+now.getMonth();
   for(var li=1;li<L.length;li++){
     var f=L[li].split('\t');if(f.length<=iZ||!f[iT])continue;
     var st=+f[iF].slice(0,4)*12+(+f[iF].slice(5,7)-1);if(!isFinite(st))continue;
-    var z=f[iZ].split(',').map(function(v){v=v.trim();return v===''?null:+v;});
-    while(z.length&&st+z.length-1>=cur)z.pop();                         /* completed months only */
-    while(z.length&&(z[z.length-1]===null||!isFinite(z[z.length-1])))z.pop();
-    while(z.length&&(z[0]===null||!isFinite(z[0]))){z.shift();st++;}
-    for(var i=1;i<z.length;i++)if(z[i]===null||!isFinite(z[i]))z[i]=z[i-1];
+    var num=function(v){v=v.trim();return v===''?null:+v;};
+    var z=f[iZ].split(',').map(num),p=iP>=0&&f[iP]?f[iP].split(',').map(num):[],dy={};
+    if(iD>=0&&f[iD])f[iD].split(',').forEach(function(x){var k=x.split(':');if(k.length===2&&k[1]!=='')dy[+k[0]]=+k[1];});
+    while(p.length<z.length)p.push(null);p.length=z.length;
+    while(z.length&&st+z.length-1>=cur){z.pop();p.pop();}               /* completed months only */
+    while(z.length&&(z[z.length-1]===null||!isFinite(z[z.length-1]))){z.pop();p.pop();}
+    while(z.length&&(z[0]===null||!isFinite(z[0]))){z.shift();p.shift();st++;}
+    for(var i=1;i<z.length;i++){if(z[i]===null||!isFinite(z[i]))z[i]=z[i-1];if(p[i]===null||!isFinite(p[i]))p[i]=p[i-1];}
     if(z.length<24)continue;
-    out[key(f[iT])]={type:f[iTy]||'',st:st,z:z,grade:(f[iG]||'').trim(),shape:f[iS]===''?null:+f[iS]};
+    out[key(f[iT])]={type:f[iTy]||'',st:st,z:z,p:p,dy:dy,grade:(f[iG]||'').trim(),shape:f[iS]===''?null:+f[iS]};
   }
   return out;
 }
@@ -511,6 +524,7 @@ function load(){
     if(s.length)D.stocks=s;if(re.length)D.reits=re;
     var h=parseHist(r[2]);if(Object.keys(h).length)D.hist=h;
     var f=parseFund(r[3]);if(Object.keys(f).length)D.fund=f;
+    PV_CACHE={};
     LIVE_AT=new Date();
   });
 }
@@ -745,6 +759,76 @@ function sparkCell(items){
     '<circle cx="'+X(last[0]).toFixed(1)+'" cy="'+Y(last[1]).toFixed(1)+'" r="2.4" fill="'+col+'"/></svg>'+
     '<span class="spv" style="color:'+col+'">'+(ch>=0?'+':'−')+Math.abs(ch).toFixed(2)+'σ</span></span>';
 }
+/* ---- Yield Sigma prediction vs reality ----
+   Every time a name entered a zone (first month at +1 sigma or higher, or -1 sigma or lower), the
+   prediction is the stock price at which the yield would be back at its 10-year average. Did the
+   stock price get there? "Came true" allows 10% short of the predicted stock price.
+   Yields here are rebuilt from history.csv: the yearly dividend amount over the monthly stock price,
+   and their 10-year average (at least 5 years of months). */
+var PV_CACHE={};
+function pvTier(y){return y>=50?0:y>=25?1:y>=10?2:y>=5?3:4;}
+var PV_TIERS=['King, 50+ years','Aristocrat, 25–49','Achiever, 10–24','Challenger, 5–9','Under 5 years'];
+function pvEvents(U){
+  var ck=UNI;if(PV_CACHE[ck])return PV_CACHE[ck];
+  var CY=new Date().getFullYear(),out=[];
+  withHist(U).forEach(function(x){
+    var h=D.hist[x.k],z=h.z,p=h.p,dy=h.dy,n=z.length;if(!p||!p.length||p[0]===null)return;
+    var yr=function(i){return Math.floor((h.st+i)/12);},dv=function(i){return dy[yr(i)]||dy[yr(i)-1]||0;};
+    var Y=[],A=[],i,j,k;
+    for(i=0;i<n;i++)Y.push(dv(i)>0&&p[i]>0?dv(i)/p[i]:null);
+    for(i=0;i<n;i++){var sm=0,c=0;for(j=Math.max(0,i-119);j<=i;j++)if(Y[j]!==null){sm+=Y[j];c++;}A.push(c>=60?sm/c:null);}
+    var now=x.rec.divGrowthYears;
+    var streakAt=function(sy){if(now!==null&&now!==undefined&&isFinite(now)&&Math.floor(now)-(CY-sy)>=0)return Math.floor(now)-(CY-sy);var q=0;for(var yy=sy-1;dy[yy]&&dy[yy-1]&&dy[yy]>dy[yy-1];yy--)q++;return q;};
+    [1,-1].forEach(function(sd){
+      i=1;
+      while(i<n){
+        if(sd*z[i]>=1&&sd*z[i-1]<1){
+          j=i+1;while(j<n&&sd*z[j]>0)j++;
+          if(Y[i]!==null&&A[i]!==null){
+            var pred=Y[i]/A[i]-1,tgt=p[i]*(1+pred),ok=function(v){return sd>0?v>=tgt*0.9:v<=tgt*1.1;};
+            var e={sd:sd,pred:pred,tier:pvTier(streakAt(yr(i))),sec:GKEY[x.k],left:n-1-i};
+            [12,24].forEach(function(hz){if(i+hz<n){e['a'+hz]=p[i+hz]/p[i]-1;var hit=false;for(k=i+1;k<=i+hz;k++)if(ok(p[k])){hit=true;break;}e['by'+hz]=hit;}});
+            var ev=false;for(k=i+1;k<n;k++)if(ok(p[k])){ev=true;break;}e.ever=ev;
+            out.push(e);
+          }
+          i=j<n?j+1:n;
+        }else i++;
+      }
+    });
+  });
+  PV_CACHE[ck]=out;return out;
+}
+function pvStats(E){
+  var L12=E.filter(function(e){return e.a12!==undefined;}),L24=E.filter(function(e){return e.a24!==undefined;});
+  var share=function(L,f){return L.length?Math.round(L.filter(f).length/L.length*100):null;};
+  return {n:E.length,n24:L24.length,pred:median(L24.map(function(e){return e.pred;})),a12:median(L12.map(function(e){return e.a12;})),a24:median(L24.map(function(e){return e.a24;})),
+    by12:share(L12,function(e){return e.by12;}),by24:share(L24,function(e){return e.by24;}),ever:share(L24,function(e){return e.ever;})};
+}
+function pvHtml(U){
+  var all=pvEvents(U);if(!all.length)return '';
+  var E=all.filter(function(e){return e.sd===PSIDE;}),S=pvStats(E);if(!S.n24)return '';
+  var pm=function(v){return v===null?'–':(v>=0?'+':'−')+Math.abs(v*100).toFixed(0)+'%';},pc=function(v){return v===null?'–':v+'%';};
+  var zone=PSIDE>0?'undervalued (+1σ or higher)':'overvalued (−1σ or lower)';
+  var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(String(v)===String(cur)?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
+  var bySec=PBY==='sector'&&UNI==='stocks';
+  var groups=bySec?
+    HM_GROUPS.map(function(g,i){return [g[0],E.filter(function(e){return e.sec===i;})];}):
+    PV_TIERS.map(function(t,i){return [t,E.filter(function(e){return e.tier===i;})];});
+  var rows=groups.map(function(g){var s=pvStats(g[1]);if(!s.n24)return '';var small=s.n24<10;
+    return '<tr'+(small?' class="thin"':'')+'><td>'+esc(g[0])+'</td><td>'+s.n24+'</td><td>'+pm(s.pred)+'</td><td>'+pm(s.a12)+'</td><td>'+pm(s.a24)+'</td><td>'+pc(s.by24)+'</td><td><b>'+pc(s.ever)+'</b></td></tr>';}).join('');
+  return '<section class="sec pv" id="pv"><h3>Yield Sigma prediction vs reality <span class="labsTag">Labs</span></h3>'+
+    '<p class="desc">Each time a name turned '+zone+', Yield Sigma predicted the stock price at which its yield would be back at the 10-year average. Did the stock price get there? “Came true” means it reached the predicted stock price, or came within 10% of it.</p>'+
+    '<div class="ctl"><span class="grp"><span class="lbl">Signal</span>'+btn('pside',1,PSIDE,'Undervalued')+btn('pside',-1,PSIDE,'Overvalued')+'</span>'+
+      '<span class="grp"><span class="lbl">Break down</span>'+btn('pby','tier',bySec?'sector':'tier','By dividend tier')+(UNI==='stocks'?btn('pby','sector',bySec?'sector':'tier','By sector'):'')+'</span></div>'+
+    '<div class="pvTop"><div class="pvBig"><div class="v">'+pc(S.ever)+'</div><div class="l">of '+S.n24+' predictions came true</div></div>'+
+      '<div class="pvTiles"><div class="st"><div class="v">'+pc(S.by12)+'</div><div class="l">came true within 12 months</div></div>'+
+      '<div class="st"><div class="v">'+pc(S.by24)+'</div><div class="l">came true within 24 months</div></div>'+
+      '<div class="st"><div class="v">'+pm(S.pred)+'</div><div class="l">typical predicted move in the stock price</div></div>'+
+      '<div class="st"><div class="v">'+pm(S.a12)+' <small>/</small> '+pm(S.a24)+'</div><div class="l">typical actual move after 12 / 24 months</div></div></div></div>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>'+(bySec?'Sector':'Dividend tier at the time')+'</th><th>Predictions</th><th>Predicted move</th><th>Actual,<br>12 months</th><th>Actual,<br>24 months</th><th>Came true<br>within 24 months</th><th>Came true</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<p class="desc" style="margin-top:12px">Predictions with at least 24 months of history after them, since '+(BR&&BR.length?Math.floor(BR[0].m/12):2003)+'. Typical = median. Moves are in the stock price only. The dividend tier is the streak as it stood in the year of the prediction. Groups with under 10 predictions are shown faded: small samples.</p>'+
+    '</section>';
+}
 function sectorHtml(U){
   if(UNI!=='stocks')return '';
   var rows=HM_GROUPS.map(function(gq,i){return {name:gq[0],etf:gq[1],items:U.filter(function(x){return GKEY[x.k]===i;})};}).filter(function(r){return r.items.length;});
@@ -814,7 +898,7 @@ function render(){
   if(UNI==='reits'&&!withHist(U).length){/* no REIT history: still show today */}
   BR=breadth(U);HB=histBins(U);
   var LT=levelTable(U,SIDE);
-  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
   sheet.querySelectorAll('thead th').forEach(function(th){th.innerHTML=th.innerHTML.replace(/\u03c3/g,'<span style="text-transform:none">\u03c3</span>');});
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
@@ -825,6 +909,8 @@ document.addEventListener('click',function(e){
   if(b.dataset.uni){UNI=b.dataset.uni;}
   else if(b.dataset.side){SIDE=+b.dataset.side;}
   else if(b.dataset.thr){THR=+b.dataset.thr;}
+  else if(b.dataset.pside){PSIDE=+b.dataset.pside;}
+  else if(b.dataset.pby){PBY=b.dataset.pby;}
   else return;
   try{localStorage.setItem('ysMacro',JSON.stringify({u:UNI,s:SIDE,t:THR}));}catch(err){}
   render();window.scrollTo(0,y);
