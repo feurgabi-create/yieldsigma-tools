@@ -8,8 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Yield Sigma(TM) workspace, Stardust Capital Labs (Nov 2026), v2
-   Four live tools on one screen, each tile on its own:
+/* Yield Sigma(TM) workspace, Stardust Capital Labs (Nov 2026), v3
+   Live tools on one screen, each tile on its own:
+   - the buttons in the top bar pick which tools are on screen; x on a tile takes it off.
+     Opening or closing a tool lays the open ones out evenly (1 = full screen, 2 = side by side ...)
    - drag a tile by its title bar to move it; drag any edge or corner to resize it (snaps to the screen and other tiles)
    - − / 100% / + in each tile scales its content; ⤢ expands it to the full screen
    - the card, history and calculator follow the same stock
@@ -66,12 +68,20 @@ a{color:var(--jade)}
 .tile.max .rz{display:none}
 body.moving iframe{pointer-events:none}
 body.moving{user-select:none}
+.picks{display:flex;align-items:center;gap:5px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.picks::-webkit-scrollbar{display:none}
+.picks .lbl{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap}
+.tg{font:600 11px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--rule);border-radius:999px;padding:6px 10px;cursor:pointer;white-space:nowrap;flex:none}
+.tg:hover{border-color:var(--jade)}
+.tg.on{background:var(--jade);border-color:var(--jade);color:var(--bg)}
+.tile[hidden]{display:none!important}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:16px/1.5 var(--serif);text-align:center;padding:20px}
 .toast{position:fixed;left:50%;top:calc(var(--bar) + 10px);transform:translateX(-50%);background:var(--ink);color:var(--bg);font:600 12px/1 var(--mono);padding:9px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:900}
 .toast.on{opacity:1}
 @media (max-width:760px){
   html,body{overflow:auto}
   .top{position:sticky;top:0;z-index:600;gap:8px;padding:0 10px}
-  .top .by,.top .lg{display:none}
+  .top .by,.top .lg,.picks .lbl,.top #reset{display:none}
   .top h1{font-size:16px}
   .desk{position:static;padding:var(--gap)}
   .tile{position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:86vh!important;margin-bottom:var(--gap)}
@@ -85,8 +95,9 @@ body.moving{user-select:none}
 <div class="top">
   <h1><a href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a> workspace</h1>
   <span class="by">by <a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a></span>
+  <nav class="picks" id="picks" aria-label="Tools on screen"></nav>
   <span class="sp"></span>
-  <button type="button" class="link" id="reset">Reset layout</button>
+  <button type="button" class="link" id="reset" title="Lay the open tools out evenly again">Reset layout</button>
   <button type="button" class="pill" id="share">Copy link<span class="lg"> to this view</span></button>
 </div>
 <div class="desk" id="desk"></div>
@@ -95,18 +106,32 @@ body.moving{user-select:none}
 (function(){
 var BASE='https://tools.yieldsigma.com/';
 try{if(location.hostname==='tools.yieldsigma.com')BASE='';}catch(e){}
-var IDS=['card','history','calc','heat'];
+var IDS=['card','history','calc','heat','macro'];
 var TOOLS={
-  card:{title:'Sigma card',src:function(t){return BASE+'card-undervalued.html?ws=1'+(t?'&ticker='+encodeURIComponent(t):'');}},
-  history:{title:'History',src:function(t){return BASE+'yield-sigma-history.html?ws=1'+(t?'&t='+encodeURIComponent(t):'');}},
-  calc:{title:'Compound calculator',src:function(t){return BASE+'compound-calculator.html?ws=1'+(t?'&a='+encodeURIComponent(t):'');}},
-  heat:{title:'Heat maps',src:function(t,hm){
+  card:{title:'Sigma card',btn:'Card',src:function(t){return BASE+'card-undervalued.html?ws=1'+(t?'&ticker='+encodeURIComponent(t):'');}},
+  history:{title:'History',btn:'History',src:function(t){return BASE+'yield-sigma-history.html?ws=1'+(t?'&t='+encodeURIComponent(t):'');}},
+  calc:{title:'Compound calculator',btn:'Calculator',src:function(t){return BASE+'compound-calculator.html?ws=1'+(t?'&a='+encodeURIComponent(t):'');}},
+  heat:{title:'Heat maps',btn:'Heat maps',src:function(t,hm){
     if(hm==='reits')return BASE+'heat-map-reits.html?ws=1&embed=1';
-    if(hm==='macro')return BASE+'heat-map-stocks.html?ws=1&embed=1&view=sector';
-    return BASE+'heat-map-stocks.html?ws=1&embed=1';}}
+    if(hm==='sector')return BASE+'heat-map-stocks.html?ws=1&embed=1&view=sector';
+    return BASE+'heat-map-stocks.html?ws=1&embed=1';}},
+  macro:{title:'Macro',btn:'Macro',src:function(){return BASE+'card-macro.html?ws=1&embed=1';}}
 };
-function defTiles(){return {card:[0,0,50,50,100],history:[50,0,50,50,100],calc:[0,50,50,50,100],heat:[50,50,50,50,100]};}
-var DEF={L:defTiles(),zo:IDS.slice(),max:'',hm:'stocks',t:''};
+var HM=['stocks','reits','sector'],HM_LBL={stocks:'Stocks',reits:'REITs',sector:'By sector'};
+/* even layout for the open tools, in the order of the buttons:
+   1 full screen, 2 side by side, 3 one tall on the left and two stacked, 4 two by two, 5 three over two */
+function autoLayout(on){
+  var n=on.length,R={};
+  var put=function(id,x,y,w,h){var z=(S.L[id]&&S.L[id][4])||100;R[id]=[x,y,w,h,z];};
+  if(n===1)put(on[0],0,0,100,100);
+  else if(n===2){put(on[0],0,0,50,100);put(on[1],50,0,50,100);}
+  else if(n===3){put(on[0],0,0,50,100);put(on[1],50,0,50,50);put(on[2],50,50,50,50);}
+  else if(n===4){put(on[0],0,0,50,50);put(on[1],50,0,50,50);put(on[2],0,50,50,50);put(on[3],50,50,50,50);}
+  else if(n>=5){var w3=100/3;put(on[0],0,0,w3,50);put(on[1],w3,0,w3,50);put(on[2],2*w3,0,w3,50);put(on[3],0,50,50,50);put(on[4],50,50,50,50);}
+  on.forEach(function(id){S.L[id]=R[id];});
+}
+function defTiles(){return {card:[0,0,50,50,100],history:[50,0,50,50,100],calc:[0,50,50,50,100],heat:[50,50,50,50,100],macro:[0,0,100,100,100]};}
+var DEF={L:defTiles(),zo:IDS.slice(),max:'',hm:'stocks',t:'',on:['card','history','calc','heat']};
 var KEY='ysWorkspace.v2';
 var S=JSON.parse(JSON.stringify(DEF));
 var MINW=18,MINH=18,SNAP=1.5;
@@ -121,48 +146,69 @@ function clampTile(a){
 }
 /* saved layout, then a shared link on top of it */
 try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){for(var k in DEF)if(sv[k]!==undefined)S[k]=sv[k];}}catch(e){}
+if(S.hm==='macro')S.hm='sector';                       /* the old name of the "By sector" tab */
 var q;try{q=new URLSearchParams(location.search);}catch(e){q=null;}
 if(q&&[...q.keys()].length){
   IDS.forEach(function(id){var v=q.get(id);if(v){var p=v.split('_').map(Number);if(p.length>=4)S.L[id]=p.concat(p.length<5?[100]:[]);}});
   S.max=IDS.indexOf(q.get('max'))>=0?q.get('max'):'';
-  if(['stocks','reits','macro'].indexOf(q.get('hm'))>=0)S.hm=q.get('hm');
+  var hq=q.get('hm');if(hq==='macro')hq='sector';if(HM.indexOf(hq)>=0)S.hm=hq;
   if(q.get('t'))S.t=q.get('t').trim().toUpperCase().slice(0,12);
+  if(q.get('on'))S.on=q.get('on').split('.');
+  else if(IDS.some(function(id){return q.get(id);}))S.on=IDS.filter(function(id){return q.get(id);});
 }
 (function valid(){
   if(!S.L||typeof S.L!=='object')S.L=defTiles();
   IDS.forEach(function(id){S.L[id]=clampTile(Array.isArray(S.L[id])?S.L[id]:defTiles()[id]);});
-  if(!Array.isArray(S.zo)||S.zo.length!==4||IDS.some(function(id){return S.zo.indexOf(id)<0;}))S.zo=IDS.slice();
+  if(!Array.isArray(S.zo))S.zo=[];
+  S.zo=S.zo.filter(function(id,i){return IDS.indexOf(id)>=0&&S.zo.indexOf(id)===i;});
+  IDS.forEach(function(id){if(S.zo.indexOf(id)<0)S.zo.unshift(id);});
+  if(!Array.isArray(S.on))S.on=DEF.on.slice();
+  S.on=IDS.filter(function(id){return S.on.indexOf(id)>=0;});
+  if(S.max&&S.on.indexOf(S.max)<0)S.max='';
   if(IDS.indexOf(S.max)<0)S.max='';
-  if(['stocks','reits','macro'].indexOf(S.hm)<0)S.hm='stocks';
+  if(HM.indexOf(S.hm)<0)S.hm='stocks';
 })();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
-var desk=document.getElementById('desk'),EL={},FR={};
+var desk=document.getElementById('desk'),picks=document.getElementById('picks'),EL={},FR={},emptyEl=null;
 function header(id){
   var h='<div class="th" data-id="'+id+'"><span class="grip" aria-hidden="true">⋮⋮</span><b>'+TOOLS[id].title+'</b><span class="sp"></span>';
-  if(id==='heat')h+='<span class="tabs">'+['stocks','reits','macro'].map(function(k){
-      return '<button type="button" data-hm="'+k+'"'+(S.hm===k?' class="on"':'')+'>'+(k==='stocks'?'Stocks':k==='reits'?'REITs':'Macro')+'</button>';}).join('')+'</span>';
+  if(id==='heat')h+='<span class="tabs">'+HM.map(function(k){
+      return '<button type="button" data-hm="'+k+'"'+(S.hm===k?' class="on"':'')+'>'+HM_LBL[k]+'</button>';}).join('')+'</span>';
   h+='<span class="zoom"><button type="button" data-zm="-1" title="Smaller" aria-label="Smaller">−</button><button type="button" class="pct" data-zm="0" title="Back to 100%"></button><button type="button" data-zm="1" title="Larger" aria-label="Larger">+</button></span>';
   h+='<a class="ib" data-open="'+id+'" href="#" target="_blank" rel="noopener" title="Open on its own page" aria-label="Open on its own page">↗</a>';
-  h+='<button type="button" class="ib" data-max="'+id+'" title="Expand" aria-label="Expand">⤢</button></div>';
+  h+='<button type="button" class="ib" data-max="'+id+'" title="Expand" aria-label="Expand">⤢</button>';
+  h+='<button type="button" class="ib" data-close="'+id+'" title="Take off the screen" aria-label="Close">×</button></div>';
   return h;
 }
 function build(){
+  picks.innerHTML='<span class="lbl">Show</span>'+IDS.map(function(id){return '<button type="button" class="tg" data-tg="'+id+'" aria-pressed="false">'+TOOLS[id].btn+'</button>';}).join('');
+  emptyEl=document.createElement('div');emptyEl.className='empty';emptyEl.textContent='Pick the tools to show from the buttons at the top.';desk.appendChild(emptyEl);
   IDS.forEach(function(id){
-    var d=document.createElement('section');d.className='tile';d.dataset.id=id;
+    var d=document.createElement('section');d.className='tile';d.dataset.id=id;d.hidden=true;
     d.innerHTML=header(id)+'<div class="vp"></div>'+['n','s','e','w','ne','nw','se','sw'].map(function(r){return '<div class="rz '+r+'" data-rz="'+r+'"></div>';}).join('');
-    var f=document.createElement('iframe');f.title=TOOLS[id].title;f.src=TOOLS[id].src(S.t,S.hm);
-    d.querySelector('.vp').appendChild(f);desk.appendChild(d);EL[id]=d;FR[id]=f;
+    desk.appendChild(d);EL[id]=d;
   });
   place();
 }
+/* a tool's page loads the first time it is shown, and stays loaded while hidden */
+function ensureFrame(id){
+  if(FR[id])return;
+  var f=document.createElement('iframe');f.title=TOOLS[id].title;f.src=TOOLS[id].src(S.t,S.hm);
+  EL[id].querySelector('.vp').appendChild(f);FR[id]=f;
+}
 function place(){
   IDS.forEach(function(id){
-    var a=S.L[id],el=EL[id],g='var(--gap)';
+    var on=S.on.indexOf(id)>=0,el=EL[id];
+    el.hidden=!on;
+    var b0=picks.querySelector('[data-tg="'+id+'"]');if(b0){b0.classList.toggle('on',on);b0.setAttribute('aria-pressed',on?'true':'false');}
+    if(!on)return;
+    ensureFrame(id);
+    var a=S.L[id],g='var(--gap)';
     el.style.left='calc('+a[0]+'% + '+g+' / 2)';el.style.top='calc('+a[1]+'% + '+g+' / 2)';
     el.style.width='calc('+a[2]+'% - '+g+')';el.style.height='calc('+a[3]+'% - '+g+')';
     el.style.zIndex=10+S.zo.indexOf(id);
-    el.classList.toggle('front',S.zo[3]===id);
+    el.classList.toggle('front',S.zo[S.zo.length-1]===id&&S.on.length>1);
     el.classList.toggle('max',S.max===id);
     var s=a[4]/100,f=FR[id];
     f.style.width=(100/s)+'%';f.style.height=(100/s)+'%';f.style.transform=s===1?'':'scale('+s+')';
@@ -170,9 +216,21 @@ function place(){
     var b=el.querySelector('[data-max]');b.textContent=S.max===id?'⤡':'⤢';b.title=S.max===id?'Back to the layout':'Expand';
     el.querySelector('[data-open]').href=TOOLS[id].src(S.t,S.hm).replace(/([?&])ws=1&?/,'$1').replace(/([?&])embed=1&?/,'$1').replace(/[?&]$/,'');
   });
+  emptyEl.hidden=S.on.length>0;emptyEl.style.display=S.on.length?'none':'';
   save();
 }
-function front(id){var i=S.zo.indexOf(id);if(i<3){S.zo.splice(i,1);S.zo.push(id);place();}}
+function front(id){var i=S.zo.indexOf(id);if(i<S.zo.length-1){S.zo.splice(i,1);S.zo.push(id);place();}}
+function setOn(id,on){
+  var i=S.on.indexOf(id);
+  if(on&&i<0)S.on=IDS.filter(function(x){return x===id||S.on.indexOf(x)>=0;});
+  else if(!on&&i>=0)S.on.splice(i,1);
+  else return;
+  if(S.max&&S.on.indexOf(S.max)<0)S.max='';
+  autoLayout(S.on);
+  if(on){var z=S.zo.indexOf(id);S.zo.splice(z,1);S.zo.push(id);}
+  place();
+}
+picks.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-tg]');if(b)setOn(b.dataset.tg,S.on.indexOf(b.dataset.tg)<0);});
 
 /* a click inside a tile's page lands in its iframe, which the desk never hears about:
    watch which iframe has focus and bring that tile to the front */
@@ -181,9 +239,9 @@ function focusCheck(){var f=document.activeElement,tile=f&&f.tagName==='IFRAME'&
 window.addEventListener('blur',function(){setTimeout(focusCheck,0);});
 setInterval(focusCheck,200);
 
-/* snapping: to the screen edges and to the edges of the other tiles */
+/* snapping: to the screen edges and to the edges of the other open tiles */
 function snapV(v,others){for(var i=0;i<others.length;i++)if(Math.abs(v-others[i])<SNAP)return others[i];return Math.round(v*2)/2;}
-function edges(id,axis){var o=[0,100];IDS.forEach(function(j){if(j===id)return;var a=S.L[j];if(axis==='x'){o.push(a[0],a[0]+a[2]);}else{o.push(a[1],a[1]+a[3]);}});return o;}
+function edges(id,axis){var o=[0,100];S.on.forEach(function(j){if(j===id)return;var a=S.L[j];if(axis==='x'){o.push(a[0],a[0]+a[2]);}else{o.push(a[1],a[1]+a[3]);}});return o;}
 
 /* move (title bar) and resize (edges, corners) */
 var act=null;
@@ -222,6 +280,8 @@ function up(){act=null;document.body.classList.remove('moving');
 /* tile buttons */
 desk.addEventListener('click',function(e){
   var t=e.target,id;
+  var c=t.closest&&t.closest('[data-close]');
+  if(c){setOn(c.dataset.close,false);return;}
   var m=t.closest&&t.closest('[data-max]');
   if(m){S.max=S.max===m.dataset.max?'':m.dataset.max;place();return;}
   var z=t.closest&&t.closest('[data-zm]');
@@ -230,13 +290,14 @@ desk.addEventListener('click',function(e){
   if(h&&h.dataset.hm!==S.hm){
     S.hm=h.dataset.hm;
     EL.heat.querySelectorAll('[data-hm]').forEach(function(b){b.classList.toggle('on',b.dataset.hm===S.hm);});
-    FR.heat.src=TOOLS.heat.src(S.t,S.hm);place();
+    if(FR.heat)FR.heat.src=TOOLS.heat.src(S.t,S.hm);place();
   }
 });
 desk.addEventListener('dblclick',function(e){var th=e.target.closest&&e.target.closest('.th');if(!th||e.target.closest('button,a'))return;var id=th.dataset.id;S.max=S.max===id?'':id;place();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.max){S.max='';place();}});
 
-/* linked tiles: card, history and calculator follow one stock */
+/* linked tiles: card, history and calculator follow one stock; a ticker clicked in the
+   heat maps or the macro card loads there (the card opens if none of the three is on screen) */
 window.addEventListener('message',function(e){
   var d=e.data;if(!d)return;
   var t=typeof d.ysTicker==='string'?d.ysTicker:typeof d.ysPick==='string'?d.ysPick:null;
@@ -244,10 +305,15 @@ window.addEventListener('message',function(e){
   var src=null;for(var id in FR)if(FR[id].contentWindow===e.source)src=id;
   if(!src)return;
   t=t.trim().toUpperCase();
-  if(t===S.t&&src!=='heat')return;
-  S.t=t;place();
-  ['card','history','calc'].forEach(function(id){if(id!==src){try{FR[id].contentWindow.postMessage({ysSelect:t},'*');}catch(x){}}});
-  if(src==='heat')toast(t+' loaded in the card, history and calculator');
+  var picker=src==='heat'||src==='macro';
+  if(t===S.t&&!picker)return;
+  S.t=t;
+  var linked=['card','history','calc'];
+  if(picker&&!linked.some(function(id){return S.on.indexOf(id)>=0;})){setOn('card',true);}
+  place();
+  linked.forEach(function(id){if(id!==src&&FR[id]){try{FR[id].contentWindow.postMessage({ysSelect:t},'*');}catch(x){}}});
+  if(picker){var shown=linked.filter(function(id){return S.on.indexOf(id)>=0;}).map(function(id){return TOOLS[id].btn.toLowerCase();});
+    toast(t+' loaded in the '+(shown.length>1?shown.slice(0,-1).join(', ')+' and '+shown[shown.length-1]:shown[0]));}
 });
 
 /* share and reset */
@@ -257,7 +323,8 @@ function r1(v){return Math.round(v*10)/10;}
 function shareUrl(){
   var p=new URLSearchParams();
   if(S.t)p.set('t',S.t);
-  IDS.forEach(function(id){var a=S.L[id];p.set(id,[r1(a[0]),r1(a[1]),r1(a[2]),r1(a[3]),a[4]].join('_'));});
+  p.set('on',S.on.join('.'));
+  S.on.forEach(function(id){var a=S.L[id];p.set(id,[r1(a[0]),r1(a[1]),r1(a[2]),r1(a[3]),a[4]].join('_'));});
   if(S.max)p.set('max',S.max);
   if(S.hm!=='stocks')p.set('hm',S.hm);
   return 'https://tools.yieldsigma.com/workspace.html?'+p.toString();
@@ -268,7 +335,7 @@ document.getElementById('share').addEventListener('click',function(){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(function(){toast('Link copied');},fb);else fb();
 });
 document.getElementById('reset').addEventListener('click',function(){
-  var hm0=S.hm;S.L=defTiles();S.zo=IDS.slice();S.max='';place();toast('Layout reset');
+  S.max='';autoLayout(S.on);place();toast('Layout reset');
 });
 
 build();
