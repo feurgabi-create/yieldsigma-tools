@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
+<style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yield Sigma Macro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+    --paper:#0F1B13;
+  }
+}
+:root[data-theme="dark"]{
+  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
+  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  --paper:#0F1B13;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+a{color:var(--jade)}
+.stage{padding:32px;min-width:0}
+.sheet{width:100%;max-width:1040px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28)}
+.empty{padding:100px 10px;text-align:center;color:var(--muted);font:16px/1.6 var(--serif)}
+
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:22px}
+.pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.pageHead .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.pageHead .asof{font-size:11.5px;color:var(--muted);text-align:right}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a{text-decoration:none;font-weight:600}
+.labsBy a:hover{text-decoration:underline}
+.dirPill{display:inline-flex;align-items:center;font:600 10.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--jade);border:1px solid var(--jade);border-radius:999px;padding:4px 9px;margin-bottom:22px;text-decoration:none}
+.dirPill:hover{background:var(--jade);color:var(--paper)}
+@media(max-width:600px){.pageHead .asof{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left}.dirPill{margin:0}}
+
+.ctl{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:0 0 18px;font-size:11.5px}
+.grp{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lbl{color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;margin-right:2px}
+.btn{font:600 11px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--rule);border-radius:999px;padding:6px 11px;cursor:pointer}
+.btn:hover{border-color:var(--jade)}
+.btn.on{background:var(--jade);border-color:var(--jade);color:var(--paper)}
+
+.zdef{font-size:11.5px;color:var(--muted);margin:0 0 18px;line-height:1.6}
+.zdef b.u{color:var(--jade)} .zdef b.o{color:var(--rust)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.st{border:1px solid var(--rule);border-radius:10px;padding:12px 14px 11px;background:var(--field)}
+.st .v{font:500 27px/1.1 var(--serif);font-variant-numeric:tabular-nums}
+.st .v small{font:500 13px var(--mono);color:var(--muted);margin-left:4px}
+.st .l{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+.st.u .v{color:var(--jade)} .st.o .v{color:var(--rust)}
+
+.sec{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
+.sec h3{font:600 14px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 8px}
+.sec .desc{font-size:12px;color:var(--muted);margin:0 0 16px;max-width:78ch;line-height:1.6}
+.sec .lead{font:400 18px/1.45 var(--serif);margin:0 0 16px;max-width:70ch}
+.sec .lead b{font-weight:600}
+
+.chart{position:relative;height:300px;margin-bottom:6px}
+.chart canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.chart.short{height:230px}
+.tip{position:absolute;top:0;z-index:5;pointer-events:none;background:var(--ink);color:var(--paper);font-size:11px;line-height:1.5;padding:8px 10px;border-radius:7px;white-space:nowrap;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);opacity:0;transition:opacity .1s}
+.tip.on{opacity:1}
+.tip b{font-weight:700}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:2px 0 0}
+.key i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:3px;margin-right:6px}
+
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+
+table.tb{width:100%;border-collapse:collapse;font-size:12.5px}
+table.tb th,table.tb td{padding:8px 9px;text-align:right;border-bottom:1px solid var(--rule)}
+table.tb th:first-child,table.tb td:first-child{text-align:left}
+table.tb thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--rule);vertical-align:bottom}
+table.tb td{font-variant-numeric:tabular-nums;font-weight:600}
+table.tb td:first-child{font-weight:600}
+table.tb td .n{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+table.tb tr.sel td{background:color-mix(in srgb,var(--jade-soft) 60%,transparent)}
+.tbWrap{overflow-x:auto}
+.u{color:var(--jade)} .o{color:var(--rust)} .m{color:var(--muted)}
+
+.lead3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:22px}
+@media(max-width:820px){.lead3{grid-template-columns:1fr}}
+.lead3 h4{font:500 16px/1.2 var(--serif);margin:0 0 4px}
+.lead3 .hint{font-size:10.5px;color:var(--muted);margin:0 0 8px}
+.lead3 ol{list-style:none;margin:0;padding:0}
+.lead3 li{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--rule);font-size:12px}
+.lead3 li a{font-weight:700;text-decoration:none;min-width:52px}
+.lead3 li a:hover{text-decoration:underline}
+.lead3 li .nm{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.lead3 li .val{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.lead3 .none{font-size:11.5px;color:var(--muted)}
+
+.bars{display:grid;gap:18px}
+.bar h4{font:500 15px/1.2 var(--serif);margin:0 0 7px}
+.seg{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--rule)}
+.seg span{display:block;height:100%}
+.segL{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);margin-top:6px}
+.segL i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.segL b{color:var(--ink);font-weight:600}
+.pct{display:grid;grid-template-columns:minmax(0,1fr) 120px 92px;gap:6px 12px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.pct .pb{height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
+.pct .pb span{display:block;height:100%}
+.pct .pv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:600px){.pct{grid-template-columns:minmax(0,1fr) 70px 80px}}
+.shapes .seg{height:12px}
+
+table.matrix{width:100%;border-collapse:collapse;font-size:13px}
+table.matrix th,table.matrix td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--rule)}
+table.matrix th:first-child,table.matrix td:first-child{text-align:left;color:var(--muted);font-weight:500}
+table.matrix thead th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--rule)}
+table.matrix thead th.under{color:var(--jade)}
+table.matrix thead th.over{color:var(--rust)}
+table.matrix td{font-variant-numeric:tabular-nums;font-weight:600}
+table.matrix tr.secHead td{font:600 11px var(--mono);letter-spacing:.03em;color:var(--muted);padding-top:18px;border-bottom:2px solid var(--rule);text-transform:uppercase}
+table.matrix thead th .zr{display:block;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
+table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
+
+.foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.foot .full{flex-basis:100%}
+
+@media(max-width:880px){
+  .stage{padding:14px}
+  .sheet{padding:26px 18px 20px}
+  table.matrix,table.tb{font-size:11.5px}
+  .chart{height:250px}
+}
+</style>
+</head>
+<body>
+<div class="stage"><article class="sheet" id="sheet"><div class="empty">Loading the universe…</div></article></div>
+<script>
+var LINKS={
+  cardStock:   "https://tools.yieldsigma.com/card-undervalued.html?ticker=",
+  cardReit:    "https://tools.yieldsigma.com/card-reits.html?ticker=",
+  labs:        "https://www.stardustcapital.net/stardust-capital-labs",
+  directory:   "https://www.yieldsigma.com/directory",
+  methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
+  fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
+};
+var GIST="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/";
+</script>
+<script>
+(function(){
+'use strict';
+/* ---- shared with the heat map (schema, parsing, sigma, aggregate metrics, sector groups) ---- */
+var SCHEMA_STOCKS=[
+ {k:'nameRaw', label:'Company / Symbol', type:'text'},
+ {k:'price', label:'Price', type:'money'},
+ {k:'low52w', label:'52-week low', type:'money'},
+ {k:'divDollar', label:'Div $', type:'num'},
+ {k:'yield', label:'Yield', type:'pct'},
+ {k:'avg10y', label:'10y average yield', type:'pct'},
+ {k:'oneSD', label:'1 SD (yield)', type:'pct'},
+ {k:'divGrowth10y', label:'Div growth, past 10y', type:'pct'},
+ {k:'sigma', label:'Sigma', type:'num'},
+ {k:'ticker', label:'Ticker', type:'text'},
+ {k:'direction', label:'Direction', type:'text'},
+ {k:'ddm', label:'DDM fair value', type:'num'},
+ {k:'par', label:'Par (yield-parity price)', type:'money'},
+ {k:'volatility', label:'Volatility (yield / SD)', type:'pct'},
+ {k:'notes', label:'Notes', type:'text'},
+ {k:'cagr5y', label:'5y CAGR (dividend)', type:'pct'},
+ {k:'cagr10y', label:'10y CAGR (dividend)', type:'pct'},
+ {k:'pe', label:'P/E', type:'num'},
+ {k:'ma200', label:'200 dma', type:'money'},
+ {k:'ma200diff', label:'200 dma, % diff', type:'pct'},
+ {k:'maxSigma', label:'Max sigma (historical)', type:'num'},
+ {k:'avMaxY', label:'Yield at max sigma', type:'pct'},
+ {k:'max1std', label:'SD at max sigma', type:'pct'},
+ {k:'maxDiffCurrent', label:'Max sigma vs current, gap', type:'pct'},
+ {k:'volMY', label:'Volatility (max-yield period)', type:'pct'},
+ {k:'parMY', label:'Par price (max-yield period)', type:'money'},
+ {k:'price1sig', label:'Price at 1 sigma (max-yield model)', type:'money'},
+ {k:'price2sig', label:'Price at 2 sigma (max-yield model)', type:'money'},
+ {k:'yieldPremium', label:'Yield premium vs long-term average', type:'pct'},
+ {k:'divIn10y', label:'Projected dividend, 10y', type:'num'},
+ {k:'divChecks10y', label:'Dividend check, 10y', type:'num'},
+ {k:'pv', label:'PV', type:'num'},
+ {k:'tnxSpread', label:'Yield spread to 10y Treasury', type:'text'},
+ {k:'divGrowthYears', label:'Years of consecutive dividend growth', type:'num'},
+ {k:'payoutRatio', label:'Payout ratio', type:'pct'},
+ {k:'divGrowth3y', label:'Div growth, past 3y', type:'pct'}
+];
+var SCHEMA_STOCKS_BY_KEY={};
+SCHEMA_STOCKS.forEach(function(f){SCHEMA_STOCKS_BY_KEY[f.k]=f;});
+var REIT_FIELD_ORDER=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD',
+ 'divGrowth10y','sigma','ticker',
+ {k:'yieldDiffK', label:'Yield difference (col K)', type:'pct'},
+ 'par','volatility','notes',
+ {k:'fv5yr', label:'5yr forward value (not used)', type:'num'},
+ 'cagr5y','cagr10y',
+ {k:'pffr', label:'Price/FFO (not used)', type:'pct'},
+ 'ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent',
+ 'volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears',
+ {k:'affo', label:'AFFO per share (diluted)', type:'money'},
+ {k:'pAffo', label:'P/AFFO', type:'num'},
+ 'payoutRatio','divGrowth3y',
+ 'direction'];   /* AI: Direction, from the REIT snapshot (ModuleYSSnap v2) */
+var SCHEMA_REITS=REIT_FIELD_ORDER.map(function(f){return typeof f==='string'?SCHEMA_STOCKS_BY_KEY[f]:f;});
+var ALL_SCHEMA_KEYS=(function(){
+  var seen={},keys=[];
+  SCHEMA_STOCKS.concat(SCHEMA_REITS).forEach(function(f){if(!seen[f.k]){seen[f.k]=true;keys.push(f.k);}});
+  return keys;
+})();
+
+var $=function(s){return document.querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function parseMoney(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parsePct(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseNum(s){
+  if(s===null||s===undefined)return null;
+  var t=String(s).trim();if(!t)return null;
+  var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+  t=t.replace(/[^0-9.\-]/g,'');
+  if(t===''||t==='-')return null;
+  var v=parseFloat(t);if(!isFinite(v))return null;
+  return neg?-v:v;
+}
+function parseText(s){return (s===null||s===undefined)?'':String(s).trim();}
+function trimZ(s){return s.indexOf('.')>=0?s.replace(/\.?0+$/,''):s;}
+function fmtMoney(v){if(v===null)return '\u2013';return (v<0?'-$':'$')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(v){if(v===null)return '\u2013';return trimZ(v.toFixed(2))+'%';}
+function fmtNum(v,d){if(v===null)return '\u2013';return trimZ(v.toFixed(d===undefined?2:d));}
+function fmtBps(v){if(v===null)return '\u2013';var b=Math.round(v*100);return (b>=0?'+':'')+b+'bps';}
+
+function splitRow(line){
+  var cells=line.split('\t');
+  if(cells.length<10)cells=line.split(/ {2,}/);
+  return cells.map(function(c){return c===undefined?'':c;});
+}
+function parseRow(line,schema){
+  schema=schema||SCHEMA_STOCKS;
+  var cells=splitRow(line);
+  var rec={},issues=[];
+  ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
+  schema.forEach(function(f,i){
+    var raw=cells[i];
+    var v;
+    if(f.type==='money')v=parseMoney(raw);
+    else if(f.type==='pct')v=parsePct(raw);
+    else if(f.type==='num')v=parseNum(raw);
+    else v=parseText(raw);
+    rec[f.k]=v;
+  });
+  if(cells.length!==schema.length)issues.push(cells.length+' columns found, expected '+schema.length+'.');
+  if(!rec.nameRaw)issues.push('No company name in the first column.');
+  return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
+}
+function erf(x){
+  var s=x<0?-1:1;x=Math.abs(x);
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var t=1/(1+p*x);
+  var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function splitNameExch(raw){
+  var m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+  if(m)return {name:m[1].trim(),exch:m[2].trim(),tick:m[3].trim()};
+  return {name:raw,exch:'',tick:''};
+}
+function parseTnx(raw){
+  var m=raw.match(/Now:\s*([^|]+)\|\s*10Y:\s*([^|]+)\|\s*Diff:\s*(.+)/i);
+  if(!m)return null;
+  return {now:m[1].trim(),ten:m[2].trim(),diff:m[3].trim()};
+}
+function tnxDiffSign(s){
+  var v=parseFloat(String(s).replace('%',''));
+  return isFinite(v)?v:0;
+}
+/* Sigma sign convention (matches the sigma card exactly): negative =
+   "rich"/overvalued (yield abnormally low vs its own 10y average),
+   positive = "cheap"/undervalued (yield abnormally high). */
+function analyzeRow(rec){
+  var a={};
+  var ne=splitNameExch(rec.nameRaw||'');
+  a.name=ne.name; a.ticker=rec.ticker||ne.tick||'\u2013';
+  var sigma=rec.sigma;
+  var sigmaComputed=null;
+  if(rec.yield!==null&&rec.avg10y!==null&&rec.oneSD)sigmaComputed=(rec.yield-rec.avg10y)/rec.oneSD;
+  a.sigma=sigma!==null?sigma:sigmaComputed;
+  a.tnx=parseTnx(rec.tnxSpread||'');
+  return a;
+}
+/* Company-name abbreviation — same dictionary as the sigma card, used
+   only for the hover preview's full-name line. */
+var COMPANY_WORD_ABBR={
+  CORPORATION:'Corp',CORP:'Corp',COMPANY:'Co',CO:'Co',INCORPORATED:'Inc',INC:'Inc',
+  LIMITED:'Ltd',LTD:'Ltd',INTERNATIONAL:'Intl',HOLDINGS:'Hldgs',HOLDING:'Hldg',
+  INDUSTRIES:'Inds',ASSOCIATES:'Assoc',MANUFACTURING:'Mfg',
+  PHARMACEUTICALS:'Pharma',PHARMACEUTICAL:'Pharma',GROUP:'Grp',
+  COMMUNITIES:'Cmtys',COMMUNITY:'Cmty',PROPERTIES:'Props',PROPERTY:'Prop',
+  APARTMENTS:'Apts',APARTMENT:'Apt',RESIDENTIAL:'Res',DEVELOPMENT:'Dev',DEVELOPMENTS:'Devs'
+};
+function abbreviateCompanyWord(w){
+  var m=w.match(/^([A-Za-z]+)([,.]*)$/);
+  if(!m)return w;
+  var core=m[1].toUpperCase();
+  return COMPANY_WORD_ABBR[core]||w;
+}
+function shortCompanyName(name){
+  if(!name)return name;
+  var words=name.trim().replace(/^THE\s+/i,'').split(/\s+/).map(abbreviateCompanyWord);   /* a leading "The" never shows */
+  if(words.length<=3)return words.join(' ');
+  var joined=words.join(' ').replace(/^THE\s+/i,'').trim();
+  return joined.split(/\s+/).slice(0,3).join(' ').replace(/,$/,'');
+}
+
+/* ------------------------------------------------------------------ *
+ * CSV parsing + live fetch — same as the sigma card.
+ * ------------------------------------------------------------------ */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQuotes=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===',' ){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+function csvTextToLines(text){
+  var rows=parseCSV(text).filter(function(r){return r.some(function(c){return c.trim()!=='';});});
+  var lines=rows.map(function(r){return r.join('\t').trim();}).filter(Boolean);
+  if(lines.length>1){
+    var firstCells=splitRow(lines[0]);
+    if(firstCells.length>1&&parseMoney(firstCells[1])===null)lines.shift();
+  }
+  return lines;
+}
+var METRICS=[
+  {k:'yield',label:'Yield',type:'pct',get:function(rec,a){return rec.yield;}},
+  {k:'sigma',label:'Sigma',type:'sigma',get:function(rec,a){return a.sigma;}},
+  {k:'ma200diff',label:'200 dma, % diff',type:'pct',get:function(rec,a){return rec.ma200diff;}},
+  {k:'pe',label:'P/E',type:'num',get:function(rec,a){return rec.pe;}},
+  {k:'payoutRatio',label:'Payout ratio',type:'pct',get:function(rec,a){return rec.payoutRatio;}},
+  {k:'divGrowth10y',label:'Div growth, past 10y',type:'pct',get:function(rec,a){return rec.divGrowth10y;}},
+  {k:'divGrowth3y',label:'Dividend growth recent trend',type:'pct',get:function(rec,a){return div3InBand(rec)?rec.divGrowth3y:null;}},
+  {k:'tnxSpread',label:'Spread to 10Y Treasury vs 10y avg',type:'bps',get:function(rec,a){return a.tnx?tnxDiffSign(a.tnx.diff):null;}}
+];
+/* Extra rows shown under "More stats" (collapsed by default). */
+function directionValue(raw){
+  if(raw===null||raw===undefined)return null;
+  var s=String(raw);
+  var up=/[⇧⬆↑▲▴↗]/.test(s);
+  var down=/[⇩⇣⬇↓▼▾↘]/.test(s);
+  var m=s.match(/[-+]?\d*\.?\d+/);
+  if(!m)return null;
+  var n=parseFloat(m[0]);
+  if(!isFinite(n))return null;
+  if(down&&!up)return -Math.abs(n);
+  if(up&&!down)return Math.abs(n);
+  return n;
+}
+/* 3-yr dividend growth counts only inside 0%–20%: values outside are data
+   artifacts (special dividends, conversions), since cutters leave the list. */
+function div3InBand(rec){var v=rec.divGrowth3y;return v!==null&&v!==undefined&&isFinite(v)&&v>=0&&v<=20;}
+var MORE_METRICS=[
+  {k:'volatility',label:'Volatility (yield gap/\u03c3 ratio)',type:'pct',get:function(rec,a){return rec.volatility;}},
+  {k:'direction',label:'Direction (σ trend, short-term)',type:'signed',get:function(rec,a){return directionValue(rec.direction);}},
+  {k:'parDiff',label:'Price vs Par (yield-parity price)',type:'pct',get:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.par!==null&&rec.par!==undefined&&rec.par>0)?(rec.price-rec.par)/rec.par*100:null;}},
+  {k:'divGrowthYears',label:'Years of dividend growth',type:'yrs',get:function(rec,a){return rec.divGrowthYears;}}
+];
+/* "Number of names" section: each test returns true/false (null = no data). */
+var COUNT_METRICS=[
+  {k:'risingCount',label:'Rising σ trend',test:function(rec,a){var d=directionValue(rec.direction);return d===null?null:d>0;}},
+  {k:'payoutOver100',label:'Payout ratio above 100%',test:function(rec,a){return (rec.payoutRatio!==null&&rec.payoutRatio!==undefined&&isFinite(rec.payoutRatio))?rec.payoutRatio>100:null;}},
+  {k:'slowingCount',label:'Slowing div growth',test:function(rec,a){if(!div3InBand(rec)||rec.divGrowth10y===null||rec.divGrowth10y===undefined||!isFinite(rec.divGrowth10y))return null;return rec.divGrowth3y-rec.divGrowth10y<-1;}},
+  {k:'belowDdm',label:'Priced below DDM fair value',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.ddm!==null&&rec.ddm!==undefined&&rec.ddm>0)?rec.price<rec.ddm:null;}},
+  {k:'near52Low',label:'Priced within 10% of 52-week low',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.low52w!==null&&rec.low52w!==undefined&&rec.low52w>0)?((rec.price-rec.low52w)/rec.low52w*100<=10):null;}}
+];
+var MORE_OPEN=true;
+function avgOf(list,getter){
+  var vals=[];
+  list.forEach(function(x){var v=getter(x.rec,x.a);if(v!==null&&v!==undefined&&isFinite(v))vals.push(v);});
+  if(!vals.length)return {avg:null,n:0};
+  var sum=vals.reduce(function(s,v){return s+v;},0);
+  return {avg:sum/vals.length,n:vals.length};
+}
+function fmtMetric(type,v){
+  if(v===null||v===undefined)return '\u2013';
+  if(type==='pct')return fmtPct(v);
+  if(type==='bps')return fmtBps(v);
+  if(type==='signed')return (v>0?'+':'')+trimZ(v.toFixed(2));
+  if(type==='yrs')return trimZ(v.toFixed(1));
+  if(type==='sigma')return fmtNum(v,2)+'\u03c3';
+  return fmtNum(v,2);
+}
+var HM_GROUPS=[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
+
+/* ------------------------------------------------------------------ *
+ * Yield Sigma Macro: statistics across the whole universe.
+ * Sigma sign: + = yield above its 10-year average (undervalued),
+ *             - = yield below it (overvalued). Same as every card.
+ * ------------------------------------------------------------------ */
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function mLabel(m){return MON[((m%12)+12)%12]+' '+Math.floor(m/12);}
+function key(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function median(a){if(!a.length)return null;var s=a.slice().sort(function(p,q){return p-q;}),h=s.length>>1;return s.length%2?s[h]:(s[h-1]+s[h])/2;}
+function pctOf(n,d){return d?Math.round(n/d*100):0;}
+function sg(v,d){if(v===null||v===undefined||!isFinite(v))return '–';return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(d===undefined?2:d)+'σ';}
+function lvl(T,s){return (s>0?'+':'−')+T+'σ';}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+
+var D={stocks:[],reits:[],hist:{},fund:{},prof:{}};
+var UNI='stocks',SIDE=1,THR=2;
+var LEVELS=[1,1.5,2,2.5,3];
+var LIVE_AT=null;
+
+/* ---- loading ---- */
+function get(url,asJson){
+  return fetch(url+(url.indexOf('?')<0?'?':'&')+'h='+Math.floor(Date.now()/600000),{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw 0;return asJson?r.json():r.text();})
+    .catch(function(){return asJson?{}:'';});
+}
+function parseHist(txt){
+  var L=String(txt||'').split(/\r?\n/),out={};if(!/^ticker\t/.test(L[0]||''))return out;
+  var H=L[0].split('\t'),ix=function(n){return H.indexOf(n);};
+  var iT=ix('ticker'),iTy=ix('type'),iF=ix('first'),iS=ix('shape'),iG=ix('grade'),iZ=ix('z');
+  var now=new Date(),cur=now.getFullYear()*12+now.getMonth();
+  for(var li=1;li<L.length;li++){
+    var f=L[li].split('\t');if(f.length<=iZ||!f[iT])continue;
+    var st=+f[iF].slice(0,4)*12+(+f[iF].slice(5,7)-1);if(!isFinite(st))continue;
+    var z=f[iZ].split(',').map(function(v){v=v.trim();return v===''?null:+v;});
+    while(z.length&&st+z.length-1>=cur)z.pop();                         /* completed months only */
+    while(z.length&&(z[z.length-1]===null||!isFinite(z[z.length-1])))z.pop();
+    while(z.length&&(z[0]===null||!isFinite(z[0]))){z.shift();st++;}
+    for(var i=1;i<z.length;i++)if(z[i]===null||!isFinite(z[i]))z[i]=z[i-1];
+    if(z.length<24)continue;
+    out[key(f[iT])]={type:f[iTy]||'',st:st,z:z,grade:(f[iG]||'').trim(),shape:f[iS]===''?null:+f[iS]};
+  }
+  return out;
+}
+function parseFund(txt){
+  var L=String(txt||'').split(/\r?\n/),out={};if(!/^ticker,/.test(L[0]||''))return out;
+  var H=L[0].split(',');
+  for(var i=1;i<L.length;i++){var f=L[i].split(',');if(!f[0])continue;var o={};H.forEach(function(h,j){o[h]=f[j]===undefined?'':f[j];});out[key(f[0])]=o;}
+  return out;
+}
+function rowsFrom(txt,kind){
+  var lines=csvTextToLines(txt||''),schema=kind==='reits'?SCHEMA_REITS:SCHEMA_STOCKS,out=[];
+  lines.forEach(function(line){
+    var rec=parseRow(line,schema).rec,a=analyzeRow(rec);
+    if(a.sigma===null||!isFinite(a.sigma))return;
+    var k=key(a.ticker);if(!k||k==='TNX')return;
+    out.push({rec:rec,a:a,kind:kind,k:k});
+  });
+  return out;
+}
+/* stocks universe = companies only (the sector map or a company profile), so the
+   index and fund rows on the stock sheet are left out */
+var GKEY={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){GKEY[key(t)]=i;});});
+function isCompany(x){return GKEY[x.k]!==undefined||!!D.profK[x.k];}
+function universe(){
+  if(UNI==='reits')return D.reits;
+  return D.stocks.filter(isCompany);
+}
+function load(){
+  return Promise.all([get(GIST+'stocks.csv'),get(GIST+'reits.csv'),get(GIST+'history.csv'),get(GIST+'fund.csv'),get('profiles.json',true)])
+  .then(function(r){
+    D.profK={};Object.keys(r[4]||{}).forEach(function(t){D.profK[key(t)]=r[4][t];});
+    var s=rowsFrom(r[0],'stocks'),re=rowsFrom(r[1],'reits');
+    if(s.length)D.stocks=s;if(re.length)D.reits=re;
+    var h=parseHist(r[2]);if(Object.keys(h).length)D.hist=h;
+    var f=parseFund(r[3]);if(Object.keys(f).length)D.fund=f;
+    LIVE_AT=new Date();
+  });
+}
+
+/* ---- statistics ---- */
+/* every time a name's sigma first reached the level (from inside it), how many months
+   until it came back to 0 sigma (its 10-year average yield); open = not back yet */
+function episodes(z,T,s){
+  var out=[],i=1,n=z.length;
+  while(i<n){
+    if(s*z[i]>=T&&s*z[i-1]<T){
+      var j=i+1;while(j<n&&s*z[j]>0)j++;
+      if(j<n){out.push({i:i,mo:j-i,avail:n-1-i});i=j+1;}
+      else{out.push({i:i,mo:null,avail:n-1-i});break;}
+    }else i++;
+  }
+  return out;
+}
+function withHist(U){return U.filter(function(x){return !!D.hist[x.k];});}
+function levelTable(U,s){
+  var H=withHist(U);
+  return LEVELS.map(function(T){
+    var all=[],names=0;
+    H.forEach(function(x){var e=episodes(D.hist[x.k].z,T,s);if(e.length)names++;all=all.concat(e);});
+    var res=all.filter(function(e){return e.mo!==null;}).map(function(e){return e.mo;});
+    var within=function(h){var base=all.filter(function(e){return e.avail>=h;});var ok=base.filter(function(e){return e.mo!==null&&e.mo<=h;}).length;return base.length?{p:pctOf(ok,base.length),n:base.length}:null;};
+    return {T:T,eps:all.length,names:names,med:median(res),w6:within(6),w12:within(12),w24:within(24),open:all.filter(function(e){return e.mo===null;}).length};
+  });
+}
+function leaders(U,T,s){
+  var per=[],open=[];
+  withHist(U).forEach(function(x){
+    var e=episodes(D.hist[x.k].z,T,s),r=e.filter(function(q){return q.mo!==null;}).map(function(q){return q.mo;});
+    if(r.length>=2)per.push({x:x,med:median(r),n:r.length});
+    var last=e[e.length-1];if(last&&last.mo===null)open.push({x:x,so:last.avail,since:D.hist[x.k].st+last.i});
+  });
+  per.sort(function(p,q){return p.med-q.med||q.n-p.n;});
+  open.sort(function(p,q){return q.so-p.so;});
+  var k=Math.min(8,Math.ceil(per.length/2));
+  return {fast:per.slice(0,k),slow:per.slice(-k).reverse(),open:open.slice(0,8),openN:open.length,ranked:per.length};
+}
+function breadth(U){
+  var H=withHist(U),cnt={},u={},o={},m0=1e9,m1=-1e9;
+  H.forEach(function(x){var h=D.hist[x.k];h.z.forEach(function(v,i){var m=h.st+i;cnt[m]=(cnt[m]||0)+1;if(v>=1)u[m]=(u[m]||0)+1;if(v<=-1)o[m]=(o[m]||0)+1;if(m<m0)m0=m;if(m>m1)m1=m;});});
+  var minN=Math.max(8,Math.round(H.length*0.25)),pts=[];
+  for(var m=m0;m<=m1;m++){if((cnt[m]||0)<minN)continue;pts.push({m:m,n:cnt[m],u:(u[m]||0)/cnt[m]*100,o:(o[m]||0)/cnt[m]*100});}
+  return pts;
+}
+
+/* ---- charts (canvas) ---- */
+function setupCanvas(cv){
+  var box=cv.parentElement,dpr=window.devicePixelRatio||1,W=box.clientWidth,H=box.clientHeight;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  return {g:g,W:W,H:H};
+}
+function showTip(box,html,x,y){
+  var t=box.querySelector('.tip');t.innerHTML=html;t.classList.add('on');
+  var w=t.offsetWidth,bw=box.clientWidth,l=Math.max(0,Math.min(bw-w,x-w/2));t.style.left=l+'px';t.style.top=Math.max(0,y)+'px';
+}
+function hideTip(box){var t=box.querySelector('.tip');if(t)t.classList.remove('on');}
+var BR=null;
+function drawBreadth(hov){
+  var cv=document.getElementById('cvBr');if(!cv||!BR||!BR.length)return;
+  var c=setupCanvas(cv),g=c.g,W=c.W,H=c.H,mono=css('--mono'),fs=W<500?9.5:10.5;
+  var L=38,R=W-10,T=12,B=H-24,n=BR.length,mx=0;BR.forEach(function(p){mx=Math.max(mx,p.u,p.o);});
+  var top=Math.min(100,Math.ceil((mx+5)/10)*10),X=function(i){return L+(R-L)*i/Math.max(1,n-1);},Y=function(v){return B-(B-T)*v/top;};
+  g.font=fs+'px '+mono;g.textBaseline='middle';g.textAlign='right';
+  for(var v=0;v<=top;v+=top>50?20:10){g.strokeStyle=css('--rule');g.lineWidth=1;g.beginPath();g.moveTo(L,Math.round(Y(v))+.5);g.lineTo(R,Math.round(Y(v))+.5);g.stroke();g.fillStyle=css('--muted');g.fillText(v+'%',L-6,Y(v));}
+  g.textAlign='center';g.textBaseline='top';
+  var y0=Math.floor(BR[0].m/12),y1=Math.floor(BR[n-1].m/12),span=y1-y0,step=W<520?(span>16?5:4):(span>16?2:1);
+  for(var yy=y0;yy<=y1;yy++){if((yy-y0)%step)continue;var i=BR.findIndex(function(p){return p.m===yy*12;});if(i<0)continue;g.fillStyle=css('--muted');g.fillText(String(yy),X(i),B+7);g.strokeStyle=css('--rule');g.beginPath();g.moveTo(Math.round(X(i))+.5,B);g.lineTo(Math.round(X(i))+.5,B+4);g.stroke();}
+  function line(k,col,fill){
+    g.beginPath();BR.forEach(function(p,i){if(i)g.lineTo(X(i),Y(p[k]));else g.moveTo(X(i),Y(p[k]));});
+    if(fill){g.save();g.lineTo(X(n-1),B);g.lineTo(X(0),B);g.closePath();g.globalAlpha=.12;g.fillStyle=col;g.fill();g.restore();
+      g.beginPath();BR.forEach(function(p,i){if(i)g.lineTo(X(i),Y(p[k]));else g.moveTo(X(i),Y(p[k]));});}
+    g.strokeStyle=col;g.lineWidth=1.8;g.lineJoin='round';g.stroke();
+  }
+  line('o',css('--rust'),true);line('u',css('--jade'),true);
+  /* mark the highest reading of each line */
+  [['u',css('--jade')],['o',css('--rust')]].forEach(function(s){
+    var bi=0;BR.forEach(function(p,i){if(p[s[0]]>BR[bi][s[0]])bi=i;});
+    var x=X(bi),y=Y(BR[bi][s[0]]);g.beginPath();g.arc(x,y,3.5,0,Math.PI*2);g.fillStyle=s[1];g.fill();
+    g.font='600 '+fs+'px '+mono;g.textBaseline='bottom';var lab=mLabel(BR[bi].m)+' · '+Math.round(BR[bi][s[0]])+'%',tw=g.measureText(lab).width;
+    g.textAlign=x+tw/2>R?'right':x-tw/2<L?'left':'center';g.fillText(lab,x,y-6);g.font=fs+'px '+mono;
+  });
+  if(hov!==null&&hov!==undefined){var x=X(hov);g.strokeStyle=css('--muted');g.setLineDash([3,3]);g.beginPath();g.moveTo(Math.round(x)+.5,T);g.lineTo(Math.round(x)+.5,B);g.stroke();g.setLineDash([]);
+    [['u',css('--jade')],['o',css('--rust')]].forEach(function(s){g.beginPath();g.arc(x,Y(BR[hov][s[0]]),4,0,Math.PI*2);g.fillStyle=s[1];g.fill();g.lineWidth=2;g.strokeStyle=css('--paper');g.stroke();});}
+  cv._m={L:L,R:R,n:n,X:X,Y:Y};
+}
+function wireBreadth(){
+  var cv=document.getElementById('cvBr');if(!cv)return;var box=cv.parentElement;
+  function pick(e){var m=cv._m;if(!m)return;var r=cv.getBoundingClientRect(),x=e.clientX-r.left;if(x<m.L-6||x>m.R+6){drawBreadth(null);hideTip(box);return;}
+    var i=Math.max(0,Math.min(m.n-1,Math.round((x-m.L)/(m.R-m.L)*(m.n-1)))),p=BR[i];drawBreadth(i);
+    showTip(box,'<b>'+mLabel(p.m)+'</b><br><span>Undervalued (+1σ or higher): '+Math.round(p.u)+'%</span><br><span>Overvalued (−1σ or lower): '+Math.round(p.o)+'%</span><br><span style="opacity:.7">'+p.n+' names with history that month</span>',m.X(i),8);}
+  cv.addEventListener('mousemove',pick);cv.addEventListener('click',pick);
+  cv.addEventListener('mouseleave',function(){drawBreadth(null);hideTip(box);});
+}
+var HB=null;
+function histBins(U){
+  var bins=[];for(var b=-3.5;b<3.5;b+=0.5)bins.push({lo:b,hi:b+0.5,items:[]});
+  U.forEach(function(x){var s=x.a.sigma,i=Math.floor((Math.max(-3.49,Math.min(3.49,s))+3.5)/0.5);bins[i].items.push(x);});
+  return bins;
+}
+function drawHist(hov){
+  var cv=document.getElementById('cvHi');if(!cv||!HB)return;
+  var c=setupCanvas(cv),g=c.g,W=c.W,H=c.H,mono=css('--mono'),fs=W<500?9.5:10.5;
+  var L=10,R=W-10,T=18,B=H-24,n=HB.length,N=0,mx=0;HB.forEach(function(b){N+=b.items.length;mx=Math.max(mx,b.items.length);});
+  var bw=(R-L)/n,pdf=function(z){return Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);},top=Math.max(mx,N*0.5*pdf(0))*1.12||1,Y=function(v){return B-(B-T)*v/top;};
+  g.font=fs+'px '+mono;
+  HB.forEach(function(b,i){var mid=(b.lo+b.hi)/2,col=mid>=1?css('--jade'):mid<=-1?css('--rust'):css('--muted');
+    var x=L+i*bw,h=B-Y(b.items.length);g.globalAlpha=hov===null||hov===undefined||hov===i?(mid>-1&&mid<1?.45:.8):.3;g.fillStyle=col;g.fillRect(x+2,B-h,bw-4,h);g.globalAlpha=1;
+    if(b.items.length){g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.fillText(b.items.length,x+bw/2,B-h-3);}});
+  /* the bell curve a normally spread universe would show */
+  g.beginPath();for(var k=0;k<=120;k++){var z=-3.5+7*k/120,xx=L+(z+3.5)/7*(R-L),yy=Y(N*0.5*pdf(z));if(k)g.lineTo(xx,yy);else g.moveTo(xx,yy);}
+  g.strokeStyle=css('--ink');g.globalAlpha=.55;g.lineWidth=1.4;g.setLineDash([4,3]);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.strokeStyle=css('--rule');g.beginPath();g.moveTo(L,B+.5);g.lineTo(R,B+.5);g.stroke();
+  g.fillStyle=css('--muted');g.textAlign='center';g.textBaseline='top';
+  for(var s=-3;s<=3;s++){var xs=L+(s+3.5)/7*(R-L);g.fillText((s>0?'+':s<0?'−':'')+Math.abs(s)+'σ',xs,B+7);}
+  cv._m={L:L,R:R,bw:bw,n:n};
+}
+function wireHist(){
+  var cv=document.getElementById('cvHi');if(!cv)return;var box=cv.parentElement,cur=null;
+  function pick(e){var m=cv._m;if(!m)return;var r=cv.getBoundingClientRect(),x=e.clientX-r.left,i=Math.floor((x-m.L)/m.bw);
+    if(i<0||i>=m.n){drawHist(null);hideTip(box);return;}
+    var b=HB[i];if(i!==cur){cur=i;drawHist(i);}
+    var lo=b.lo<=-3.5?'below −3σ':b.hi>=3.5?'+3σ and above':sg(b.lo,1).replace('.0','')+' to '+sg(b.hi,1).replace('.0','');
+    if(b.lo===-3.5)lo='−3σ and below';
+    var list=b.items.slice().sort(function(p,q){return q.a.sigma-p.a.sigma;}).map(function(x){return esc(x.a.ticker);});
+    showTip(box,'<b>'+lo+'</b> · '+b.items.length+' name'+(b.items.length===1?'':'s')+(list.length?'<br><span style="opacity:.8">'+list.slice(0,12).join(' ')+(list.length>12?' +'+(list.length-12):'')+'</span>':''),m.L+(i+.5)*m.bw,4);}
+  cv.addEventListener('mousemove',pick);cv.addEventListener('click',pick);
+  cv.addEventListener('mouseleave',function(){cur=null;drawHist(null);hideTip(box);});
+}
+
+/* ---- sections ---- */
+function cardUrl(x){return (x.kind==='reits'?LINKS.cardReit:LINKS.cardStock)+encodeURIComponent(x.a.ticker);}
+function tkLink(x){return '<a href="'+esc(cardUrl(x))+'" target="_blank" rel="noopener">'+esc(x.a.ticker)+'</a>';}
+function nm(x){return esc(shortCompanyName(x.a.name)||'');}
+
+function headHtml(U){
+  var noun=UNI==='reits'?'REITs':'dividend-growth stocks';
+  return '<div class="pageHead"><div><h2>Yield Sigma™ Macro</h2><div class="sub">The whole universe at a glance: '+U.length+' '+noun+'.</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="asof"><a class="dirPill" href="'+esc(LINKS.directory)+'" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
+    '<div class="ctl"><span class="grp"><span class="lbl">Universe</span>'+
+      '<button type="button" class="btn'+(UNI==='stocks'?' on':'')+'" data-uni="stocks">Stocks</button><button type="button" class="btn'+(UNI==='reits'?' on':'')+'" data-uni="reits">REITs</button></span></div>'+
+    '<p class="zdef"><b class="u">Undervalued</b>: yield at +1σ or more above its own 10-year average — the stock price, conversely, low. '+
+      '<b class="o">Overvalued</b>: yield at −1σ or more below it — the price, conversely, high. 0σ is the 10-year average yield.</p>';
+}
+function todayHtml(U,LT){
+  var u=U.filter(function(x){return x.a.sigma>=1;}).length,o=U.filter(function(x){return x.a.sigma<=-1;}).length,N=U.length;
+  var avg=U.reduce(function(s,x){return s+x.a.sigma;},0)/(N||1);
+  var lu=BR&&BR.length?BR.reduce(function(s,p){return s+p.u;},0)/BR.length:null;
+  var row=LT.filter(function(r){return r.T===2;})[0];
+  var t='<div class="stats">'+
+    '<div class="st u"><div class="v">'+u+'<small>'+pctOf(u,N)+'%</small></div><div class="l">names undervalued today (+1σ or higher)</div></div>'+
+    '<div class="st o"><div class="v">'+o+'<small>'+pctOf(o,N)+'%</small></div><div class="l">names overvalued today (−1σ or lower)</div></div>'+
+    '<div class="st"><div class="v">'+sg(avg)+'</div><div class="l">average sigma across all '+N+' names</div></div>';
+  if(lu!==null)t+='<div class="st"><div class="v">'+Math.round(lu)+'%</div><div class="l">average share undervalued, every month since '+Math.floor(BR[0].m/12)+'</div></div>';
+  if(row&&row.med!==null)t+='<div class="st"><div class="v">'+Math.round(row.med)+'<small>months</small></div><div class="l">typical time from '+lvl(2,SIDE)+' back to 0σ (median)</div></div>';
+  return t+'</div>';
+}
+function breadthHtml(){
+  if(!BR||!BR.length)return '';
+  var last=BR[BR.length-1];
+  return '<section class="sec"><h3>Undervalued and overvalued, month by month</h3>'+
+    '<p class="desc">Share of names in each zone at the end of every month since '+Math.floor(BR[0].m/12)+'. The peaks show when cheap or rich readings came all at once, across the market, rather than one name at a time. Last completed month, '+mLabel(last.m)+': '+Math.round(last.u)+'% undervalued, '+Math.round(last.o)+'% overvalued.</p>'+
+    '<div class="chart" id="brBox"><canvas id="cvBr"></canvas><div class="tip"></div></div>'+
+    '<div class="key"><span><i style="background:var(--jade)"></i>Undervalued (+1σ or higher)</span><span><i style="background:var(--rust)"></i>Overvalued (−1σ or lower)</span></div></section>';
+}
+function spreadHtml(U){
+  var H=withHist(U),cnt={Textbook:0,Defined:0,Loose:0,'Not normalizing':0},other=0;
+  H.forEach(function(x){var gname=D.hist[x.k].grade;if(cnt[gname]!==undefined)cnt[gname]++;else other++;});
+  var tot=H.length-other,cols={Textbook:'var(--jade)',Defined:'color-mix(in srgb,var(--jade) 55%,var(--paper))',Loose:'var(--gold)','Not normalizing':'var(--rust)'};
+  var seg='',leg='';Object.keys(cnt).forEach(function(k){if(!cnt[k])return;seg+='<span style="width:'+(cnt[k]/tot*100)+'%;background:'+cols[k]+'" title="'+k+'"></span>';leg+='<span><i style="background:'+cols[k]+'"></i>'+k+' <b>'+cnt[k]+'</b> ('+pctOf(cnt[k],tot)+'%)</span>';});
+  var sorted=U.slice().sort(function(p,q){return q.a.sigma-p.a.sigma;});
+  var top=sorted.slice(0,5),bot=sorted.slice(-5).reverse();
+  var li=function(arr){return arr.map(function(x){return '<li>'+tkLink(x)+'<span class="nm">'+nm(x)+'</span><span class="val">'+sg(x.a.sigma)+'</span></li>';}).join('');};
+  return '<section class="sec"><h3>Where the universe stands today</h3>'+
+    '<p class="desc">Every name’s sigma today, in ½σ steps. The dashed line is the bell curve the same number of names would make if spread normally around 0σ; bars that rise above it show where the universe is crowded.</p>'+
+    '<div class="two"><div><div class="chart short" id="hiBox"><canvas id="cvHi"></canvas><div class="tip"></div></div></div>'+
+    '<div class="lead3" style="grid-template-columns:1fr;margin-top:0;gap:16px"><div><h4 class="u">Most undervalued</h4><ol>'+li(top)+'</ol></div><div><h4 class="o">Most overvalued</h4><ol>'+li(bot)+'</ol></div></div></div>'+
+    (tot?'<div class="bar shapes" style="margin-top:24px"><h4>How reliably sigma comes back: bell-curve shape of each name’s history</h4><div class="seg">'+seg+'</div><div class="segL">'+leg+'</div></div>':'')+
+    '</section>';
+}
+function normHtml(U,LT){
+  var side=SIDE>0?'undervalued':'overvalued',r2=LT.filter(function(r){return r.T===THR;})[0]||LT[2];
+  var lead='';
+  if(r2&&r2.eps){lead='<p class="lead">From '+lvl(r2.T,SIDE)+', '+(r2.w24?'<b>'+r2.w24.p+'%</b> of moves were back at 0σ within 24 months':'')+(r2.med!==null?'; the typical trip back took <b>'+Math.round(r2.med)+' months</b>':'')+'. '+r2.eps+' times across '+r2.names+' names'+(r2.open?', '+r2.open+' still away':'')+'.</p>';}
+  var rows=LT.map(function(r){
+    var c=function(w){return w?w.p+'%<span class="n">of '+w.n+'</span>':'–';};
+    return '<tr'+(r.T===THR?' class="sel"':'')+'><td class="'+(SIDE>0?'u':'o')+'">'+lvl(r.T,SIDE)+(SIDE>0?' or higher':' or lower')+'</td><td>'+r.eps+'<span class="n">'+r.names+' names</span></td><td>'+c(r.w6)+'</td><td>'+c(r.w12)+'</td><td>'+c(r.w24)+'</td><td>'+(r.med===null?'–':Math.round(r.med))+'</td><td>'+r.open+'</td></tr>';
+  }).join('');
+  var Ld=leaders(U,THR,SIDE);
+  var li=function(arr,f){return arr.length?'<ol>'+arr.map(function(e){return '<li>'+tkLink(e.x)+'<span class="nm">'+nm(e.x)+'</span><span class="val">'+f(e)+'</span></li>';}).join('')+'</ol>':'<p class="none">None at this level.</p>';};
+  var mo=function(e){return Math.round(e.med)+' mo<span class="m" style="font-weight:500"> · '+e.n+'×</span>';};
+  var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(v===cur?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
+  return '<section class="sec" id="norm"><h3>Normalizing: how fast sigma comes back</h3>'+
+    '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. The further out, the more often and the faster it has come back: that is the level at which normalizing has been fastest. “Still away” counts moves not back yet.</p>'+
+    '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span>'+
+      '<span class="grp"><span class="lbl">Level for the lists</span>'+LEVELS.map(function(T){return btn('thr',String(T),String(THR),lvl(T,SIDE));}).join('')+'</span></div>'+
+    lead+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Times reached</th><th>Back to 0σ within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to 0σ</th><th>Still away</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="lead3">'+
+      '<div><h4>Fastest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · times, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
+      '<div><h4>Slowest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · times, at least 2</p>'+li(Ld.slow,mo)+'</div>'+
+      '<div><h4>Still away from 0σ</h4><p class="hint">'+Ld.openN+' name'+(Ld.openN===1?'':'s')+' past '+lvl(THR,SIDE)+' and not back yet · months so far</p>'+li(Ld.open,function(e){return e.so+' mo<span class="m" style="font-weight:500"> · since '+mLabel(e.since)+'</span>';})+'</div>'+
+    '</div></section>';
+}
+function sectorHtml(U){
+  if(UNI!=='stocks')return '';
+  var rows=HM_GROUPS.map(function(gq,i){return {name:gq[0],etf:gq[1],items:U.filter(function(x){return GKEY[x.k]===i;})};}).filter(function(r){return r.items.length;});
+  rows.forEach(function(r){
+    var N=r.items.length;r.avg=r.items.reduce(function(s,x){return s+x.a.sigma;},0)/N;
+    r.u=r.items.filter(function(x){return x.a.sigma>=1;}).length;r.o=r.items.filter(function(x){return x.a.sigma<=-1;}).length;
+    var mos=[],good=0,gn=0;r.items.forEach(function(x){var h=D.hist[x.k];if(!h)return;episodes(h.z,THR,SIDE).forEach(function(e){if(e.mo!==null)mos.push(e.mo);});if(h.grade){gn++;if(h.grade==='Textbook'||h.grade==='Defined')good++;}});
+    r.med=median(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
+  });
+  rows.sort(function(p,q){return q.avg-p.avg;});
+  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td>'+(r.med===null?'–':Math.round(r.med)+'<span class="n">'+r.n+' times</span>')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). Reliable shape: share of names graded Textbook or Defined.</p>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average σ</th><th>Undervalued</th><th>Overvalued</th><th>Median months to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
+}
+function segBar(title,parts,N){
+  var seg='',leg='';parts.forEach(function(p){if(!p.n)return;seg+='<span style="width:'+(p.n/N*100)+'%;background:'+p.c+'" title="'+esc(p.l)+'"></span>';leg+='<span><i style="background:'+p.c+'"></i>'+esc(p.l)+' <b>'+p.n+'</b> ('+pctOf(p.n,N)+'%)</span>';});
+  return '<div class="bar"><h4>'+title+'</h4><div class="seg">'+seg+'</div><div class="segL">'+leg+'</div></div>';
+}
+var C1='var(--jade)',C2='color-mix(in srgb,var(--jade) 55%,var(--paper))',C3='var(--gold)',C4='var(--rust)',C5='color-mix(in srgb,var(--muted) 45%,var(--paper))';
+function healthHtml(U){
+  var ok=function(v){return v!==null&&v!==undefined&&isFinite(v);};
+  var P=U.filter(function(x){return ok(x.rec.payoutRatio);}),pp=function(f){return P.filter(function(x){return f(x.rec.payoutRatio);}).length;};
+  var S=U.filter(function(x){return ok(x.rec.divGrowthYears);}),ss=function(a,b){return S.filter(function(x){var y=Math.floor(x.rec.divGrowthYears);return y>=a&&y<b;}).length;};
+  var G=U.filter(function(x){return div3InBand(x.rec)&&ok(x.rec.divGrowth10y);}),gg=function(f){return G.filter(function(x){return f(x.rec.divGrowth3y-x.rec.divGrowth10y);}).length;};
+  var h='<section class="sec"><h3>Dividend health of the universe</h3><p class="desc">The same checks as each card’s About panel, counted across every name.</p><div class="bars">';
+  if(P.length)h+=segBar('Payout ratio (dividend as a % of earnings)',[{l:'Under 40%',n:pp(function(p){return p>0&&p<40;}),c:C1},{l:'40–60%',n:pp(function(p){return p>=40&&p<60;}),c:C2},{l:'60–80%',n:pp(function(p){return p>=60&&p<80;}),c:C3},{l:'80–100%',n:pp(function(p){return p>=80&&p<=100;}),c:'color-mix(in srgb,var(--rust) 60%,var(--paper))'},{l:'Above 100% or negative earnings',n:pp(function(p){return p>100||p<=0;}),c:C4}],P.length);
+  if(S.length)h+=segBar('Years of dividend growth in a row',[{l:'King, 50+',n:ss(50,999),c:C1},{l:'Aristocrat, 25–49',n:ss(25,50),c:C2},{l:'Achiever, 10–24',n:ss(10,25),c:C3},{l:'Challenger, 5–9',n:ss(5,10),c:'color-mix(in srgb,var(--gold) 45%,var(--paper))'},{l:'Under 5',n:ss(0,5),c:C5}],S.length);
+  if(G.length)h+=segBar('Dividend growth, last 3 years vs past 10',[{l:'Picking up',n:gg(function(d){return d>1;}),c:C1},{l:'Steady',n:gg(function(d){return d>=-1&&d<=1;}),c:C5},{l:'Slowing',n:gg(function(d){return d<-1;}),c:C3}],G.length);
+  h+='</div>';
+  if(UNI==='stocks'){
+    var F=U.map(function(x){return D.fund[x.k];}).filter(function(f){return f&&f.status==='OK';}),foreign=U.filter(function(x){var f=D.fund[x.k];return f&&f.status==='Foreign filer';}).length;
+    if(F.length){
+      var num=function(v){return v===''||v===undefined?null:+v;};
+      var rows=[
+        ['Free cash flow covered the dividend last fiscal year',F.filter(function(f){var c=num(f.fcfCover);return c!==null&&c>=1;}).length,F.filter(function(f){return num(f.fcfCover)!==null;}).length,C1],
+        ['Net income fell in 2 or more of the last 3 fiscal years',F.filter(function(f){var c=num(f.niDown);return c!==null&&c>=2;}).length,F.filter(function(f){return num(f.niDown)!==null;}).length,C3],
+        ['Revenue shrank over the last 3 fiscal years',F.filter(function(f){var c=num(f.revGrowth);return c!==null&&c<0;}).length,F.filter(function(f){return num(f.revGrowth)!==null;}).length,C3],
+        ['Long-term debt up 3 years in a row',F.filter(function(f){return f.debtUp==='Yes';}).length,F.filter(function(f){return f.debtUp==='Yes'||f.debtUp==='No';}).length,C3],
+        ['Operating income covers interest less than 3×',F.filter(function(f){var c=num(f.intCover);return c!==null&&c<3;}).length,F.filter(function(f){return num(f.intCover)!==null;}).length,C4],
+        ['Negative shareholders’ equity (usually from buybacks)',F.filter(function(f){return f.debtEq==='Negative equity';}).length,F.length,C5]
+      ];
+      h+='<div style="margin-top:26px"><h4 style="font:500 15px/1.2 var(--serif);margin:0 0 4px">From the annual 10-K filings</h4><p class="desc" style="margin-bottom:6px">'+F.length+' U.S. filers'+(foreign?'; '+foreign+' foreign filers not covered':'')+'.</p>'+
+        rows.filter(function(r){return r[2];}).map(function(r){var p=pctOf(r[1],r[2]);return '<div class="pct"><span>'+r[0]+'</span><span class="pb"><span style="width:'+p+'%;background:'+r[3]+'"></span></span><span class="pv">'+r[1]+' of '+r[2]+' · '+p+'%</span></div>';}).join('')+'</div>';
+    }
+  }
+  return h+'</section>';
+}
+function matrixHtml(U){
+  var over=U.filter(function(x){return x.a.sigma<=-1;}),normal=U.filter(function(x){return x.a.sigma>-1&&x.a.sigma<1;}),under=U.filter(function(x){return x.a.sigma>=1;});
+  var cols=[{key:'all',label:'All',range:'',items:U},{key:'over',label:'Overvalued',range:'−1σ or lower',cls:'over',items:over},{key:'normal',label:'Normal',range:'−1σ to +1σ',items:normal},{key:'under',label:'Undervalued',range:'+1σ or higher',cls:'under',items:under}];
+  var N=U.length,ncol=cols.length+1;
+  var thead='<tr><th>Metric</th>'+cols.map(function(c){var n=c.items.length;return '<th class="'+(c.cls||'')+'">'+c.label+'<span class="zr">'+(c.range||'&nbsp;')+'</span><span class="zr zn">'+(c.key==='all'?n+' names':n+' names ('+pctOf(n,N)+'%)')+'</span></th>';}).join('')+'</tr>';
+  var avgRow=function(m){return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){return '<td>'+fmtMetric(m.type,avgOf(c.items,m.get).avg)+'</td>';}).join('')+'</tr>';};
+  var sec=function(l){return '<tr class="secHead"><td colspan="'+ncol+'">'+esc(l)+'</td></tr>';};
+  var cnt=COUNT_METRICS.map(function(m){return '<tr><td>'+esc(m.label)+'</td>'+cols.map(function(c){var n=0;c.items.forEach(function(x){if(m.test(x.rec,x.a)===true)n++;});return '<td>'+n+' ('+pctOf(n,c.items.length)+'%)</td>';}).join('')+'</tr>';}).join('');
+  return '<section class="sec"><h3>Aggregate average stats</h3><div class="tbWrap"><table class="matrix"><thead>'+thead+'</thead><tbody>'+sec('Averages per group')+METRICS.concat(MORE_METRICS).map(avgRow).join('')+sec('Number of names / % of names per group')+cnt+'</tbody></table></div></section>';
+}
+function footHtml(){
+  return '<footer class="foot"><span class="full">Model output, not investment advice. Sigma history: the Yield Sigma workbook, monthly, completed months only. Financials: SEC EDGAR (10-K filings). Company list and sectors: this site’s cards.</span>'+
+    '<span><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
+    '<span>'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</span></footer>';
+}
+
+function render(){
+  var U=universe(),sheet=document.getElementById('sheet');
+  if(!U.length){sheet.innerHTML='<div class="empty">Couldn’t reach the data just now. Try again in a minute.</div>';return;}
+  if(UNI==='reits'&&!withHist(U).length){/* no REIT history: still show today */}
+  BR=breadth(U);HB=histBins(U);
+  var LT=levelTable(U,SIDE);
+  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  drawBreadth(null);wireBreadth();drawHist(null);wireHist();
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.btn');if(!b)return;
+  var y=window.scrollY;
+  if(b.dataset.uni){UNI=b.dataset.uni;}
+  else if(b.dataset.side){SIDE=+b.dataset.side;}
+  else if(b.dataset.thr){THR=+b.dataset.thr;}
+  else return;
+  try{localStorage.setItem('ysMacro',JSON.stringify({u:UNI,s:SIDE,t:THR}));}catch(err){}
+  render();window.scrollTo(0,y);
+});
+try{var sv=JSON.parse(localStorage.getItem('ysMacro')||'null');if(sv){if(sv.u==='reits'||sv.u==='stocks')UNI=sv.u;if(sv.s===1||sv.s===-1)SIDE=sv.s;if(LEVELS.indexOf(sv.t)>=0)THR=sv.t;}}catch(e){}
+try{var q=new URLSearchParams(location.search);if(q.get('u')==='reits')UNI='reits';}catch(e){}
+window.addEventListener('resize',function(){clearTimeout(window.__rz);window.__rz=setTimeout(function(){drawBreadth(null);drawHist(null);},120);});
+if(window.matchMedia)try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){drawBreadth(null);drawHist(null);});}catch(e){}
+load().then(render).catch(render);
+setInterval(function(){load().then(render);},30*60*1000);
+})();
+</script>
+<script>
+/* Opened over a Yield Sigma card (?embed=1): a click on a stock's card link sends the ticker back to that card. */
+(function(){
+  if(window.parent===window)return;
+  var on=false;try{on=new URLSearchParams(location.search).get('embed')==='1';}catch(e){}
+  if(!on)return;
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href*="ticker="]');if(!a)return;
+    var m=a.getAttribute('href').match(/[?&]ticker=([^&#]+)/);if(!m)return;
+    e.preventDefault();window.parent.postMessage({ysPick:decodeURIComponent(m[1])},'*');
+  },true);
+})();
+</script>
+</body>
+</html>
