@@ -94,7 +94,7 @@ table.tb td:first-child{font-weight:600}
 table.tb td .n{display:block;font-size:10px;font-weight:500;color:var(--muted)}
 table.tb tr.sel td{background:color-mix(in srgb,var(--jade-soft) 60%,transparent)}
 .tbWrap{overflow-x:auto}
-table.tb td.spc,table.tb th.spc{text-align:center;padding-top:4px;padding-bottom:4px}
+table.tb td.spc,table.tb th.spc{text-align:center;padding-top:4px;padding-bottom:4px;min-width:178px}
 .spk{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .spk svg{display:block}
 .spv{font-size:11.5px;font-weight:700;min-width:52px;text-align:right}
@@ -706,7 +706,7 @@ function spreadHtml(U){
 function normHtml(U,LT){
   var side=SIDE>0?'undervalued':'overvalued',r2=LT.filter(function(r){return r.T===THR;})[0]||LT[2];
   var lead='';
-  if(r2&&r2.eps){lead='<p class="lead">From '+lvl(r2.T,SIDE)+', '+(r2.w24?'<b>'+r2.w24.p+'%</b> of moves were back at 0σ within 24 months':'')+(r2.med!==null?'; the typical trip back took <b>'+Math.round(r2.med)+' months</b>':'')+'. '+r2.eps+' times across '+r2.names+' names'+(r2.open?', '+r2.open+' still away':'')+'.</p>';}
+  if(r2&&r2.eps){lead='<p class="lead">From '+lvl(r2.T,SIDE)+', '+(r2.w24?'<b>'+r2.w24.p+'%</b> of moves were back at 0σ within 24 months':'')+(r2.med!==null?'; the typical trip back took <b>'+Math.round(r2.med)+' months</b>':'')+'. '+r2.eps+' occurrences across '+r2.names+' names'+(r2.open?', '+r2.open+' still away':'')+'.</p>';}
   var rows=LT.map(function(r){
     var c=function(w){return w?w.p+'%<span class="n">of '+w.n+'</span>':'–';};
     return '<tr'+(r.T===THR?' class="sel"':'')+'><td class="'+(SIDE>0?'u':'o')+'">'+lvl(r.T,SIDE)+(SIDE>0?' or higher':' or lower')+'</td><td>'+r.eps+'<span class="n">'+r.names+' names</span></td><td>'+c(r.w6)+'</td><td>'+c(r.w12)+'</td><td>'+c(r.w24)+'</td><td>'+(r.med===null?(r.eps?'over half not back':'–'):Math.round(r.med))+'</td><td>'+r.open+'</td></tr>';
@@ -720,10 +720,10 @@ function normHtml(U,LT){
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span>'+
       '<span class="grp"><span class="lbl">Level for the lists</span>'+LEVELS.map(function(T){return btn('thr',String(T),String(THR),lvl(T,SIDE));}).join('')+'</span></div>'+
     lead+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Times reached</th><th>Back to 0σ within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to 0σ</th><th>Still away</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Back to 0σ within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to 0σ</th><th>Still away</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="lead3">'+
-      '<div><h4>Fastest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · times, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
-      '<div><h4>Slowest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · times, at least 2</p>'+li(Ld.slow,mo)+'</div>'+
+      '<div><h4>Fastest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
+      '<div><h4>Slowest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.slow,mo)+'</div>'+
       '<div><h4>Still away from 0σ</h4><p class="hint">'+Ld.openN+' name'+(Ld.openN===1?'':'s')+' past '+lvl(THR,SIDE)+' and not back yet · months so far</p>'+li(Ld.open,function(e){return e.so+' mo<span class="m" style="font-weight:500"> · since '+mLabel(e.since)+'</span>';})+'</div>'+
     '</div></section>';
 }
@@ -755,9 +755,9 @@ function sectorHtml(U){
     r.med=kmMedian(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
   });
   rows.sort(function(p,q){return q.avg-p.avg;});
-  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' times</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). σ move: the sector’s average sigma at the end of each of the last 12 months; the figure is the change over that time (+ toward undervalued, − toward overvalued). Reliable shape: share of names graded Textbook or Defined.</p>'+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average σ</th><th>Undervalued</th><th>Overvalued</th><th class="spc">σ move, last 12 months</th><th>Median months to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average<br>σ</th><th>Undervalued</th><th>Overvalued</th><th class="spc">σ move,<br>last 12 months</th><th>Median months<br>to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable<br>shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
 function segBar(title,parts,N){
   var seg='',leg='';parts.forEach(function(p){if(!p.n)return;seg+='<span style="width:'+(p.n/N*100)+'%;background:'+p.c+'" title="'+esc(p.l)+'"></span>';leg+='<span><i style="background:'+p.c+'"></i>'+esc(p.l)+' <b>'+p.n+'</b> ('+pctOf(p.n,N)+'%)</span>';});
