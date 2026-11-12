@@ -2100,7 +2100,7 @@ function csKick(){
 function csRow(rec){
   var r=csReady()?csScore(rec):null;
   if(!csReady())csKick();
-  var lab='<span class="l">Constant Score<button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the Constant Score">i</button></span>';
+  var lab='<span class="l">Constant Score<button type="button" class="labsPill" aria-expanded="false" aria-label="About the Constant Score">Labs</button></span>';
   var val;
   if(!csReady())val='<span class="v" style="color:var(--c-muted)">…</span>';
   else if(!r)return '';
