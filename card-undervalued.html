@@ -1184,7 +1184,7 @@ function wireMiniCalc(rec){
  * history flip. If it can't be reached, the built-in tables stay.
  * ------------------------------------------------------------------ */
 var YS_HIST_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/history.csv';
-var ysHist={state:0,cbs:[]};
+var ysHist={state:0,cbs:[]},YS_DIVY={};
 function ysHistParse(txt){
   var lines=String(txt||'').split(/\r?\n/);if(lines.length<2||!/^ticker\t/.test(lines[0]))return 0;
   var now=new Date(),cur=now.getFullYear()*12+now.getMonth(),n=0;
@@ -1193,6 +1193,7 @@ function ysHistParse(txt){
     var t=f[0].trim().toUpperCase(),st=+f[3].slice(0,4)*12+(+f[3].slice(5,7)-1);
     var z=f[7].split(',').map(function(v){return v===''?null:+v;}),p=f[8].split(',').map(function(v){return v===''?null:+v;}),d={};
     f[9].split(',').forEach(function(x){var k=x.split(':');if(k.length===2&&k[1]!=='')d[k[0]]=+k[1];});
+    YS_DIVY[t]=d;
     while(z.length&&st+z.length-1>=cur){z.pop();p.pop();}            /* completed months only */
     while(z.length&&(z[z.length-1]==null||p[z.length-1]==null)){z.pop();p.length=z.length;}
     for(var i=1;i<z.length;i++){if(z[i]==null)z[i]=z[i-1];if(p[i]==null)p[i]=p[i-1];}
@@ -1725,7 +1726,7 @@ function buildCard(rec,a){
   }
   if(divStats.length||histStats.length){
     h+='<details class="sec"><summary><h3>Dividend and sigma detail</h3></summary><div class="grid2">'+
-      '<div>'+divStats.map(statRow).join('')+'</div>'+
+      '<div>'+csRow(rec)+divStats.map(statRow).join('')+'</div>'+
       '<div>'+histStats.map(statRow).join('')+'</div>'+
     '</div>'+
     '</details>';
@@ -2027,6 +2028,91 @@ function renderCurrent(){
    The dividend picture is worked out here from the same row the card uses. */
 var YS_AB_REC=null,YS_AB_A=null,YS_PROFILES=null,YS_PROF_LOADING=false;
 var YS_FUND=null,YS_FUND_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/fund.csv';
+/* ===== Constant Score (Nov 2026, first version) =====
+   How predictable the dividend is, 0-100. Weights set for predictability:
+   years of growth in a row 45 (flattening curve: ~half at 10 years, ~90% at 25, full at 50),
+   steadiness of the raises over the last 5 completed years 25 (how evenly, not how fast),
+   free cash flow coverage year by year 15, payout ratio year by year 10, balance sheet 5.
+   Inputs: the card row (streak), history.csv (dividend amount per year), fund.csv (SEC 10-K).
+   Foreign filers are not scored. Band cut-offs are provisional. */
+var CS_PARTS=[['streak','Years of dividend growth in a row',45],['steady','Steadiness of the raises, last 5 years',25],['fcf','Free cash flow coverage, year by year',15],['payout','Payout ratio, year by year',10],['bal','Balance sheet',5]];
+function csBand(v){return v>=80?['Bedrock','var(--c-jade)']:v>=60?['Solid','var(--c-jade)']:v>=40?['Watch','var(--c-gold)']:['Fragile','var(--c-rust)'];}
+function csForeign(t,F){
+  if(F&&F.status==='Foreign filer')return true;
+  var P=YS_PROFILES&&(YS_PROFILES[t]||YS_PROFILES[t.replace(/[\s.\/]+/g,'-')]);
+  return !!(P&&P.hq&&/(Canada|Ireland|France|Switzerland|Bermuda|United Kingdom)$/.test(P.hq));
+}
+function csScore(rec){
+  var t=String(rec.ticker||'').trim().toUpperCase(),F=YS_FUND?YS_FUND[t]:null;
+  if(csForeign(t,F))return {foreign:true};
+  var P={},num=function(k){var v=F?F[k]:'';return (v===''||v===undefined||isNaN(+v))?null:+v;};
+  /* 1. years of growth in a row, flattening */
+  var y=rec.divGrowthYears;
+  if(y===null||y===undefined||!isFinite(y))return null;
+  y=Math.max(0,Math.floor(y));
+  P.streak=45*Math.min(1,(1-Math.exp(-y/12))/(1-Math.exp(-50/12)));
+  /* 2. steadiness: the 5 yearly raises of the last 5 completed years; a cut or a freeze costs the most */
+  var D=YS_DIVY[t],cy=new Date().getFullYear()-1;
+  if(D){
+    var g=[],okD=true;
+    for(var k=cy-4;k<=cy;k++){var a0=D[String(k-1)],a1=D[String(k)];if(!(a0>0&&a1>0)){okD=false;break;}g.push((a1/a0-1)*100);}
+    if(okD){
+      var mu=g.reduce(function(s,v){return s+v;},0)/g.length,sd=Math.sqrt(g.reduce(function(s,v){return s+(v-mu)*(v-mu);},0)/(g.length-1));
+      var cuts=g.filter(function(v){return v<-0.5;}).length,flat=g.filter(function(v){return v>=-0.5&&v<=0.5;}).length;
+      P.steady=25*Math.max(0,Math.max(0,1-sd/6)-0.2*flat-0.5*cuts);
+      P._raises=g;
+    }
+  }
+  /* 3. free cash flow coverage, each of the 4 fiscal years in the filings */
+  if(F&&F.status==='OK'){
+    var sc=[];
+    for(var i=0;i<4;i++){var cfo=num('cfo'+i),cx=num('capex'+i),dv=num('div'+i);if(cfo===null||dv===null||dv<=0)continue;
+      var c=(cfo-(cx||0))/dv;sc.push(c>=1.5?1:c>=1?0.7:c>=0.8?0.35:0);}
+    if(sc.length)P.fcf=15*sc.reduce(function(s,v){return s+v;},0)/sc.length;
+    /* 4. payout ratio, each year: the middle year sets the level, every year over 100% takes a quarter off */
+    var pr=[];
+    for(i=0;i<4;i++){var ni=num('ni'+i),dv2=num('div'+i);if(ni===null||dv2===null||dv2<=0)continue;pr.push(ni>0?dv2/ni*100:1e9);}
+    if(pr.length){
+      var srt=pr.slice().sort(function(p,q){return p-q;}),md=srt.length%2?srt[srt.length>>1]:(srt[srt.length/2-1]+srt[srt.length/2])/2;
+      var b=md<=60?1:md<=75?0.75:md<=90?0.5:md<=100?0.25:0,over=pr.filter(function(v){return v>100;}).length;
+      P.payout=10*Math.max(0,b-0.25*over);
+    }
+    /* 5. balance sheet: interest cover and the debt trend */
+    var d3=num('debt3'),ic=num('intCover');
+    if(d3===null&&num('intx3')===null)P.bal=5;
+    else P.bal=5*(((ic===null)?0.3:ic>=8?0.6:ic>=4?0.4:ic>=2?0.2:0)+(F.debtUp==='No'?0.4:0));
+  }else if(rec.payoutRatio!==null&&rec.payoutRatio!==undefined&&isFinite(rec.payoutRatio)){
+    var p1=rec.payoutRatio;P.payout=10*(p1<=0?0:p1<=60?1:p1<=75?0.75:p1<=90?0.5:p1<=100?0.25:0);
+  }
+  var got=0,max=0;CS_PARTS.forEach(function(q){if(P[q[0]]!==undefined){got+=P[q[0]];max+=q[2];}});
+  return {v:Math.round(got/max*100),parts:P,partial:max<100};
+}
+function csReady(){return ysHist.state>=2&&!!YS_FUND;}
+var CS_KICKED=false;
+function csKick(){
+  if(CS_KICKED||csReady())return;CS_KICKED=true;
+  var left=2,done=function(){if(--left===0)renderCurrent();};
+  ysLoadHist(function(){done();});
+  if(YS_FUND)done();else if(YS_PROF_LOADING){var w=setInterval(function(){if(!YS_PROF_LOADING){clearInterval(w);done();}},200);}else abLoad(done);
+}
+function csRow(rec){
+  var r=csReady()?csScore(rec):null;
+  if(!csReady())csKick();
+  var lab='<span class="l">Constant Score<button type="button" class="labsPill infoPill" aria-expanded="false" aria-label="About the Constant Score">i</button></span>';
+  var val;
+  if(!csReady())val='<span class="v" style="color:var(--c-muted)">…</span>';
+  else if(!r)return '';
+  else if(r.foreign)val='<span class="v" style="color:var(--c-muted);font-weight:500">Not scored · foreign filer</span>';
+  else{var bd=csBand(r.v);val='<span class="v"><span style="color:'+bd[1]+'">'+r.v+' · '+bd[0]+'</span></span>';}
+  var pop='<b>The Constant Score</b> uses the predictability of a long-term dividend grower: how long the dividend has grown, how steadily, and how well cash and earnings cover it. 0 to 100.';
+  if(r&&!r.foreign){
+    pop+='<span style="display:block;margin-top:8px">'+CS_PARTS.map(function(q){var v=r.parts[q[0]];
+      return '<span style="display:flex;justify-content:space-between;gap:10px;border-top:1px solid color-mix(in srgb,var(--c-ink) 12%,transparent);padding:4px 0"><span>'+q[1]+'</span><b style="white-space:nowrap">'+(v===undefined?'no data':Math.round(v)+' / '+q[2])+'</b></span>';}).join('')+'</span>'+
+      (r.partial?'<span style="display:block;margin-top:6px;color:var(--c-muted)">Parts with no data are left out and the score is scaled to 100.</span>':'')+
+      '<span style="display:block;margin-top:6px;color:var(--c-muted)">Bedrock 80+ · Solid 60–79 · Watch 40–59 · Fragile under 40.</span>';
+  }else if(r&&r.foreign){pop+=' Foreign filers are not scored.';}
+  return '<div class="statBlock"><div class="stat noBorder">'+lab+val+'</div><span class="labsPop" hidden style="margin:8px 0 0;max-width:none;font-size:12px">'+pop+'</span></div>';
+}
 function abParseFund(t){
   var m={},L=String(t||'').split(/\r?\n/);if(L.length<2)return m;
   var H=L[0].split(',');
