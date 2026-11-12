@@ -249,6 +249,7 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .abPanel ul{margin:6px 0 0;padding:0;list-style:none}
 .abPanel li{padding:4px 0 4px 16px;position:relative}
 .abPanel li::before{content:"";position:absolute;left:2px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--abc,var(--muted))}
+.abPanel .abNote{color:var(--muted);font-style:italic}
 .abPanel .abFoot{margin-top:12px;font-size:11px;color:var(--muted)}
 .streakBadge{display:inline-flex;align-items:center;gap:7px;margin-top:9px;font:italic 600 13.5px var(--serif);color:var(--c-muted)}
 .streakBadge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
@@ -2025,11 +2026,48 @@ function renderCurrent(){
    Profiles come from profiles.json next to the card (filled from FMP company profiles).
    The dividend picture is worked out here from the same row the card uses. */
 var YS_AB_REC=null,YS_AB_A=null,YS_PROFILES=null,YS_PROF_LOADING=false;
+var YS_FUND=null,YS_FUND_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/fund.csv';
+function abParseFund(t){
+  var m={},L=String(t||'').split(/\r?\n/);if(L.length<2)return m;
+  var H=L[0].split(',');
+  for(var i=1;i<L.length;i++){if(!L[i])continue;var c=L[i].split(','),o={};for(var j=0;j<H.length;j++)o[H[j]]=c[j]===undefined?'':c[j];if(o.ticker)m[o.ticker.toUpperCase()]=o;}
+  return m;
+}
 function abLoad(cb){
-  if(YS_PROFILES){cb();return;}
+  if(YS_PROFILES&&YS_FUND){cb();return;}
   if(YS_PROF_LOADING)return;YS_PROF_LOADING=true;
-  fetch('profiles.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
-    .then(function(j){YS_PROFILES=j||{};YS_PROF_LOADING=false;cb();});
+  Promise.all([
+    fetch('profiles.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};}),
+    fetch(YS_FUND_URL,{cache:'no-cache'}).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';})
+  ]).then(function(a){YS_PROFILES=a[0]||{};YS_FUND=abParseFund(a[1]);YS_PROF_LOADING=false;cb();});
+}
+/* Financial health lines from the SEC 10-K figures (fund.csv, $ millions) */
+function abMoney(m){var a=Math.abs(m),s=a>=1000?('$'+(a/1000).toFixed(a>=10000?0:1)+'B'):('$'+Math.round(a)+'M');return (m<0?'\u2212':'')+s;}
+function abFundLines(F){
+  var L=[],n=function(k){var v=F[k];return (v===''||v===undefined||isNaN(+v))?null:+v;};
+  var cover=n('fcfCover'),fcf=n('fcf'),div=n('div3'),payout=n('payout'),ni3=n('ni3');
+  if(cover!==null&&fcf!==null&&div!==null&&div>0){
+    var cx=cover.toFixed(1)+'\u00d7';
+    if(fcf<=0)L.push(['Free cash flow (cash from operations after capital spending) was negative last fiscal year, so it did not cover the '+abMoney(div)+' paid in dividends.','var(--rust)']);
+    else if(cover>=1.5)L.push(['Free cash flow (cash from operations after capital spending) of '+abMoney(fcf)+' covered the '+abMoney(div)+' paid in dividends '+cx+' last fiscal year.','var(--jade)']);
+    else if(cover>=1)L.push(['Free cash flow of '+abMoney(fcf)+' just covered the '+abMoney(div)+' paid in dividends ('+cx+') last fiscal year.','var(--gold)']);
+    else L.push(['Free cash flow of '+abMoney(fcf)+' did not fully cover the '+abMoney(div)+' paid in dividends ('+cx+') last fiscal year.','var(--rust)']);
+  }else if(payout!==null){
+    L.push(['Dividends paid took '+Math.round(payout)+'% of net income last fiscal year.',payout<=60?'var(--jade)':payout<=90?'var(--gold)':'var(--rust)']);
+  }
+  if(ni3!==null&&ni3<0)L.push(['Net loss of '+abMoney(-ni3)+' last fiscal year.','var(--rust)']);
+  else{var dn=n('niDown');if(dn!==null)L.push([dn===0?'Net income rose in each of the last 3 fiscal years.':'Net income fell in '+dn+' of the last 3 fiscal years.',dn===0?'var(--jade)':dn===1?'var(--muted)':'var(--gold)']);}
+  var rg=n('revGrowth');
+  if(rg!==null)L.push([(rg>=0?'Revenue grew ':'Revenue shrank ')+Math.abs(rg).toFixed(1)+'% a year over the last 3 fiscal years.',rg>=3?'var(--jade)':rg>=0?'var(--muted)':'var(--gold)']);
+  var d3=n('debt3'),ic=n('intCover');
+  if(F.debtEq==='Negative equity')L.push(["Shareholders' equity is negative, usually the result of years of share buybacks rather than a sign of distress.",'var(--muted)']);
+  if(d3===null)L.push(['No long-term debt reported in the filings.','var(--jade)']);
+  else{
+    var t='Long-term debt of '+abMoney(d3)+(F.debtUp==='Yes'?', up 3 years in a row':'');
+    if(ic!==null)t+='; operating income covers interest '+ic.toFixed(1)+'\u00d7';
+    L.push([t+'.',(ic!==null&&ic<3)?'var(--rust)':(F.debtUp==='Yes'||(ic!==null&&ic<6))?'var(--gold)':'var(--jade)']);
+  }
+  return L;
 }
 function abSize(c){if(!c||!isFinite(c))return null;return c>=2e11?'Mega cap':c>=1e10?'Large cap':c>=2e9?'Mid cap':c>=3e8?'Small cap':'Micro cap';}
 function abDivLines(rec,a){
@@ -2084,7 +2122,14 @@ function abOpen(){
     if(P&&P.about)h+='<div class="abSec">What they do</div><p>'+esc(P.about)+'</p>';
     var D=abDivLines(rec,a);
     if(D.length)h+='<div class="abSec">Dividend picture</div><ul>'+D.map(function(d){return '<li style="--abc:'+d[1]+'">'+esc(d[0])+'</li>';}).join('')+'</ul>';
-    h+='<div class="abFoot">'+(P?'Company facts: Financial Modeling Prep. ':'')+'Dividend figures: this card’s data. Not investment advice.</div>';
+    var F=(YS_FUND&&YS_FUND[String(tk).toUpperCase()])||null,secFy='';
+    if(F&&F.status==='OK'){
+      var FL=abFundLines(F);
+      if(FL.length){h+='<div class="abSec">Financial health</div><ul>'+FL.map(function(d){return '<li style="--abc:'+d[1]+'">'+esc(d[0])+'</li>';}).join('')+'</ul>';secFy=F.fy;}
+    }else if((F&&F.status==='Foreign filer')||(P&&P.hq&&/(Canada|Ireland|France|Switzerland|Bermuda|United Kingdom)$/.test(P.hq))){
+      h+='<div class="abSec">Financial health</div><p class="abNote">Foreign filer: financial background not covered.</p>';
+    }
+    h+='<div class="abFoot">'+(P?'Company facts: Financial Modeling Prep. ':'')+(secFy?'Financial health: SEC EDGAR (10-K filings), fiscal year ended '+esc(secFy)+'. ':'')+'Dividend figures: this card’s data. Not investment advice.</div>';
     var p=document.createElement('div');p.className='abPanel';p.id='abPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','About '+name);p.innerHTML=h;
     document.body.appendChild(p);
     var b=document.getElementById('abPill');if(b)b.setAttribute('aria-expanded','true');
