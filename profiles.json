@@ -1,0 +1,17 @@
+{
+  "_note": "Company profiles for the About pill on the valuation cards. Facts from Financial Modeling Prep company profiles; 'about' is a plain-English summary. capAsOf is the day the market value was read (used only for the size class).",
+  "FIS": {
+    "name": "Fidelity National Information Services",
+    "founded": 1968,
+    "hq": "Jacksonville, Florida",
+    "listed": "NYSE",
+    "ipo": 2001,
+    "ceo": "Stephanie L. Ferris",
+    "employees": 44000,
+    "cap": 15572357098,
+    "capAsOf": "2026-11-12",
+    "field": "Information technology services",
+    "web": "fisglobal.com",
+    "about": "FIS runs the technology behind banks: the core systems that keep accounts, online and mobile banking, fraud checks, and the networks that move money between them. Its capital markets arm sells trading, lending and treasury software to investment firms."
+  }
+}

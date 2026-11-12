@@ -81,7 +81,7 @@ html.tiles .t-tnx .bpsNote{margin:0 0 6px}
 html.tiles .tnx>div{padding:clamp(8px,1.4vh,22px) 12px}
 html.tiles .tnx>div>div{flex:0 0 auto;border-left:0;padding:0}
 html.tiles .tnx .l{font-size:clamp(10.5px,1.1vh,13px)}
-html.tiles .tnx .v{font-size:clamp(18px,min(2.7vh,2vw),40px);font-weight:500;color:color-mix(in srgb,var(--c-ink) 62%,var(--c-paper));margin-top:clamp(4px,.8vh,12px);letter-spacing:-.01em}
+html.tiles .tnx .v{font-size:clamp(18px,min(2.7vh,2vw),40px);font-weight:500;color:color-mix(in srgb,var(--ink) 62%,var(--panel));margin-top:clamp(4px,.8vh,12px);letter-spacing:-.01em}
 html.tiles .tnx .cap{margin-top:clamp(4px,.8vh,12px);max-width:22ch;align-self:center}
 html.tiles .t-tnx .desc{margin:clamp(4px,.8vh,12px) 0 0;font-size:clamp(12px,1.05vh,14px);line-height:1.5}
 html.tiles .t-tnx .bpsNote{font-size:11.5px}
@@ -230,6 +230,26 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
 .mast .exch{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-muted);margin-top:4px}
 .mast .exch .sep{width:4px;height:4px;border-radius:50%;background:var(--c-muted);flex:none}
+.abPill{display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding:2px 9px 2px 10px;border:1px solid var(--jade);border-radius:999px;background:transparent;color:var(--jade);font:600 11.5px/1.5 var(--mono);cursor:pointer;white-space:nowrap}
+.abPill i{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;border:1px solid currentColor;font:italic 700 10px/1 var(--serif)}
+.abPill:hover,.abPill[aria-expanded="true"]{background:var(--jade-soft)}
+.abPanel{position:fixed;z-index:950;width:min(470px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:var(--field);color:var(--ink);border:1px solid var(--rule);border-radius:12px;box-shadow:0 18px 40px -16px rgba(10,25,20,.4);padding:16px 18px 14px;font:13px/1.55 var(--mono)}
+.abPanel h4{margin:0 26px 2px 0;font:500 19px/1.25 var(--serif)}
+.abPanel .abTk{font:600 11.5px var(--mono);color:var(--muted);letter-spacing:.04em}
+.abPanel .abX{position:absolute;top:10px;right:10px;width:26px;height:26px;border:0;background:transparent;color:var(--muted);font:18px/1 var(--mono);cursor:pointer;border-radius:6px}
+.abPanel .abX:hover{background:var(--panel)}
+.abPanel dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:12px 0 0}
+.abPanel dt{padding-right:14px!important}
+.abPanel dt,.abPanel dd{margin:0;padding:5px 0;border-top:1px solid var(--rule)}
+.abPanel dt{color:var(--muted)}
+.abPanel dd{text-align:right}
+.abPanel dd a{color:var(--jade)}
+.abPanel .abSec{margin:14px 0 0;font:600 10.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.abPanel p{margin:6px 0 0}
+.abPanel ul{margin:6px 0 0;padding:0;list-style:none}
+.abPanel li{padding:4px 0 4px 16px;position:relative}
+.abPanel li::before{content:"";position:absolute;left:2px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--abc,var(--muted))}
+.abPanel .abFoot{margin-top:12px;font-size:11px;color:var(--muted)}
 .streakBadge{display:inline-flex;align-items:center;gap:7px;margin-top:9px;font:italic 600 13.5px var(--serif);color:var(--c-muted)}
 .streakBadge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
 .streakBadge.tiered{color:var(--c-gold);font-weight:700}
@@ -1619,7 +1639,7 @@ function buildCard(rec,a){
     tickHtml='<div class="tick" style="--tick-acc:'+tickAcc+'"><span class="dot"></span>'+esc(a.ticker)+'</div>';
   }
   var h=ysNavHtml(a);
-  h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch"><span><a class="ysHome" href="https://www.yieldsigma.com/home" target="_blank" rel="noopener">Yield Sigma™</a> valuation card</span></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
+  h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch"><span><a class="ysHome" href="https://www.yieldsigma.com/home" target="_blank" rel="noopener">Yield Sigma™</a> valuation card</span><button type="button" class="abPill" id="abPill" aria-expanded="false" aria-controls="abPanel">About '+esc(a.ticker||rec.ticker||'')+' <i aria-hidden="true">i</i></button></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
     '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+'</div>'+
@@ -2001,6 +2021,86 @@ function renderCurrent(){
   renderCurrentBase();
   ysApplyTiles();
 }
+/* ===== About pill (Nov 2026): company profile + plain-language dividend picture =====
+   Profiles come from profiles.json next to the card (filled from FMP company profiles).
+   The dividend picture is worked out here from the same row the card uses. */
+var YS_AB_REC=null,YS_AB_A=null,YS_PROFILES=null,YS_PROF_LOADING=false;
+function abLoad(cb){
+  if(YS_PROFILES){cb();return;}
+  if(YS_PROF_LOADING)return;YS_PROF_LOADING=true;
+  fetch('profiles.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
+    .then(function(j){YS_PROFILES=j||{};YS_PROF_LOADING=false;cb();});
+}
+function abSize(c){if(!c||!isFinite(c))return null;return c>=2e11?'Mega cap':c>=1e10?'Large cap':c>=2e9?'Mid cap':c>=3e8?'Small cap':'Micro cap';}
+function abDivLines(rec,a){
+  var L=[],p=rec.payoutRatio,n=rec.divGrowthYears,g10=rec.divGrowth10y,g3=rec.divGrowth3y,ok=function(v){return v!==null&&v!==undefined&&isFinite(v);};
+  if(ok(p)){
+    var t,c;
+    if(p<=0){t='Earnings are negative right now, so the dividend isn’t covered by profits.';c='var(--rust)';}
+    else if(p<40){t='Pays out '+Math.round(p)+'% of earnings — plenty of room to keep raising the dividend.';c='var(--jade)';}
+    else if(p<60){t='Pays out '+Math.round(p)+'% of earnings — a comfortable level.';c='var(--jade)';}
+    else if(p<80){t='Pays out '+Math.round(p)+'% of earnings — on the high side, less room for big raises.';c='var(--gold)';}
+    else if(p<=100){t='Pays out '+Math.round(p)+'% of earnings — stretched; raises depend on earnings growing.';c='var(--rust)';}
+    else{t='Pays out more than it earns ('+Math.round(p)+'%) — watch for slower raises or a cut.';c='var(--rust)';}
+    L.push([t,c]);
+  }
+  if(ok(n)&&n>0){
+    var tier=a&&a.streak&&a.streak.tier?(' \u2014 a '+a.streak.tier):'';
+    L.push(['Has raised its dividend '+Math.floor(n)+' year'+(Math.floor(n)===1?'':'s')+' in a row'+tier+'.',n>=10?'var(--jade)':'var(--muted)']);
+  }
+  if(ok(g10)){
+    var tr=divTrend(rec),s='Dividend '+(g10<0?'shrank '+fmtPct(-g10):'grew '+fmtPct(g10))+' a year over the past 10 years';
+    if(ok(g3))s+=(g3<0?', and shrank '+fmtPct(-g3):', '+fmtPct(g3))+' a year over the last 3'+(tr==='slowing'?' \u2014 growth is slowing':tr==='advancing'?' \u2014 growth is picking up':' \u2014 a steady pace');
+    L.push([s+'.',tr==='slowing'?'var(--gold)':'var(--jade)']);
+  }
+  if(ok(rec.yield)&&ok(rec.avg10y))L.push(['Dividend yield is '+fmtPct(rec.yield)+' today, against a 10-year average of '+fmtPct(rec.avg10y)+'.','var(--muted)']);
+  return L;
+}
+function abClose(){var p=document.getElementById('abPanel');if(p)p.remove();var b=document.getElementById('abPill');if(b)b.setAttribute('aria-expanded','false');}
+function abPlace(){
+  var p=document.getElementById('abPanel'),b=document.getElementById('abPill');if(!p||!b)return;
+  var r=b.getBoundingClientRect(),w=p.offsetWidth,h=p.offsetHeight,vw=window.innerWidth,vh=window.innerHeight;
+  var x=Math.min(Math.max(12,r.left),vw-w-12),y=r.bottom+8;
+  if(y+h>vh-12)y=Math.max(12,vh-h-12);
+  p.style.left=x+'px';p.style.top=y+'px';
+}
+function abOpen(){
+  var rec=YS_AB_REC,a=YS_AB_A;if(!rec)return;
+  abLoad(function(){
+    abClose();
+    var tk=rec.ticker||'',P=(YS_PROFILES&&YS_PROFILES[tk])||null,rows=[];
+    var name=(P&&P.name)||shortCompanyName(a&&a.name||rec.nameRaw||'')||tk;
+    if(P){
+      if(P.founded)rows.push(['Founded',P.founded+(P.hq?' · '+P.hq:'')]);
+      if(P.listed)rows.push(['Listed',P.listed+(P.ipo?' since '+P.ipo:'')]);
+      if(P.ceo)rows.push(['CEO',P.ceo]);
+      if(P.employees)rows.push(['Employees',Number(P.employees).toLocaleString('en-US')]);
+      var sz=abSize(P.cap);if(sz)rows.push(['Size',sz]);
+      if(P.field)rows.push(['Field',P.field]);
+      if(P.web)rows.push(['Website','<a href="https://'+esc(P.web)+'" target="_blank" rel="noopener">'+esc(P.web)+'</a>']);
+    }
+    var h='<button type="button" class="abX" aria-label="Close">×</button><h4>'+esc(name)+'</h4><div class="abTk">'+esc(tk)+'</div>';
+    if(rows.length)h+='<dl>'+rows.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+(r[0]==='Website'?r[1]:esc(String(r[1])))+'</dd>';}).join('')+'</dl>';
+    if(P&&P.about)h+='<div class="abSec">What they do</div><p>'+esc(P.about)+'</p>';
+    var D=abDivLines(rec,a);
+    if(D.length)h+='<div class="abSec">Dividend picture</div><ul>'+D.map(function(d){return '<li style="--abc:'+d[1]+'">'+esc(d[0])+'</li>';}).join('')+'</ul>';
+    h+='<div class="abFoot">'+(P?'Company facts: Financial Modeling Prep. ':'')+'Dividend figures: this card’s data. Not investment advice.</div>';
+    var p=document.createElement('div');p.className='abPanel';p.id='abPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','About '+name);p.innerHTML=h;
+    document.body.appendChild(p);
+    var b=document.getElementById('abPill');if(b)b.setAttribute('aria-expanded','true');
+    abPlace();
+  });
+}
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(t.closest&&t.closest('#abPill')){if(document.getElementById('abPanel'))abClose();else abOpen();return;}
+  if(t.closest&&t.closest('.abX')){abClose();return;}
+  if(document.getElementById('abPanel')&&!(t.closest&&t.closest('#abPanel')))abClose();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')abClose();});
+window.addEventListener('resize',abPlace);
+window.addEventListener('scroll',abPlace,true);
+
 function renderCurrentBase(){
   var card=$('#card');
   applyThemeVars();
@@ -2009,6 +2109,7 @@ function renderCurrentBase(){
   var parsed=ROWS[idx];
   var rec=priceOverride!==null?applyPriceOverride(parsed.rec,priceOverride):parsed.rec;
   var a=analyze(rec);
+  YS_AB_REC=rec;YS_AB_A=a;abClose();
   a.maxAbs=Math.max(Math.abs(rec.sigma||0),Math.abs(a.sigmaComputed||0));
   /* sections land closed; keep whatever the reader opened when the same stock re-renders (price edit, live refresh) */
   var openSet=null;
