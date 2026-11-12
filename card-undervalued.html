@@ -2246,6 +2246,7 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="calc">Compound calculator</button>'+
       '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
+      '<button type="button" role="menuitem" data-go="macro">Macro<small>Universe stats</small></button>'+
       '<a role="menuitem" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory<small>All names \u2197</small></a>'+
       (window.parent===window?'<a role="menuitem" href="https://tools.yieldsigma.com/workspace.html?t='+t+'" target="_blank" rel="noopener">Workspace<small>All tools, one screen \u2197</small></a>':'')+
       '<div class="ysMenuSep"></div>'+
@@ -2330,6 +2331,7 @@ function ysGo(k,t){
   else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
   else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');
   else if(k==='hmR')ysPage(YS_BASE+'heat-map-reits.html?embed=1','Heat map · REITs');
+  else if(k==='macro')ysPage(YS_BASE+'card-macro.html?embed=1','Macro · universe stats');
 }
 function ysPage(url,title){
   ysClosePage();
