@@ -94,6 +94,10 @@ table.tb td:first-child{font-weight:600}
 table.tb td .n{display:block;font-size:10px;font-weight:500;color:var(--muted)}
 table.tb tr.sel td{background:color-mix(in srgb,var(--jade-soft) 60%,transparent)}
 .tbWrap{overflow-x:auto}
+table.tb td.spc,table.tb th.spc{text-align:center;padding-top:4px;padding-bottom:4px}
+.spk{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.spk svg{display:block}
+.spv{font-size:11.5px;font-weight:700;min-width:52px;text-align:right}
 .u{color:var(--jade)} .o{color:var(--rust)} .m{color:var(--muted)}
 
 .lead3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:22px}
@@ -723,6 +727,24 @@ function normHtml(U,LT){
       '<div><h4>Still away from 0σ</h4><p class="hint">'+Ld.openN+' name'+(Ld.openN===1?'':'s')+' past '+lvl(THR,SIDE)+' and not back yet · months so far</p>'+li(Ld.open,function(e){return e.so+' mo<span class="m" style="font-weight:500"> · since '+mLabel(e.since)+'</span>';})+'</div>'+
     '</div></section>';
 }
+/* mini chart: the sector's average sigma at the end of each of the last 12 completed months,
+   plus the change over those 12 months (+ = toward undervalued) */
+function sparkCell(items){
+  var sum={},cnt={},m1=-1e9;
+  items.forEach(function(x){var h=D.hist[x.k];if(!h)return;h.z.forEach(function(v,i){var m=h.st+i;sum[m]=(sum[m]||0)+v;cnt[m]=(cnt[m]||0)+1;if(m>m1)m1=m;});});
+  var pts=[];for(var m=m1-11;m<=m1;m++)if(cnt[m])pts.push([m,sum[m]/cnt[m]]);
+  if(pts.length<6)return '–';
+  var W=104,H=30,lo=Math.min(-0.5,Math.min.apply(null,pts.map(function(p){return p[1];}))),hi=Math.max(0.5,Math.max.apply(null,pts.map(function(p){return p[1];})));
+  var X=function(m){return 2+(m-pts[0][0])/Math.max(1,pts[pts.length-1][0]-pts[0][0])*(W-6);},Y=function(v){return 3+(hi-v)/(hi-lo)*(H-6);};
+  var d=pts.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join('');
+  var first=pts[0],last=pts[pts.length-1],ch=last[1]-first[1],col=ch>=0?'var(--jade)':'var(--rust)';
+  var lab='Average σ '+mLabel(first[0])+': '+sg(first[1])+' → '+mLabel(last[0])+': '+sg(last[1]);
+  return '<span class="spk"><svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="'+esc(lab)+'"><title>'+esc(lab)+'</title>'+
+    '<line x1="0" x2="'+W+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 2"/>'+
+    '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+X(last[0]).toFixed(1)+'" cy="'+Y(last[1]).toFixed(1)+'" r="2.4" fill="'+col+'"/></svg>'+
+    '<span class="spv" style="color:'+col+'">'+(ch>=0?'+':'−')+Math.abs(ch).toFixed(2)+'σ</span></span>';
+}
 function sectorHtml(U){
   if(UNI!=='stocks')return '';
   var rows=HM_GROUPS.map(function(gq,i){return {name:gq[0],etf:gq[1],items:U.filter(function(x){return GKEY[x.k]===i;})};}).filter(function(r){return r.items.length;});
@@ -733,9 +755,9 @@ function sectorHtml(U){
     r.med=kmMedian(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
   });
   rows.sort(function(p,q){return q.avg-p.avg;});
-  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' times</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
-  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). Reliable shape: share of names graded Textbook or Defined.</p>'+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average σ</th><th>Undervalued</th><th>Overvalued</th><th>Median months to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
+  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' times</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). σ move: the sector’s average sigma at the end of each of the last 12 months; the figure is the change over that time (+ toward undervalued, − toward overvalued). Reliable shape: share of names graded Textbook or Defined.</p>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average σ</th><th>Undervalued</th><th>Overvalued</th><th class="spc">σ move, last 12 months</th><th>Median months to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
 function segBar(title,parts,N){
   var seg='',leg='';parts.forEach(function(p){if(!p.n)return;seg+='<span style="width:'+(p.n/N*100)+'%;background:'+p.c+'" title="'+esc(p.l)+'"></span>';leg+='<span><i style="background:'+p.c+'"></i>'+esc(p.l)+' <b>'+p.n+'</b> ('+pctOf(p.n,N)+'%)</span>';});
@@ -793,6 +815,8 @@ function render(){
   BR=breadth(U);HB=histBins(U);
   var LT=levelTable(U,SIDE);
   sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
+  sheet.querySelectorAll('thead th').forEach(function(th){th.innerHTML=th.innerHTML.replace(/\u03c3/g,'<span style="text-transform:none">\u03c3</span>');});
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
 }
 document.addEventListener('click',function(e){
