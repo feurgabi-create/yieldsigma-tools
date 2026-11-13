@@ -849,6 +849,26 @@ var BT_H=[[6,'Last 6 months'],[12,'Last year'],[60,'Last 5 years'],[120,'Last 10
 function btRet(h,i,k){var d=0;for(var j=i+1;j<=i+k;j++){var y=Math.floor((h.st+j)/12);d+=(h.dy[y]||h.dy[y-1]||0)/12;}return (h.p[i+k]+d)/h.p[i]-1;}
 /* dividends reinvested: each month's dividend buys more shares at that month's stock price */
 function btRetC(h,i,k){var sh=1;for(var j=i+1;j<=i+k;j++){var y=Math.floor((h.st+j)/12),dm=(h.dy[y]||h.dy[y-1]||0)/12;if(h.p[j]>0)sh*=1+dm/h.p[j];}return sh*h.p[i+k]/h.p[i]-1;}
+/* signal strategy: buy a name in the month it is at +1 sigma or higher, sell it in the month it is at
+   -1 sigma or lower. Names held at the same time are equal weight, rebalanced monthly; with nothing
+   held the money sits in cash (0%). Paid out: dividends collected as cash. Reinvested: compounded. */
+function btSignal(U,m0,m1){
+  var H=withHist(U).map(function(x){return D.hist[x.k];}).filter(function(h){return h.p&&h.p.length;});
+  var held=[],V=1,VP=1,cash=0,t,j;
+  var zAt=function(h,m){var i=m-h.st;return i>=0&&i<h.z.length?h.z[i]:null;};
+  H.forEach(function(h,k){var z=zAt(h,m0);held[k]=z!==null&&z>=1;});
+  for(t=m0;t<m1;t++){
+    var rp=0,rd=0,n=0;
+    H.forEach(function(h,k){
+      if(!held[k])return;var i=t-h.st;if(i<0||i+1>=h.z.length||!(h.p[i]>0)||!(h.p[i+1]>0))return;
+      var y=Math.floor((h.st+i+1)/12),dm=(h.dy[y]||h.dy[y-1]||0)/12;
+      rp+=h.p[i+1]/h.p[i]-1;rd+=dm/h.p[i];n++;
+    });
+    if(n){rp/=n;rd/=n;cash+=VP*rd;VP*=1+rp;V*=1+rp+rd;}
+    H.forEach(function(h,k){var z=zAt(h,t+1);if(z===null)return;if(!held[k]&&z>=1)held[k]=true;else if(held[k]&&z<=-1)held[k]=false;});
+  }
+  return {paid:VP+cash-1,re:V-1};
+}
 function btLast(){var m=-1e9;Object.keys(D.hist).forEach(function(k){var h=D.hist[k];m=Math.max(m,h.st+h.z.length-1);});return m;}
 function btRun(U,m,k){
   var c=[];
@@ -859,7 +879,8 @@ function btRun(U,m,k){
   var top=c.slice(0,nb),bot=c.slice(-nb).reverse();
   var spy=null,hs=D.hist.SPY;if(hs&&hs.p){var si=m-hs.st;if(si>=0&&si+k<hs.z.length&&hs.p[si]>0)spy=btRet(hs,si,k);}
   var rc=function(q){return q.rc;};
-  return {n:c.length,nb:nb,top:avg(top,function(q){return q.r;}),bot:avg(bot,function(q){return q.r;}),all:avg(c,function(q){return q.r;}),spy:spy,
+  var sgl=btSignal(U,m,m+k);
+  return {sg:sgl.paid,sgC:sgl.re,n:c.length,nb:nb,top:avg(top,function(q){return q.r;}),bot:avg(bot,function(q){return q.r;}),all:avg(c,function(q){return q.r;}),spy:spy,
     topC:avg(top,rc),botC:avg(bot,rc),allC:avg(c,rc),
     topZ:avg(top,function(q){return q.z;}),botZ:avg(bot,function(q){return q.z;}),topL:top,botL:bot};
 }
@@ -874,16 +895,16 @@ function btHtml(U){
   var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+(k>12?pc(yr(v,k))+' a year<span class="n">'+pc(v)+' over '+per(k)+'</span>':pc(v)+'<span class="n">over '+per(k)+'</span>')+'</td>';};
   var hasSpy=false;   /* the S&P 500 is left out: a dividend growth ETF is the fairer yardstick */
   var rows=runs.map(function(q){var r=q.r,k=q.H[0];
-    return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.topC,k,'u rc')+cell(r.bot,k,'o')+cell(r.botC,k,'o rc')+cell(r.all,k)+cell(r.allC,k,'rc')+'</tr>';}).join('');
+    return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.topC,k,'u rc')+cell(r.sg,k,'u')+cell(r.sgC,k,'u rc')+cell(r.bot,k,'o')+cell(r.botC,k,'o rc')+cell(r.all,k)+cell(r.allC,k,'rc')+'</tr>';}).join('');
   var lists=runs.map(function(q){var r=q.r,nm=function(L){return L.map(function(e){return tkLink(e.x)+' <span class="m">'+sg(e.z)+'</span>';}).join(', ');};
     return '<details class="btL"><summary>'+q.H[1]+': the names bought at the end of '+mLabel(last-q.H[0])+'</summary>'+
       '<p><b class="u">Top '+r.nb+' undervalued</b> (average '+sg(r.topZ)+'): '+nm(r.topL)+'</p>'+
       '<p><b class="o">Bottom '+r.nb+' overvalued</b> (average '+sg(r.botZ)+'): '+nm(r.botL)+'</p></details>';}).join('');
   return '<section class="sec" id="bt"><h3>Yield Sigma backtest: hypothetical portfolios '+labsBtn('bt')+'</h3>'+
-    labsPop('bt','At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Returns are the stock price change plus the dividends. Dividends paid out: the dividends are collected as cash. Dividends reinvested: each dividend buys more shares at that month’s stock price, so the returns compound. Periods over a year show the return a year, with the total over the whole period below it. Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced. Not actual trading results.')+
+    labsPop('bt','At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Buy at +1σ, sell at −1σ: every name is bought in the month it is at +1σ or higher and sold in the month it is at −1σ or lower; names held at the same time are equal weight, rebalanced monthly, and with nothing held the money sits in cash. Returns are the stock price change plus the dividends. Dividends paid out: the dividends are collected as cash. Dividends reinvested: each dividend buys more shares at that month’s stock price, so the returns compound. Periods over a year show the return a year, with the total over the whole period below it. Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced. Not actual trading results.')+
     '<p class="desc">Returns of the most undervalued names against the most overvalued, bought once and held.</p>'+
-    '<div class="tbWrap"><table class="tb bt"><thead><tr><th rowspan="2">Holding period</th><th colspan="2" class="g">Return: top '+nb+' undervalued</th><th colspan="2" class="g">Return: bottom '+nb+' overvalued</th><th colspan="2" class="g">Return: all names, equal weight</th></tr>'+
-      '<tr><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="tbWrap"><table class="tb bt"><thead><tr><th rowspan="2">Holding period</th><th colspan="2" class="g">Return: top '+nb+' undervalued</th><th colspan="2" class="g">Return: buy at +1\u03c3,<br>sell at \u22121\u03c3</th><th colspan="2" class="g">Return: bottom '+nb+' overvalued</th><th colspan="2" class="g">Return: all names, equal weight</th></tr>'+
+      '<tr><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="btLists">'+lists+'</div>'+
     '</section>';
 }
