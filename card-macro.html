@@ -137,7 +137,8 @@ table.matrix tr.secHead td{font:600 11px var(--mono);letter-spacing:.03em;color:
 table.matrix thead th .zr{display:block;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
 table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
 
-.labsTag{display:inline-block;font:600 9px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--jade);border:1px solid var(--jade);border-radius:999px;padding:3px 7px;margin-left:8px;vertical-align:2px}
+.labsPop{font-size:12px;line-height:1.6;color:var(--ink);background:var(--jade-soft);border:1px solid color-mix(in srgb,var(--jade) 35%,transparent);border-radius:8px;padding:10px 12px;margin:0 0 12px;max-width:78ch}
+.labsTag{cursor:pointer;background:transparent;display:inline-block;font:600 9px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--jade);border:1px solid var(--jade);border-radius:999px;padding:3px 7px;margin-left:8px;vertical-align:2px}
 .pvTop{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,2fr);gap:14px;align-items:stretch;margin:4px 0 22px}
 .pvBig{border:1px solid var(--jade);border-radius:12px;padding:18px 18px 16px;background:var(--jade-soft);display:flex;flex-direction:column;justify-content:center}
 .pvBig .v{font:500 58px/1 var(--serif);color:var(--jade);font-variant-numeric:tabular-nums}
@@ -770,6 +771,9 @@ function sparkCell(items){
    stock price get there? "Came true" allows 10% short of the predicted stock price.
    Yields here are rebuilt from history.csv: the yearly dividend amount over the monthly stock price,
    and their 10-year average (at least 5 years of months). */
+/* Labs pill: a click opens the explanation under the title */
+function labsBtn(id){return '<button type="button" class="labsTag" data-pop="'+id+'" aria-expanded="false" aria-controls="pop-'+id+'">Labs</button>';}
+function labsPop(id,text){return '<p class="labsPop" id="pop-'+id+'" hidden>'+text+'</p>';}
 var PV_CACHE={};
 function pvTier(y){return y>=50?0:y>=25?1:y>=10?2:y>=5?3:4;}
 var PV_TIERS=['King, 50+ years','Aristocrat, 25–49','Achiever, 10–24','Challenger, 5–9','Under 5 years'];
@@ -821,8 +825,9 @@ function pvHtml(U){
     PV_TIERS.map(function(t,i){return [t,E.filter(function(e){return e.tier===i;})];});
   var rows=groups.map(function(g){var s=pvStats(g[1]);if(!s.n24)return '';var small=s.n24<10;
     return '<tr'+(small?' class="thin"':'')+'><td>'+esc(g[0])+'</td><td>'+s.n24+'</td><td>'+pm(s.pred)+'</td><td>'+pm(s.a12)+'</td><td>'+pm(s.a24)+'</td><td>'+pc(s.by24)+'</td><td><b>'+pc(s.ever)+'</b></td></tr>';}).join('');
-  return '<section class="sec pv" id="pv"><h3>Yield Sigma prediction vs reality <span class="labsTag">Labs</span></h3>'+
-    '<p class="desc">Each time a name turned '+zone+', Yield Sigma predicted the stock price at which its yield would be back at the 10-year average. Did the stock price get there? “Came true” means it reached the predicted stock price, or came within 10% of it.</p>'+
+  return '<section class="sec pv" id="pv"><h3>Yield Sigma prediction vs reality '+labsBtn('pv')+'</h3>'+
+    labsPop('pv','Each time a name turned '+zone+', Yield Sigma predicted the stock price at which its yield would be back at the 10-year average. “Came true” means the stock price reached the predicted level, or came within 10% of it. Only predictions with at least 24 months of history after them are counted, since '+(BR&&BR.length?Math.floor(BR[0].m/12):2003)+'. Typical = median. Moves are in the stock price only. The dividend tier is the streak as it stood in the year of the prediction. Groups with under 10 predictions are shown faded: small samples.')+
+    '<p class="desc">How often the stock price Yield Sigma predicted actually came true.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Signal</span>'+btn('pside',1,PSIDE,'Undervalued')+btn('pside',-1,PSIDE,'Overvalued')+'</span>'+
       '<span class="grp"><span class="lbl">Break down</span>'+btn('pby','tier',bySec?'sector':'tier','By dividend tier')+(UNI==='stocks'?btn('pby','sector',bySec?'sector':'tier','By sector'):'')+'</span></div>'+
     '<div class="pvTop"><div class="pvBig"><div class="v">'+pc(S.ever)+'</div><div class="l">of '+S.n24+' predictions came true</div></div>'+
@@ -831,7 +836,6 @@ function pvHtml(U){
       '<div class="st"><div class="v">'+pm(S.pred)+'</div><div class="l">typical predicted move in the stock price</div></div>'+
       '<div class="st"><div class="v">'+pm(S.a12)+' <small>/</small> '+pm(S.a24)+'</div><div class="l">typical actual move after 12 / 24 months</div></div></div></div>'+
     '<div class="tbWrap"><table class="tb"><thead><tr><th>'+(bySec?'Sector':'Dividend tier at the time')+'</th><th>Predictions</th><th>Predicted move</th><th>Actual,<br>12 months</th><th>Actual,<br>24 months</th><th>Came true<br>within 24 months</th><th>Came true</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<p class="desc" style="margin-top:12px">Predictions with at least 24 months of history after them, since '+(BR&&BR.length?Math.floor(BR[0].m/12):2003)+'. Typical = median. Moves are in the stock price only. The dividend tier is the streak as it stood in the year of the prediction. Groups with under 10 predictions are shown faded: small samples.</p>'+
     '</section>';
 }
 /* ---- Yield Sigma backtest: hypothetical portfolios ----
@@ -860,7 +864,8 @@ function btHtml(U){
   var nb=runs[0].r.nb;
   var yr=function(v,k){return k<12?v:Math.pow(1+v,12/k)-1;};
   var pc=function(v){return v===null||v===undefined?'–':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';};
-  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+pc(yr(v,k))+(k>12?'<span class="n">'+pc(v)+' in all</span>':'')+'</td>';};
+  var per=function(k){return k<12?k+' months':k===12?'1 year':(k/12)+' years';};
+  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+(k>12?pc(yr(v,k))+' a year<span class="n">'+pc(v)+' over '+per(k)+'</span>':pc(v)+'<span class="n">over '+per(k)+'</span>')+'</td>';};
   var hasSpy=runs.some(function(q){return q.r.spy!==null;});
   var rows=runs.map(function(q){var r=q.r,k=q.H[0];
     return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.bot,k,'o')+cell(r.all,k)+(hasSpy?(r.spy===null?'<td>–</td>':cell(r.spy,k)):'')+'</tr>';}).join('');
@@ -868,11 +873,11 @@ function btHtml(U){
     return '<details class="btL"><summary>'+q.H[1]+': the names bought at the end of '+mLabel(last-q.H[0])+'</summary>'+
       '<p><b class="u">Top '+r.nb+' undervalued</b> (average '+sg(r.topZ)+'): '+nm(r.topL)+'</p>'+
       '<p><b class="o">Bottom '+r.nb+' overvalued</b> (average '+sg(r.botZ)+'): '+nm(r.botL)+'</p></details>';}).join('');
-  return '<section class="sec" id="bt"><h3>Yield Sigma backtest: hypothetical portfolios <span class="labsTag">Labs</span></h3>'+
-    '<p class="desc">At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Returns include the dividends paid along the way. Yearly % for periods of a year or more; the small figure is the return over the whole period.</p>'+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Held</th><th>Top '+nb+' undervalued</th><th>Bottom '+nb+' overvalued</th><th>All names</th>'+(hasSpy?'<th>S&amp;P 500<br>(SPY)</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  return '<section class="sec" id="bt"><h3>Yield Sigma backtest: hypothetical portfolios '+labsBtn('bt')+'</h3>'+
+    labsPop('bt','At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Returns are the stock price change plus the dividends paid along the way. Periods over a year show the return a year, with the total over the whole period below it. Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced; dividends are counted as paid, not reinvested. Not actual trading results.')+
+    '<p class="desc">Returns of the most undervalued names against the most overvalued, bought once and held.</p>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Holding period</th><th>Return:<br>top '+nb+' undervalued</th><th>Return:<br>bottom '+nb+' overvalued</th><th>Return: all names,<br>equal weight</th>'+(hasSpy?'<th>Return:<br>S&amp;P 500 (SPY)</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="btLists">'+lists+'</div>'+
-    '<p class="desc" style="margin-top:12px">Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced; dividends are counted as paid, not reinvested. Not actual trading results.</p>'+
     '</section>';
 }
 function sectorHtml(U){
@@ -950,6 +955,8 @@ function render(){
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
 }
 document.addEventListener('click',function(e){
+  var lp=e.target.closest&&e.target.closest('.labsTag[data-pop]');
+  if(lp){var pp=document.getElementById('pop-'+lp.dataset.pop);if(pp){pp.hidden=!pp.hidden;lp.setAttribute('aria-expanded',pp.hidden?'false':'true');}return;}
   var b=e.target.closest&&e.target.closest('.btn');if(!b)return;
   var y=window.scrollY;
   if(b.dataset.uni){UNI=b.dataset.uni;}
