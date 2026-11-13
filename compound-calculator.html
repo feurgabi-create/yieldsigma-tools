@@ -545,7 +545,10 @@ function simulate(sh,r,mode){
           if(r.reinvest)shares+=pay/P;else{cash+=pay;cf[(y2-1)*12+mo2]+=pay;}
         }
       }
-      rows.push({y:y2,contrib:contrib,value:shares*P,flow:inc,cash:cash,inc:inc,divCum:divCum,g:rateIn(r.dgr,y2)});
+      /* yield on cost, same convention as the card: the yearly dividend after this year's raise
+         (shares held now x next year's dividend per share), divided by the money put in */
+      var fwd=shares*D*(1+rateIn(r.dgr,y2+1)/100);
+      rows.push({y:y2,contrib:contrib,value:shares*P,flow:inc,cash:cash,inc:inc,fwd:fwd,divCum:divCum,g:rateIn(r.dgr,y2)});
       m*=1+sh.raise/100;
     }
   }
@@ -729,10 +732,10 @@ function render(){
   var stats=st('Contribution',money(a.contrib),b?money(b.contrib):undefined)+
     st('Growth',money(a.value-a.contrib),b?money(b.value-b.contrib):undefined);
   if(div){
-    var yocA=a.inc/a.contrib*100,yocB=b?b.inc/b.contrib*100:0;
+    var yocA=a.fwd/a.contrib*100,yocB=b?b.fwd/b.contrib*100:0;
     stats+=st('Annualized return',pct(A.irr,2),b?pct(B.irr,2):undefined,'IRR · price + dividends')+
       st('Per month, year '+Y,money(a.inc/12),b?money(b.inc/12):undefined)+
-      st('Yield on cost',pct(yocA),b?pct(yocB):undefined)+
+      st(S.A.reinvest?'Yield on cost, with reinvested dividends':'Yield on cost',pct(yocA),b?pct(yocB):undefined)+
       st('Dividends received, total',money(a.divCum),b?money(b.divCum):undefined);
     if(!S.A.reinvest||(b&&!S.B.reinvest))stats+=st('Taken as cash (not in balance)',money(a.cash),b?money(b.cash):undefined);
   }else{
@@ -765,7 +768,7 @@ function render(){
   h+='<h3>Year by year</h3><div class="tbl"><table><thead><tr><th>Year</th><th>Contribution</th><th>Balance</th><th>'+(div?'Dividends':'Growth')+'</th>'+(div?'<th>Yield on cost</th>':'')+(div&&S.fade?'<th>Div growth</th>':'')+'<th>Today’s $</th>'+(B?'<th>'+esc(div?sideLabel('B'):'B')+' balance</th>':'')+'</tr></thead><tbody>';
   A.forEach(function(r,i){
     h+='<tr><td>'+(r.y===0?'Now':r.y)+'</td><td>'+money(r.contrib)+'</td><td>'+money(r.value)+'</td><td>'+(r.y?money(r.flow):'–')+'</td>'+
-      (div?'<td>'+(r.y?pct(r.inc/r.contrib*100,2):'–')+'</td>':'')+(div&&S.fade?'<td>'+(r.y?pct(r.g,2):'–')+'</td>':'')+'<td>'+money(r.real)+'</td>'+(B?'<td class="bcol">'+money(B[i].value)+'</td>':'')+'</tr>';
+      (div?'<td>'+(r.y?pct(r.fwd/r.contrib*100,2):'–')+'</td>':'')+(div&&S.fade?'<td>'+(r.y?pct(r.g,2):'–')+'</td>':'')+'<td>'+money(r.real)+'</td>'+(B?'<td class="bcol">'+money(B[i].value)+'</td>':'')+'</tr>';
   });
   h+='</tbody></table></div></div></div>';
   h+='<footer class="foot"><span>An illustration, not a forecast: '+((div&&S.fade)?'rates follow the inputs above':'rates are held constant')+' and taxes and fees are ignored. Model output, not investment advice.'+((div&&(S.A.ticker||(S.compare&&S.B.ticker)))?' Picked stocks use their current yield and actual past 10-year dividend growth (capped at '+trimNum(S.pick.cap)+'%), with the price assumed to grow at that same rate.':'')+((div&&S.fade)?' Growth rates above the long-run rate fade to it in a straight line over the years set, then stay there; rates already below it are unchanged.':'')+'</span><span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span><span><a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></span></footer>';
