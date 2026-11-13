@@ -150,6 +150,8 @@ table.tb tr.thin td{opacity:.5}
 @media(max-width:700px){.pvTop{grid-template-columns:1fr}}
 .tb.bt thead th.g{text-align:center;border-bottom:1px solid var(--rule)}
 .tb.bt th.rc,.tb.bt td.rc{background:color-mix(in srgb,var(--jade-soft) 55%,transparent)}
+.btKey{font-size:11.5px;color:var(--ink);font-weight:600;margin:0 0 10px}
+.tb.bt td[title]{cursor:help}
 .btLists{margin-top:14px;display:grid;gap:6px}
 .btL{border:1px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:12px}
 .btL summary{cursor:pointer;color:var(--jade);font-weight:600}
@@ -908,7 +910,8 @@ function btHtml(U){
   var yr=function(v,k){return k<12?v:Math.pow(1+v,12/k)-1;};
   var pc=function(v){return v===null||v===undefined?'–':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';};
   var per=function(k){return k<12?k+' months':k===12?'1 year':(k/12)+' years';};
-  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+(k>12?pc(yr(v,k))+' a year<span class="n">'+pc(v)+' over '+per(k)+'</span>':pc(v)+'<span class="n">over '+per(k)+'</span>')+'</td>';};
+  /* one figure per cell: % per year (the 6-month row: % over the 6 months); the total over the period shows on hover */
+  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'" title="'+esc(pc(v)+' total over '+per(k))+'">'+pc(k>12?yr(v,k):v)+'</td>';};
   var hasSpy=false;   /* the S&P 500 is left out: a dividend growth ETF is the fairer yardstick */
   var rows=runs.map(function(q){var r=q.r,k=q.H[0];
     return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.topC,k,'u rc')+cell(r.bot,k,'o')+cell(r.botC,k,'o rc')+cell(r.all,k)+cell(r.allC,k,'rc')+cell(r.sg,k)+cell(r.sgC,k,'rc')+'</tr>';}).join('');
@@ -917,8 +920,9 @@ function btHtml(U){
       '<p><b class="u">Top '+r.nb+' undervalued</b> (average '+sg(r.topZ)+'): '+nm(r.topL)+'</p>'+
       '<p><b class="o">Bottom '+r.nb+' overvalued</b> (average '+sg(r.botZ)+'): '+nm(r.botL)+'</p></details>';}).join('');
   return '<section class="sec" id="bt"><h3>Yield Sigma backtest: hypothetical portfolios '+labsBtn('bt')+'</h3>'+
-    labsPop('bt','At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Monthly rotation: at the end of every month, the portfolio holds the 20 most undervalued names by Sigma, in equal amounts. If a name is no longer one of the 20 most undervalued, it is sold. The money from that sale buys the name that took its place. Returns are the stock price change plus the dividends. Dividends paid out: the dividends are collected as cash. Dividends reinvested: each dividend buys more shares at that month’s stock price, so the returns compound. Periods over a year show the return a year, with the total over the whole period below it. Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced. Not actual trading results.')+
+    labsPop('bt','At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Monthly rotation: at the end of every month, the portfolio holds the 20 most undervalued names by Sigma, in equal amounts. If a name is no longer one of the 20 most undervalued, it is sold. The money from that sale buys the name that took its place. Returns are the stock price change plus the dividends. Dividends paid out: the dividends are collected as cash. Dividends reinvested: each dividend buys more shares at that month’s stock price, so the returns compound. Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced. Not actual trading results.')+
     '<p class="desc">Returns of the most undervalued names against the most overvalued, bought once and held.</p>'+
+    '<p class="btKey">Returns in % per year. The 6-month row shows the return over the 6 months. Hover over a figure to see the total return over the whole period.</p>'+
     '<div class="tbWrap"><table class="tb bt"><thead><tr><th rowspan="2">Holding period</th><th colspan="2" class="g">Return: top '+nb+' undervalued</th><th colspan="2" class="g">Return: bottom '+nb+' overvalued</th><th colspan="2" class="g">Return: all names, equal weight</th><th colspan="2" class="g">Return: top 20 undervalued,<br>rotated every month, equal weight</th></tr>'+
       '<tr><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th><th>Dividends<br>paid out</th><th class="rc">Dividends<br>reinvested</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="btLists">'+lists+'</div>'+
