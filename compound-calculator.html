@@ -761,7 +761,7 @@ function render(){
     h+='<div class="cross">'+lines.join('<br>')+'</div>';
   }
   h+='<h3>Balance year by year</h3><div class="chartWrap">'+growthChart(A,B,cxBal)+'<div class="tip" id="gTip"></div></div>'+
-    '<div class="legend"><span><i style="background:var(--jade-mid);opacity:.7"></i>Contribution</span><span><i style="background:var(--jade)"></i>Growth'+(div?' (price + reinvested dividends)':'')+'</span>'+
+    '<div class="legend"><span><i style="background:var(--jade-mid);opacity:.7"></i>Contribution</span><span><i style="background:var(--jade)"></i>Growth'+(div?(S.A.reinvest?' (price + reinvested dividends)':' (price)'):'')+'</span>'+
     (B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+' balance</span>':'')+'</div>';
   h+='<h3>'+(div?'Dividend income each year':'Growth each year')+'</h3><div class="chartWrap">'+flowChart(A,B,cxInc)+'<div class="tip" id="fTip"></div></div>'+
     '<div class="legend"><span><i style="background:var(--jade)"></i>'+(div?'Dividends paid that year':'Growth earned that year')+(S.compare?' ('+esc(div?sideLabel('A'):'A')+')':'')+'</span>'+(B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+'</span>':'')+'</div>';
