@@ -785,6 +785,8 @@ function hmSectorHtml(complete){
     var gi=HM_GMAP[t];(gi===undefined?other:rows[gi]).items.push(x);
   });
   if(other.items.length)rows.push(other);
+  /* each sector ETF's own sigma, shown next to its ticker in the group header */
+  var etfS={};complete.forEach(function(x){var t=String(x.a.ticker||'').trim().toUpperCase();if(x.a.sigma!==null&&isFinite(x.a.sigma))etfS[t]=x.a.sigma;});
   rows.forEach(function(r){
     var v=r.items.map(function(x){return x.a.sigma;}).filter(function(s){return s!==null&&isFinite(s);});
     r.avg=v.length?v.reduce(function(p,q){return p+q;},0)/v.length:null;
@@ -794,7 +796,7 @@ function hmSectorHtml(complete){
   var h='<div class="hmSectors">';
   rows.forEach(function(r){
     var it=r.items.filter(hmPass).sort(asc);if(!it.length)return;
-    h+='<div class="hmSec"><div class="hmSecHd"><b>'+esc(r.name)+'</b>'+(r.etf?' <span>'+esc(r.etf)+'</span>':'')+
+    h+='<div class="hmSec"><div class="hmSecHd"><b>'+esc(r.name)+'</b>'+(r.etf?' <span>'+esc(r.etf)+(etfS[r.etf]!==undefined?' '+(etfS[r.etf]>0?'+':'')+etfS[r.etf].toFixed(2)+'σ':'')+'</span>':'')+
       (r.avg!==null?'<span class="hmAvg">avg '+(r.avg>0?'+':'')+r.avg.toFixed(2)+'σ · '+r.items.length+(r.items.length===1?' name':' names')+'</span>':'')+'</div>'+
       '<div class="hmSecTiles">'+it.map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('')+'</div></div>';
   });
