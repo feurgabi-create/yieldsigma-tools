@@ -860,7 +860,7 @@ function btHtml(U){
   var nb=runs[0].r.nb;
   var yr=function(v,k){return k<12?v:Math.pow(1+v,12/k)-1;};
   var pc=function(v){return v===null||v===undefined?'–':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';};
-  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+pc(yr(v,k))+(k>=12?'<span class="n">'+pc(v)+' in all</span>':'')+'</td>';};
+  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+pc(yr(v,k))+(k>12?'<span class="n">'+pc(v)+' in all</span>':'')+'</td>';};
   var hasSpy=runs.some(function(q){return q.r.spy!==null;});
   var rows=runs.map(function(q){var r=q.r,k=q.H[0];
     return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.bot,k,'o')+cell(r.all,k)+(hasSpy?(r.spy===null?'<td>–</td>':cell(r.spy,k)):'')+'</tr>';}).join('');
