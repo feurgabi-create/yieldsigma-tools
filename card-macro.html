@@ -147,6 +147,11 @@ table.matrix thead th .zr.zn{font-weight:600;color:var(--ink)}
 .pvTiles .st .v small{margin:0 2px}
 table.tb tr.thin td{opacity:.5}
 @media(max-width:700px){.pvTop{grid-template-columns:1fr}}
+.btLists{margin-top:14px;display:grid;gap:6px}
+.btL{border:1px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:12px}
+.btL summary{cursor:pointer;color:var(--jade);font-weight:600}
+.btL p{margin:8px 0 2px;line-height:1.7}
+.btL a{font-weight:700;text-decoration:none}
 .foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .foot .full{flex-basis:100%}
 
@@ -829,6 +834,47 @@ function pvHtml(U){
     '<p class="desc" style="margin-top:12px">Predictions with at least 24 months of history after them, since '+(BR&&BR.length?Math.floor(BR[0].m/12):2003)+'. Typical = median. Moves are in the stock price only. The dividend tier is the streak as it stood in the year of the prediction. Groups with under 10 predictions are shown faded: small samples.</p>'+
     '</section>';
 }
+/* ---- Yield Sigma backtest: hypothetical portfolios ----
+   At the end of a past month, take the names with the highest sigma (most undervalued) and the
+   lowest sigma (most overvalued), equal weight, buy once and hold to the last completed month.
+   Return = stock price change plus the dividends paid along the way (yearly dividend amount / 12
+   per month, not reinvested). Benchmarks: all names equal weight, and SPY when its history is there. */
+var BT_H=[[6,'Last 6 months'],[12,'Last year'],[60,'Last 5 years'],[120,'Last 10 years']];
+function btRet(h,i,k){var d=0;for(var j=i+1;j<=i+k;j++){var y=Math.floor((h.st+j)/12);d+=(h.dy[y]||h.dy[y-1]||0)/12;}return (h.p[i+k]+d)/h.p[i]-1;}
+function btLast(){var m=-1e9;Object.keys(D.hist).forEach(function(k){var h=D.hist[k];m=Math.max(m,h.st+h.z.length-1);});return m;}
+function btRun(U,m,k){
+  var c=[];
+  withHist(U).forEach(function(x){var h=D.hist[x.k],i=m-h.st;if(i<0||i+k>=h.z.length||!h.p||!(h.p[i]>0)||!(h.p[i+k]>0))return;c.push({x:x,z:h.z[i],r:btRet(h,i,k)});});
+  var nb=Math.min(20,Math.floor(c.length/3));if(nb<5)return null;
+  c.sort(function(a,b){return b.z-a.z;});
+  var avg=function(a,f){return a.reduce(function(s,q){return s+f(q);},0)/a.length;};
+  var top=c.slice(0,nb),bot=c.slice(-nb).reverse();
+  var spy=null,hs=D.hist.SPY;if(hs&&hs.p){var si=m-hs.st;if(si>=0&&si+k<hs.z.length&&hs.p[si]>0)spy=btRet(hs,si,k);}
+  return {n:c.length,nb:nb,top:avg(top,function(q){return q.r;}),bot:avg(bot,function(q){return q.r;}),all:avg(c,function(q){return q.r;}),spy:spy,
+    topZ:avg(top,function(q){return q.z;}),botZ:avg(bot,function(q){return q.z;}),topL:top,botL:bot};
+}
+function btHtml(U){
+  if(!withHist(U).length)return '';
+  var last=btLast(),runs=BT_H.map(function(H){return {H:H,r:btRun(U,last-H[0],H[0])};}).filter(function(q){return q.r;});
+  if(!runs.length)return '';
+  var nb=runs[0].r.nb;
+  var yr=function(v,k){return k<12?v:Math.pow(1+v,12/k)-1;};
+  var pc=function(v){return v===null||v===undefined?'–':(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';};
+  var cell=function(v,k,cls){return '<td class="'+(cls||'')+'">'+pc(yr(v,k))+(k>=12?'<span class="n">'+pc(v)+' in all</span>':'')+'</td>';};
+  var hasSpy=runs.some(function(q){return q.r.spy!==null;});
+  var rows=runs.map(function(q){var r=q.r,k=q.H[0];
+    return '<tr><td>'+q.H[1]+'<span class="n">from '+mLabel(last-k)+'</span></td>'+cell(r.top,k,'u')+cell(r.bot,k,'o')+cell(r.all,k)+(hasSpy?(r.spy===null?'<td>–</td>':cell(r.spy,k)):'')+'</tr>';}).join('');
+  var lists=runs.map(function(q){var r=q.r,nm=function(L){return L.map(function(e){return tkLink(e.x)+' <span class="m">'+sg(e.z)+'</span>';}).join(', ');};
+    return '<details class="btL"><summary>'+q.H[1]+': the names bought at the end of '+mLabel(last-q.H[0])+'</summary>'+
+      '<p><b class="u">Top '+r.nb+' undervalued</b> (average '+sg(r.topZ)+'): '+nm(r.topL)+'</p>'+
+      '<p><b class="o">Bottom '+r.nb+' overvalued</b> (average '+sg(r.botZ)+'): '+nm(r.botL)+'</p></details>';}).join('');
+  return '<section class="sec" id="bt"><h3>Yield Sigma backtest: hypothetical portfolios <span class="labsTag">Labs</span></h3>'+
+    '<p class="desc">At the start of each period, buy the '+nb+' most undervalued names (highest sigma) and, separately, the '+nb+' most overvalued (lowest sigma), equal weight, and hold them to the end of '+mLabel(last)+'. Returns include the dividends paid along the way. Yearly % for periods of a year or more; the small figure is the return over the whole period.</p>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Held</th><th>Top '+nb+' undervalued</th><th>Bottom '+nb+' overvalued</th><th>All names</th>'+(hasSpy?'<th>S&amp;P 500<br>(SPY)</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="btLists">'+lists+'</div>'+
+    '<p class="desc" style="margin-top:12px">Hypothetical portfolios built from the Yield Sigma history, bought once and not rebalanced; dividends are counted as paid, not reinvested. Not actual trading results.</p>'+
+    '</section>';
+}
 function sectorHtml(U){
   if(UNI!=='stocks')return '';
   var rows=HM_GROUPS.map(function(gq,i){return {name:gq[0],etf:gq[1],items:U.filter(function(x){return GKEY[x.k]===i;})};}).filter(function(r){return r.items.length;});
@@ -898,7 +944,7 @@ function render(){
   if(UNI==='reits'&&!withHist(U).length){/* no REIT history: still show today */}
   BR=breadth(U);HB=histBins(U);
   var LT=levelTable(U,SIDE);
-  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+btHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
   sheet.querySelectorAll('thead th').forEach(function(th){th.innerHTML=th.innerHTML.replace(/\u03c3/g,'<span style="text-transform:none">\u03c3</span>');});
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
