@@ -696,9 +696,9 @@ function parseRow(line,schema){
   });
   if(cells.length!==schema.length)issues.push(cells.length+' column'+(cells.length===1?'':'s')+' found, expected '+schema.length+'. Fields may be shifted — check against the column order below.');
   if(!rec.nameRaw)issues.push('No company name in the first column.');
-  /* data filter: a P/E above 50 or at/below 0 is a spreadsheet anomaly or depressed earnings, not a
-     usable valuation; treat it as inconclusive (shown as "–", left out of averages) */
-  if(rec.pe!==null&&rec.pe!==undefined&&(!isFinite(rec.pe)||rec.pe>50||rec.pe<=0))rec.pe=null;
+  /* P/E check (pe-check.js): Excel's P/E if 0-60 and in line with the SEC filings, else the SEC P/E, else none */
+  if(window.YS_PE)YS_PE.fix(rec,typeof SCHEMA_REITS!=='undefined'&&schema===SCHEMA_REITS);
+  else if(rec.pe!==null&&rec.pe!==undefined&&(!isFinite(rec.pe)||rec.pe>60||rec.pe<=0))rec.pe=null;
   return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
 }
 
@@ -2323,6 +2323,9 @@ function loadUploadedText(text,filename){
    Stocks+REITs fetch mixes rows from two different column layouts, so
    each line is tagged with which schema it needs (see handleRaw). */
 function fetchLiveRows(stocksUrl,reitsUrl){
+  return Promise.all([fetchLiveRows0(stocksUrl,reitsUrl),window.YS_PE?YS_PE.ready:null]).then(function(r){return r[0];});
+}
+function fetchLiveRows0(stocksUrl,reitsUrl){
   var sources=[];
   if(stocksUrl)sources.push({url:stocksUrl,kind:'stocks'});
   if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
