@@ -3,7 +3,7 @@
    1. Excel's P/E (Stocks data feed, last 12 months) is used when it is above 0, at most 60, and within
       2x of the P/E from the SEC filings.
    2. Otherwise (missing, #FIELD!, over 60, zero, or far from the filings) the SEC P/E is used:
-      market value / net income of the latest 10-K, if it is above 0 and at most 60.
+      today's stock price x shares / net income of the latest 10-K, if it is above 0 and at most 60.
    3. Otherwise no P/E ("-").
    REITs (P/AFFO) and foreign filers: only the 0-60 test, no SEC figure.
    Pages call YS_PE.fix(rec, isReit) while parsing a row, and wait for YS_PE.ready before parsing. */
@@ -24,8 +24,8 @@
     var H=L[0].split(',');
     for(var i=1;i<L.length;i++){
       var c=L[i].split(',');if(!c[0])continue;var o={};H.forEach(function(h,j){o[h]=c[j];});
-      var k=key(c[0]),ni=parseFloat(o.ni3),cap=P[k]&&P[k].cap;
-      M[k]={status:o.status,pe:(o.status==='OK'&&cap>0&&ni>0)?cap/(ni*1e6):null};
+      var k=key(c[0]),ni=parseFloat(o.ni3),cap=P[k]&&P[k].cap,sh=P[k]&&P[k].shares;
+      M[k]={status:o.status,ni:(o.status==='OK'&&ni>0)?ni*1e6:null,shares:sh>0?sh:null,cap:cap>0?cap:null};
     }
   }).catch(function(){});
   function ok(v){return v!==null&&v!==undefined&&isFinite(v)&&v>0&&v<=MAX;}
@@ -34,7 +34,10 @@
     var ex=(rec.pe===null||rec.pe===undefined||!isFinite(rec.pe))?null:rec.pe;
     rec.peSrc=null;
     if(isReit){rec.pe=ok(ex)?ex:null;if(rec.pe!==null)rec.peSrc='Excel';return rec;}
-    var s=M[key(rec.ticker)],sec=s?s.pe:null;
+    /* SEC P/E with today's stock price: price x shares / net income of the latest 10-K
+       (falls back to the stored market value when there is no live price or share count) */
+    var s=M[key(rec.ticker)],sec=null;
+    if(s&&s.ni){var px=rec.price;sec=(s.shares&&px>0)?px*s.shares/s.ni:(s.cap?s.cap/s.ni:null);}
     if(ok(ex)&&(sec===null||(ex/sec>=0.5&&ex/sec<=2))){rec.peSrc='Excel';return rec;}
     if(ok(sec)){rec.pe=sec;rec.peSrc='SEC';return rec;}
     rec.pe=null;return rec;
