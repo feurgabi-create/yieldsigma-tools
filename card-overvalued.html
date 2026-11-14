@@ -696,6 +696,9 @@ function parseRow(line,schema){
   });
   if(cells.length!==schema.length)issues.push(cells.length+' column'+(cells.length===1?'':'s')+' found, expected '+schema.length+'. Fields may be shifted — check against the column order below.');
   if(!rec.nameRaw)issues.push('No company name in the first column.');
+  /* data filter: a P/E above 50 or at/below 0 is a spreadsheet anomaly or depressed earnings, not a
+     usable valuation; treat it as inconclusive (shown as "–", left out of averages) */
+  if(rec.pe!==null&&rec.pe!==undefined&&(!isFinite(rec.pe)||rec.pe>50||rec.pe<=0))rec.pe=null;
   return {rec:rec,issues:issues,label:(rec.ticker||rec.nameRaw||'Row')};
 }
 
