@@ -5,7 +5,8 @@
    2. Otherwise (missing, #FIELD!, over 60, zero, or far from the filings) the SEC P/E is used:
       today's stock price x shares / net income of the latest 10-K, if it is above 0 and at most 60.
    3. Otherwise no P/E ("-").
-   REITs (P/AFFO) and foreign filers: only the 0-60 test, no SEC figure.
+   The payout ratio is then worked out again as dividend yield x the checked P/E (none when there is no P/E).
+   REITs (P/AFFO, payout on AFFO) and foreign filers: only the 0-60 test, no SEC figure.
    Pages call YS_PE.fix(rec, isReit) while parsing a row, and wait for YS_PE.ready before parsing. */
 (function(){
   var GIST='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/';
@@ -38,9 +39,16 @@
        (falls back to the stored market value when there is no live price or share count) */
     var s=M[key(rec.ticker)],sec=null;
     if(s&&s.ni){var px=rec.price;sec=(s.shares&&px>0)?px*s.shares/s.ni:(s.cap?s.cap/s.ni:null);}
-    if(ok(ex)&&(sec===null||(ex/sec>=0.5&&ex/sec<=2))){rec.peSrc='Excel';return rec;}
-    if(ok(sec)){rec.pe=sec;rec.peSrc='SEC';return rec;}
-    rec.pe=null;return rec;
+    if(ok(ex)&&(sec===null||(ex/sec>=0.5&&ex/sec<=2)))rec.peSrc='Excel';
+    else if(ok(sec)){rec.pe=sec;rec.peSrc='SEC';}
+    else rec.pe=null;
+    payout(rec);return rec;
+  }
+  /* the payout ratio in the data is dividend yield x Excel's P/E, so a bad P/E makes a bad payout:
+     work it out again from the checked P/E; with no usable P/E there is no payout ratio either */
+  function payout(rec){
+    if(rec.pe!==null&&rec.yield!==null&&rec.yield!==undefined&&isFinite(rec.yield)&&rec.yield>0)rec.payoutRatio=Math.round(rec.yield*rec.pe*100)/100;
+    else rec.payoutRatio=null;
   }
   window.YS_PE={ready:ready,fix:fix,MAX:MAX};
 })();
