@@ -688,6 +688,9 @@ function parseRow(line,schema){
   ALL_SCHEMA_KEYS.forEach(function(k){rec[k]=null;});
   schema.forEach(function(f,i){
     var raw=cells[i];
+    /* Excel error cells (#DIV/0!, #N/A, #VALUE!, #FIELD!, ####) are blanks, never numbers:
+       stripping the symbols would otherwise turn "#DIV/0!" into 0 */
+    if(raw!==null&&raw!==undefined&&/^\s*#/.test(String(raw)))raw='';
     var v;
     if(f.type==='money')v=parseMoney(raw);
     else if(f.type==='pct')v=parsePct(raw);
