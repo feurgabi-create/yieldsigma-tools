@@ -122,7 +122,12 @@ table.dir.all th,table.dir.all td{padding:7px 7px}
 .topScroll.on{display:block}
 .topScroll>div{height:1px}
 .secSum{font-size:12.5px;margin:0 0 10px;color:var(--muted)}.secSum b{color:var(--ink)}.secSum b.up{color:var(--jade)}.secSum b.dn{color:var(--rust)}
-.ysStar{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 6px 0 0;vertical-align:-1px}
+.ysStar{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 0 0 10px;vertical-align:-1px}
+/* the star stays out of sight until the row is hovered; names on the list keep their gold star; touch screens show a faint one */
+table.dir .ysStar{visibility:hidden}
+table.dir tr:hover .ysStar,table.dir .ysStar.on,table.dir .ysStar:focus-visible{visibility:visible}
+@media (hover:none){table.dir .ysStar{visibility:visible;opacity:.45}table.dir .ysStar.on{opacity:1}}
+table.dir td.cardCol{white-space:nowrap}
 .ysStar:hover{color:var(--gold)}.ysStar.on{color:var(--gold)}
 .wchip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted)}
 .wchip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
@@ -654,10 +659,10 @@ function render(){
     var card=r.free
       ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
       :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
-    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+esc(r.name)+'</td><td class="tk">'+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+esc(r.ticker)+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
+    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+esc(r.name)+'</td><td class="tk">'+esc(r.ticker)+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
       (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+esc(o.v)+'</td>';}).join('')+
-      '<td class="cardCol">'+card+'</td></tr>';
+      '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+'</td></tr>';
   });
   h+='</tbody></table></div>';
   h+='<footer class="foot"><span>Model output, not investment advice.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
