@@ -734,7 +734,7 @@ function nm(x){return esc(shortCompanyName(x.a.name)||'');}
 function headHtml(U){
   var noun=UNI==='reits'?'REITs':'dividend-growth stocks';
   return '<div class="pageHead"><div><h2>Yield Sigma™ Macro</h2><div class="sub">The whole universe at a glance: '+U.length+' '+noun+'.</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof"><a class="dirPill" href="'+esc(LINKS.directory)+'" target="_blank" rel="noopener">Directory</a><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
+    '<div class="asof"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Universe</span>'+
       '<button type="button" class="btn'+(UNI==='stocks'?' on':'')+'" data-uni="stocks">Stocks</button><button type="button" class="btn'+(UNI==='reits'?' on':'')+'" data-uni="reits">REITs</button></span></div>'+
     '<p class="zdef"><b class="u">Undervalued</b>: yield at +1σ or more above its own 10-year average — the stock price, conversely, low. '+
