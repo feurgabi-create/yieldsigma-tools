@@ -80,12 +80,14 @@ a{color:var(--jade)}
 .tvBtn[aria-pressed="true"] .sw{background:var(--jade)}
 .tvBtn[aria-pressed="true"] .sw::after{left:13px}
 @media (max-width:1099px){.tvBtn{display:none}}
+.detToggle{display:block;margin:28px 0 0;padding:0;background:none;border:0;cursor:pointer;font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.detToggle:hover{color:var(--jade)}
 .foldAll{font:600 11px var(--mono);color:var(--muted);margin:14px 0 0}
 .foldAll button{border:0;background:none;color:var(--jade);font:inherit;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
 .sec h3 .fold{border:0;background:none;color:var(--muted);font:inherit;cursor:pointer;padding:0 6px 0 0;width:1.3em;text-align:left}
 .sec h3 .fold:hover{color:var(--jade)}
 .sec.folded>*:not(h3){display:none!important}
-.sec.folded{padding-bottom:0}
+.sec.folded{padding:16px 0 0;margin-top:16px}
 @media (min-width:1100px){
   .sheet.tiles{max-width:2400px}
   html.mTiles .ysThemeAnchor{max-width:2400px}
@@ -1065,6 +1067,8 @@ function toggleBig(sec){
 }
 var XP_OPEN='<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var b=document.querySelector('section.sec.big');if(b)toggleBig(b);}});
+function detSync(){var b=document.querySelector('.detToggle');if(!b)return;var anyF=!!document.querySelector('#sheet section.sec.folded');
+  b.textContent=anyF?'Open detailed view \u25be':'Close detailed view \u25b4';b.setAttribute('aria-expanded',anyF?'false':'true');}
 var TILES=false,FOLD={};
 try{TILES=localStorage.getItem('ysMacroTiles')==='1';FOLD=JSON.parse(localStorage.getItem('ysMacroFold')||'{}')||{};}catch(e){}
 function saveFold(){try{localStorage.setItem('ysMacroFold',JSON.stringify(FOLD));}catch(e){}}
@@ -1084,8 +1088,8 @@ function render(){
       '<div class="tcols"><div class="tc"><section class="sec" id="today"><h3>Today</h3>'+todayHtml(U,LT)+'</section>'+pvHtml(U)+btHtml(U)+healthHtml(U)+'</div>'+
       '<div class="tc">'+normHtml(U,LT)+spreadHtml(U)+sectorHtml(U)+'</div></div>'+matrixHtml(U)+footHtml();
   }else{
-    sheet.innerHTML=headHtml(U)+'<p class="foldAll"><button type="button" data-foldall="1">Collapse all</button> · <button type="button" data-foldall="0">Expand all</button></p>'+
-      todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+btHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+    sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+'<button type="button" class="detToggle" data-foldall="x" aria-expanded="true">Close detailed view \u25b4</button>'+
+      breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+btHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
   }
   /* folding: every section heading gets an arrow; folded sections are remembered */
   sheet.querySelectorAll('section.sec').forEach(function(sec){
@@ -1098,6 +1102,7 @@ function render(){
   if(tiles)sheet.querySelectorAll('section.sec').forEach(function(sec){
     sec.insertAdjacentHTML('afterbegin','<button type="button" class="xpand" title="Open large" aria-label="Open this section large"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>');
   });
+  detSync();
   var sh0=document.querySelector('.macroShade');if(sh0)sh0.parentNode.removeChild(sh0);document.documentElement.style.overflow='';
   if(tiles&&bigK){var nb=sheet.querySelector('section.sec[data-k="'+bigK+'"]');if(nb)toggleBig(nb);}
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
@@ -1115,11 +1120,11 @@ document.addEventListener('click',function(e){
   var fb=e.target.closest&&e.target.closest('.sec h3 .fold');
   if(fb){var sec=fb.closest('section.sec'),k=sec.getAttribute('data-k'),f=!sec.classList.contains('folded');
     sec.classList.toggle('folded',f);fb.textContent=f?'▸':'▾';fb.setAttribute('aria-expanded',f?'false':'true');fb.title=(f?'Show':'Hide')+' this section';
-    if(f)FOLD[k]=1;else delete FOLD[k];saveFold();if(!f){drawBreadth(null);drawHist(null);}return;}
+    if(f)FOLD[k]=1;else delete FOLD[k];saveFold();detSync();if(!f){drawBreadth(null);drawHist(null);}return;}
   var fa=e.target.closest&&e.target.closest('[data-foldall]');
-  if(fa){var all=fa.getAttribute('data-foldall')==='1';document.querySelectorAll('#sheet section.sec').forEach(function(sec){var k=sec.getAttribute('data-k'),b2=sec.querySelector('h3 .fold');
+  if(fa){var all=fa.getAttribute('data-foldall')==='1';if(fa.getAttribute('data-foldall')==='x')all=!document.querySelector('#sheet section.sec.folded');document.querySelectorAll('#sheet section.sec').forEach(function(sec){var k=sec.getAttribute('data-k'),b2=sec.querySelector('h3 .fold');
       sec.classList.toggle('folded',all);if(b2){b2.textContent=all?'▸':'▾';b2.setAttribute('aria-expanded',all?'false':'true');}if(all)FOLD[k]=1;else delete FOLD[k];});
-    saveFold();if(!all){drawBreadth(null);drawHist(null);}return;}
+    saveFold();detSync();if(!all){drawBreadth(null);drawHist(null);}return;}
   var b=e.target.closest&&e.target.closest('.btn');if(!b)return;
   var y=window.scrollY;
   if(b.dataset.uni){UNI=b.dataset.uni;}
