@@ -2350,7 +2350,7 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
       '<button type="button" role="menuitem" data-go="macro">Macro<small>Universe stats</small></button>'+
-      '<a role="menuitem" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory<small>All names \u2197</small></a>'+
+      '<button type="button" role="menuitem" data-go="dir">Directory<small>All names</small></button>'+
       (window.parent===window?'<a role="menuitem" href="https://tools.yieldsigma.com/workspace.html?t='+t+'" target="_blank" rel="noopener">Workspace<small>All tools, one screen \u2197</small></a>':'')+
       '<div class="ysMenuSep"></div>'+
       '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
@@ -2429,7 +2429,7 @@ function ysFindHtml(){
     '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
 function ysGo(k,t){
-  if(k==='dir')window.open(YS_DIR,'_blank','noopener');
+  if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
   else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
   else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');
