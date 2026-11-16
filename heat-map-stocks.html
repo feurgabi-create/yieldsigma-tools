@@ -797,7 +797,7 @@ function hmControlsHtml(){
     '<span class="hmGrp"><span class="hmLbl">Show</span>'+b('sign','all',HM_SIGN,'All')+b('sign','neg',HM_SIGN,'Negative σ')+b('sign','pos',HM_SIGN,'Positive σ')+'</span></div>';
 }
 /* List / Broad: one explanation, opened by the small i next to them */
-var LB_TXT='<b>List</b>: the average Yield Sigma of the dividend growers on our list in this sector, each counted once. <b>Broad</b>: the sector ETF, where each company counts by its size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
+var LB_TXT='<b>List (EW)</b>: the average Yield Sigma of the dividend growers on our list in this sector, equal weight (EW): each name counts the same. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
 function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
 function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);
@@ -822,7 +822,7 @@ function hmSectorHtml(complete){
     var it=r.items.filter(hmPass).sort(asc);if(!it.length)return;
     var f2=function(v){return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'σ';};
     h+='<div class="hmSec"><div class="hmSecHd"><b>'+esc(r.name)+'</b>'+
-      (r.avg!==null?'<span class="hmAvg">List '+f2(r.avg)+' · '+r.items.length+(r.items.length===1?' name':' names')+'</span>':'')+
+      (r.avg!==null?'<span class="hmAvg">List (EW) '+f2(r.avg)+' · '+r.items.length+(r.items.length===1?' name':' names')+'</span>':'')+
       (r.etf&&etfS[r.etf]!==undefined?'<span>· Broad '+esc(r.etf)+' '+f2(etfS[r.etf])+'</span>':'')+(first?lbBtn('hm'):'')+'</div>'+(first?lbPop('hm'):'')+
       '<div class="hmSecTiles">'+it.map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('')+'</div></div>';
     first=false;
