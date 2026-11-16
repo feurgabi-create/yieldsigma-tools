@@ -106,7 +106,7 @@ body.moving{user-select:none}
 (function(){
 var BASE='https://tools.yieldsigma.com/';
 try{if(location.hostname==='tools.yieldsigma.com')BASE='';}catch(e){}
-var IDS=['card','history','calc','heat','macro'];
+var IDS=['card','history','calc','heat','macro','dir'];
 var TOOLS={
   card:{title:'Sigma card',btn:'Card',src:function(t){return BASE+'card-undervalued.html?ws=1'+(t?'&ticker='+encodeURIComponent(t):'');}},
   history:{title:'History',btn:'History',src:function(t){return BASE+'yield-sigma-history.html?ws=1'+(t?'&t='+encodeURIComponent(t):'');}},
@@ -115,11 +115,12 @@ var TOOLS={
     if(hm==='reits')return BASE+'heat-map-reits.html?ws=1&embed=1';
     if(hm==='sector')return BASE+'heat-map-stocks.html?ws=1&embed=1&view=sector';
     return BASE+'heat-map-stocks.html?ws=1&embed=1';}},
-  macro:{title:'Macro',btn:'Macro',src:function(){return BASE+'card-macro.html?ws=1&embed=1';}}
+  macro:{title:'Macro',btn:'Macro',src:function(){return BASE+'card-macro.html?ws=1&embed=1';}},
+  dir:{title:'Directory',btn:'Directory',src:function(){return BASE+'directory.html?ws=1&embed=1';}}
 };
 var HM=['stocks','reits','sector'],HM_LBL={stocks:'Stocks',reits:'REITs',sector:'By sector'};
 /* even layout for the open tools, in the order of the buttons:
-   1 full screen, 2 side by side, 3 one tall on the left and two stacked, 4 two by two, 5 three over two */
+   1 full screen, 2 side by side, 3 one tall on the left and two stacked, 4 two by two, 5 three over two, 6 three by two */
 function autoLayout(on){
   var n=on.length,R={};
   var put=function(id,x,y,w,h){var z=(S.L[id]&&S.L[id][4])||100;R[id]=[x,y,w,h,z];};
@@ -127,10 +128,11 @@ function autoLayout(on){
   else if(n===2){put(on[0],0,0,50,100);put(on[1],50,0,50,100);}
   else if(n===3){put(on[0],0,0,50,100);put(on[1],50,0,50,50);put(on[2],50,50,50,50);}
   else if(n===4){put(on[0],0,0,50,50);put(on[1],50,0,50,50);put(on[2],0,50,50,50);put(on[3],50,50,50,50);}
+  else if(n>=6){var w6=100/3;on.forEach(function(id,i){put(id,(i%3)*w6,Math.floor(i/3)*50,w6,50);});}
   else if(n>=5){var w3=100/3;put(on[0],0,0,w3,50);put(on[1],w3,0,w3,50);put(on[2],2*w3,0,w3,50);put(on[3],0,50,50,50);put(on[4],50,50,50,50);}
   on.forEach(function(id){S.L[id]=R[id];});
 }
-function defTiles(){return {card:[0,0,50,50,100],history:[50,0,50,50,100],calc:[0,50,50,50,100],heat:[50,50,50,50,100],macro:[0,0,100,100,100]};}
+function defTiles(){return {card:[0,0,50,50,100],history:[50,0,50,50,100],calc:[0,50,50,50,100],heat:[50,50,50,50,100],macro:[0,0,100,100,100],dir:[0,0,100,100,100]};}
 var DEF={L:defTiles(),zo:IDS.slice(),max:'',hm:'stocks',t:'',on:['card','history','calc','heat']};
 var KEY='ysWorkspace.v2';
 var S=JSON.parse(JSON.stringify(DEF));
@@ -297,7 +299,7 @@ desk.addEventListener('dblclick',function(e){var th=e.target.closest&&e.target.c
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.max){S.max='';place();}});
 
 /* linked tiles: card, history and calculator follow one stock; a ticker clicked in the
-   heat maps or the macro card loads there (the card opens if none of the three is on screen) */
+   heat maps, the macro card or the directory loads there (the card opens if none of the three is on screen) */
 window.addEventListener('message',function(e){
   var d=e.data;if(!d)return;
   var t=typeof d.ysTicker==='string'?d.ysTicker:typeof d.ysPick==='string'?d.ysPick:null;
@@ -305,7 +307,7 @@ window.addEventListener('message',function(e){
   var src=null;for(var id in FR)if(FR[id].contentWindow===e.source)src=id;
   if(!src)return;
   t=t.trim().toUpperCase();
-  var picker=src==='heat'||src==='macro';
+  var picker=src==='heat'||src==='macro'||src==='dir';
   if(t===S.t&&!picker)return;
   S.t=t;
   var linked=['card','history','calc'];
