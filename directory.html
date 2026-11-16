@@ -6,7 +6,7 @@
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* light / dark switch (theme.js) */
-.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:1040px;z-index:5}
+.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:1480px;z-index:5}
 .ysThemeAnchor .ysThemeBtn{position:absolute;top:12px;right:12px}
 .ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--rule);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;padding:0}
 .ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
@@ -39,7 +39,7 @@ body{margin:0;min-height:100%;background:var(--shell);color:var(--ink);font:15px
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 .stage{padding:32px 16px}
-.sheet{width:100%;max-width:1040px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;
+.sheet{width:100%;max-width:1480px;margin:0 auto;background:var(--paper);color:var(--ink);padding:40px 40px 28px;
   box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28)}
 .empty{padding:100px 10px;text-align:center;color:var(--muted);font:16px/1.6 var(--serif)}
 .pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:20px}
@@ -105,6 +105,12 @@ table.dir td.nm{white-space:normal;min-width:9em}
 table.dir td.sg{font-weight:700}
 table.dir .up{color:var(--jade)}table.dir .dn{color:var(--rust)}
 table.dir .mut{color:var(--muted)}
+/* wide tables: compact type in "All", and a second scrollbar on top when the table is wider than the screen */
+table.dir.all{font-size:12px}
+table.dir.all th,table.dir.all td{padding:7px 7px}
+.topScroll{overflow-x:auto;overflow-y:hidden;height:14px;margin:0 0 4px;display:none}
+.topScroll.on{display:block}
+.topScroll>div{height:1px}
 .labsBy{font-size:12px;color:var(--muted);margin-top:3px}
 .labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
 .labsBy a:hover{text-decoration:underline}
@@ -608,7 +614,7 @@ function render(){
   var cols=SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
   if(isS&&cols.indexOf('cs')>=0)csLoad();
   var ncol=3+(isS?1:0)+cols.length;
-  h+='<div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'"><table class="dir"><thead><tr>'+
+  h+='<div class="topScroll" id="topScroll"><div></div></div><div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'" id="tblWrap"><table class="dir'+(STATE.set==='all'?' all':'')+'"><thead><tr>'+
     headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
     cols.map(function(k){return headCell(k,C[k][0],true);}).join('')+'<th class="cardCol">Card</th>'+
     '</tr></thead><tbody>';
@@ -632,6 +638,16 @@ function render(){
   wire();
   if(hadFocus){var qi=$('#q');qi.focus();try{qi.setSelectionRange(caret,caret);}catch(e){}}
 }
+/* the top scrollbar mirrors the table's own, so a wide table can be scrolled without going to the bottom */
+function syncTopScroll(){
+  var ts=$('#topScroll'),tw=$('#tblWrap');if(!ts||!tw)return;
+  var t=tw.querySelector('table');if(!t)return;
+  ts.firstChild.style.width=t.scrollWidth+'px';
+  ts.classList.toggle('on',t.scrollWidth>tw.clientWidth+2);
+  ts.onscroll=function(){if(tw.scrollLeft!==ts.scrollLeft)tw.scrollLeft=ts.scrollLeft;};
+  tw.onscroll=function(){if(ts.scrollLeft!==tw.scrollLeft)ts.scrollLeft=tw.scrollLeft;};
+}
+window.addEventListener('resize',function(){try{syncTopScroll();}catch(e){}});
 function wire(){
   Array.prototype.forEach.call(document.querySelectorAll('.sortBtn'),function(b){
     b.addEventListener('click',function(){
@@ -645,6 +661,7 @@ function wire(){
     b.addEventListener('click',function(){STATE.kind=b.getAttribute('data-kind');render();});
   });
   $('#q').addEventListener('input',function(e){STATE.q=e.target.value;render();});
+  syncTopScroll();
   Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(b){b.addEventListener('click',function(){STATE.set=b.getAttribute('data-set');render();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-zone]'),function(b){b.addEventListener('click',function(){STATE.zone=b.getAttribute('data-zone');render();});});
   var ss=$('#secSel');if(ss)ss.addEventListener('change',function(e){STATE.sector=e.target.value;render();});
