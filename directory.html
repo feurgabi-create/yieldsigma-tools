@@ -488,7 +488,7 @@ function parseDirection(raw){
 }
 
 /* List / Broad: one explanation, opened by the small i next to them */
-var LB_TXT='<b>List</b>: the average Yield Sigma of the dividend growers on our list in this sector, each counted once. <b>Broad</b>: the sector ETF, where each company counts by its size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
+var LB_TXT='<b>List (EW)</b>: the average Yield Sigma of the dividend growers on our list in this sector, equal weight (EW): each name counts the same. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
 function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
 function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);
@@ -634,7 +634,7 @@ function render(){
     var gi=HM_GROUPS.filter(function(g){return g[0]===STATE.sector;})[0],sec=DATA.stocks.filter(function(r){return r.sector===STATE.sector&&r.sigma!==null&&isFinite(r.sigma);});
     var lst=sec.length?sec.reduce(function(a,r){return a+r.sigma;},0)/sec.length:null,etf=gi?DATA.stocks.filter(function(r){return tkKey(r.ticker)===gi[1];})[0]:null;
     var f2=function(v){return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'σ';};
-    if(lst!==null)h+='<p class="secSum"><b>'+esc(STATE.sector)+'</b> · List <b class="'+(lst>=0?'up':'dn')+'">'+f2(lst)+'</b> ('+sec.length+' names)'+(etf&&etf.sigma!==null&&isFinite(etf.sigma)?' · Broad '+esc(gi[1])+' <b>'+f2(etf.sigma)+'</b>':'')+' '+lbBtn('dir')+'</p>'+lbPop('dir');
+    if(lst!==null)h+='<p class="secSum"><b>'+esc(STATE.sector)+'</b> · List (EW) <b class="'+(lst>=0?'up':'dn')+'">'+f2(lst)+'</b> ('+sec.length+' names)'+(etf&&etf.sigma!==null&&isFinite(etf.sigma)?' · Broad '+esc(gi[1])+' <b>'+f2(etf.sigma)+'</b>':'')+' '+lbBtn('dir')+'</p>'+lbPop('dir');
   }
   h+='<div class="topScroll" id="topScroll"><div></div></div><div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'" id="tblWrap"><table class="dir'+(STATE.set==='all'?' all':'')+'"><thead><tr>'+
     headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
