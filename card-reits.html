@@ -1160,7 +1160,7 @@ function flipHTML(rec){
       '<div class="fbHead"><span class="fbTitle" id="fbTitle" data-cap="'+t+' · % of months in each ½σ step · last 10 years">'+t+' · % of months in each ½σ step · last 10 years</span><button type="button" class="flipBtn" id="flipBackBtn">⤿ Flip back</button></div>'+
       '<a class="subpill fhPill" href="https://tools.yieldsigma.com/yield-sigma-history.html?t='+encodeURIComponent(rec.ticker)+'" target="_blank" rel="noopener">Full history \u2192</a>'+
       '<div class="fbBox"><canvas id="flipCv"></canvas></div>'+
-      '<div class="fbNote">'+f[4]+' months, '+flipMonth(f[5])+' to '+flipMonth(f[5],f[4]-1)+'. The black curve is a bell fitted to '+t+'’s own readings. Percentages are the share of months in each ½σ step.</div>'+
+      '<div class="fbNote">'+f[4]+' months, '+flipMonth(f[5])+' to '+flipMonth(f[5],f[4]-1)+'. The curve is a bell fitted to '+t+'’s own readings. Percentages are the share of months in each ½σ step.</div>'+
     '</div>';
 }
 /* header readout for one ½σ block: share of months, and (beyond ±1σ) the last time here and what followed */
@@ -2020,7 +2020,8 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="calc">Compound calculator</button>'+
       '<button type="button" role="menuitem" data-go="hmS">Heat map<small>Stocks</small></button>'+
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
-      '<a role="menuitem" href="'+YS_DIR+'" target="_blank" rel="noopener">Directory<small>All names \u2197</small></a>'+
+      '<button type="button" role="menuitem" data-go="macro">Macro<small>Universe stats</small></button>'+
+      '<button type="button" role="menuitem" data-go="dir">Directory<small>All names</small></button>'+
       (window.parent===window?'<a role="menuitem" href="https://tools.yieldsigma.com/workspace.html?t='+t+'" target="_blank" rel="noopener">Workspace<small>All tools, one screen \u2197</small></a>':'')+
       '<div class="ysMenuSep"></div>'+
       '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
@@ -2042,7 +2043,8 @@ function ysFindHtml(){
     '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
 function ysGo(k,t){
-  if(k==='dir')window.open(YS_DIR,'_blank','noopener');
+  if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
+  else if(k==='macro')ysPage(YS_BASE+'card-macro.html?embed=1','Macro · universe stats');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
   else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
   else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');
