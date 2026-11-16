@@ -84,7 +84,8 @@ a{color:var(--jade)}
 .sec.folded>*:not(h3){display:none!important}
 .sec.folded{padding-bottom:0}
 @media (min-width:1100px){
-  .sheet.tiles{max-width:1680px}
+  .sheet.tiles{max-width:2400px}
+  html.mTiles .ysThemeAnchor{max-width:2400px}
   .sheet.tiles .tcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 44px;align-items:start}
   /* each section is its own panel, with clear space between panels */
   .sheet.tiles .sec{margin-top:26px;border:1px solid var(--rule);border-top:3px solid var(--jade);border-radius:12px;padding:20px 24px 24px;
@@ -94,6 +95,13 @@ a{color:var(--jade)}
   .sheet.tiles .sec h3{color:var(--ink);font-size:14.5px;margin-bottom:10px}
   .sheet.tiles .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sheet.tiles .zdef{margin-bottom:4px}
+  /* expand: any panel opens large, over the page */
+  .sheet.tiles .sec{position:relative}
+  .sheet.tiles .sec .xpand{position:absolute;top:14px;right:14px;width:30px;height:28px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+  .sheet.tiles .sec .xpand:hover{color:var(--jade);border-color:var(--jade)}
+  .sheet.tiles .sec.big{position:fixed;inset:28px max(28px,calc((100vw - 1500px)/2));z-index:200;overflow:auto;margin:0!important;background:var(--paper);box-shadow:0 30px 80px -20px rgba(0,0,0,.55);padding:30px 40px 40px}
+  .sheet.tiles .sec.big h3{font-size:16px}
+  .macroShade{position:fixed;inset:0;background:rgba(10,18,14,.55);z-index:199}
   .sheet.tiles .sec h3 .fold,.sheet.tiles .foldAll{display:none}
 }
 .sec{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
@@ -1040,6 +1048,20 @@ function footHtml(){
     '<span>'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</span></footer>';
 }
 
+/* Tile view: open one panel large over the page; × or Esc or a click outside puts it back */
+function toggleBig(sec){
+  if(!sec)return;
+  var on=!sec.classList.contains('big');
+  document.querySelectorAll('section.sec.big').forEach(function(x){x.classList.remove('big');});
+  var sh=document.querySelector('.macroShade');if(sh)sh.parentNode.removeChild(sh);
+  document.querySelectorAll('.sec .xpand').forEach(function(b){b.innerHTML=XP_OPEN;b.title='Open large';});
+  if(on){sec.classList.add('big');var d=document.createElement('div');d.className='macroShade';document.body.appendChild(d);
+    var b=sec.querySelector('.xpand');if(b){b.innerHTML='×';b.style.fontSize='20px';b.title='Close';}document.documentElement.style.overflow='hidden';}
+  else document.documentElement.style.overflow='';
+  setTimeout(function(){try{drawBreadth(null);drawHist(null);}catch(e){}},30);
+}
+var XP_OPEN='<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var b=document.querySelector('section.sec.big');if(b)toggleBig(b);}});
 var TILES=false,FOLD={};
 try{TILES=localStorage.getItem('ysMacroTiles')==='1';FOLD=JSON.parse(localStorage.getItem('ysMacroFold')||'{}')||{};}catch(e){}
 function saveFold(){try{localStorage.setItem('ysMacroFold',JSON.stringify(FOLD));}catch(e){}}
@@ -1049,8 +1071,10 @@ function render(){
   if(UNI==='reits'&&!withHist(U).length){/* no REIT history: still show today */}
   BR=breadth(U);HB=histBins(U);
   var LT=levelTable(U,SIDE);
+  var bigEl=document.querySelector('section.sec.big'),bigK=bigEl?bigEl.getAttribute('data-k'):null;
   var tiles=TILES&&window.innerWidth>=1100;
   sheet.classList.toggle('tiles',tiles);
+  document.documentElement.classList.toggle('mTiles',tiles);
   if(tiles){
     /* Tile view: the month-by-month chart full width, then two columns, then the averages table full width */
     sheet.innerHTML=headHtml(U)+breadthHtml()+
@@ -1068,6 +1092,11 @@ function render(){
     var f=!tiles&&FOLD[k]===1;sec.classList.toggle('folded',f);
     h.insertAdjacentHTML('afterbegin','<button type="button" class="fold" aria-expanded="'+(f?'false':'true')+'" title="'+(f?'Show':'Hide')+' this section">'+(f?'▸':'▾')+'</button>');
   });
+  if(tiles)sheet.querySelectorAll('section.sec').forEach(function(sec){
+    sec.insertAdjacentHTML('afterbegin','<button type="button" class="xpand" title="Open large" aria-label="Open this section large"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>');
+  });
+  var sh0=document.querySelector('.macroShade');if(sh0)sh0.parentNode.removeChild(sh0);document.documentElement.style.overflow='';
+  if(tiles&&bigK){var nb=sheet.querySelector('section.sec[data-k="'+bigK+'"]');if(nb)toggleBig(nb);}
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
   sheet.querySelectorAll('thead th').forEach(function(th){th.innerHTML=th.innerHTML.replace(/\u03c3/g,'<span style="text-transform:none">\u03c3</span>');});
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
@@ -1075,6 +1104,9 @@ function render(){
 document.addEventListener('click',function(e){
   var lp=e.target.closest&&e.target.closest('.labsTag[data-pop]');
   if(lp){var pp=document.getElementById('pop-'+lp.dataset.pop);if(pp){pp.hidden=!pp.hidden;lp.setAttribute('aria-expanded',pp.hidden?'false':'true');}return;}
+  var xb=e.target.closest&&e.target.closest('.sec .xpand');
+  if(xb){toggleBig(xb.closest('section.sec'));return;}
+  if(e.target.classList&&e.target.classList.contains('macroShade')){toggleBig(document.querySelector('section.sec.big'));return;}
   var tv=e.target.closest&&e.target.closest('#tvBtn');
   if(tv){TILES=!TILES;try{localStorage.setItem('ysMacroTiles',TILES?'1':'0');}catch(err){}var y0=window.scrollY;render();window.scrollTo(0,y0);return;}
   var fb=e.target.closest&&e.target.closest('.sec h3 .fold');
