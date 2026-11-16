@@ -13,6 +13,9 @@
 .ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
 .ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
 html.ws .ysThemeBtn{display:none}
+
+/* row highlight on hover, every table (works over shaded cells, light and dark) */
+table tbody tr:hover>td,table tbody tr:hover>th{box-shadow:inset 0 0 0 999px rgba(98,190,149,.11)}
 </style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yield Sigma Macro</title>
