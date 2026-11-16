@@ -201,6 +201,8 @@ function ensureFrame(id){
   if(FR[id])return;
   var f=document.createElement('iframe');f.title=TOOLS[id].title;f.src=TOOLS[id].src(S.t,S.hm);
   EL[id].querySelector('.vp').appendChild(f);FR[id]=f;
+  /* once the page is up, tell it the current stock again (it may have changed while the tile loaded) */
+  f.addEventListener('load',function(){syncTile(id);});
 }
 function place(){
   IDS.forEach(function(id){
@@ -225,6 +227,7 @@ function place(){
   save();
 }
 function front(id){var i=S.zo.indexOf(id);if(i<S.zo.length-1){S.zo.splice(i,1);S.zo.push(id);place();}}
+function syncTile(id){if(S.t&&FR[id]&&['card','history','calc'].indexOf(id)>=0){try{FR[id].contentWindow.postMessage({ysSelect:S.t},'*');}catch(x){}}}
 function setOn(id,on){
   var i=S.on.indexOf(id);
   if(on&&i<0)S.on=IDS.filter(function(x){return x===id||S.on.indexOf(x)>=0;});
@@ -234,6 +237,7 @@ function setOn(id,on){
   autoLayout(S.on);
   if(on){var z=S.zo.indexOf(id);S.zo.splice(z,1);S.zo.push(id);}
   place();
+  if(on)syncTile(id);
 }
 picks.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-tg]');if(b)setOn(b.dataset.tg,S.on.indexOf(b.dataset.tg)<0);});
 

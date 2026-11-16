@@ -719,7 +719,9 @@ sel.addEventListener('change', draw);
 /* Yield Sigma workspace: report the stock shown, and follow a stock picked in another tile */
 sel.addEventListener('change',()=>{ if(window.parent!==window){ try{window.parent.postMessage({ysTicker:sel.value},'*');}catch(e){} } });
 window.addEventListener('message',e=>{ if(window.parent===window||e.source!==window.parent) return; const d=e.data; if(!d||typeof d.ysSelect!=='string') return;
-  const t=d.ysSelect.toUpperCase(); if(DATA[t]&&sel.value!==t){ sel.value=t; draw(); } });
+  const t=d.ysSelect.toUpperCase(); WS_T=t; if(DATA[t]&&sel.value!==t){ sel.value=t; draw(); } });
+/* the stock the workspace last asked for: it wins over the address the tile was first opened with */
+var WS_T='';
 loadLive(); setInterval(loadLive,15*60*1000);
 ['showEp','showFan'].forEach(id=>document.getElementById(id).addEventListener('change',draw));
 document.querySelectorAll('input[name="rng"]').forEach(r=>r.addEventListener('change',draw));
@@ -806,7 +808,7 @@ async function loadHistory(){
   for(const k in PRED) delete PRED[k]; for(const k in UNI) delete UNI[k];
   const keep=sel.value, want=(new URLSearchParams(location.search).get('t')||'').toUpperCase();
   sel.innerHTML=''; Object.keys(DATA).sort().forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=NAMES[t]?t+' · '+NAMES[t]:t; sel.appendChild(o); });
-  sel.value=DATA[want]?want:(DATA[keep]?keep:Object.keys(DATA)[0]);
+  sel.value=(WS_T&&DATA[WS_T])?WS_T:(DATA[want]?want:(DATA[keep]?keep:Object.keys(DATA)[0]));
   draw(); if(typeof drawBell==='function') drawBell();
 }
 loadHistory();
