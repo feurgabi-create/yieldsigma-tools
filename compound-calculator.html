@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
-<style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}</style>
+<style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
+/* light / dark switch (theme.js) */
+.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:1100px;z-index:5}
+.ysThemeAnchor .ysThemeBtn{position:absolute;top:12px;right:12px}
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--rule);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
+html.ws .ysThemeBtn{display:none}
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Compound Growth Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +23,10 @@
   --shell:#E4E9E4;--panel:#EEF2ED;--field:#FFFFFF;--ink:#132419;--muted:#5E6F63;--rule:#D2DBD1;
   --jade:#1F7A52;--jade-soft:#DCEDE3;--jade-mid:#9CCBB2;--rust:#B54A2C;--gold:#A5791F;--paper:#FFFFFF;
   --serif:'Newsreader',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+:root[data-theme="dark"]{
+  --shell:#1C1F22;--panel:#25292D;--field:#2C3136;--ink:#DDE1E4;--muted:#9AA2A8;--rule:#363C42;
+  --jade:#62BE95;--jade-soft:#29362F;--jade-mid:#3F6B55;--rust:#DA8A6E;--gold:#D1B06C;--paper:#25292D;color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -127,7 +140,7 @@ td.bcol{color:var(--gold)}
 </style>
 </head>
 <body>
-<main class="stage"><article class="sheet" id="calc"></article></main>
+<main class="stage"><div class="ysThemeAnchor"><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="calc"></article></main>
 <script src="https://tools.yieldsigma.com/pe-check.js?v=3"></script>
 <script>
 /* ===== EDIT LINKS HERE =====

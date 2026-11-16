@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
-<style>html.ws body{padding-left:14px!important;padding-right:14px!important}</style>
+<style>html.ws body{padding-left:14px!important;padding-right:14px!important}
+/* light / dark switch (theme.js) */
+.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:none;z-index:5}
+.ysThemeAnchor .ysThemeBtn{position:absolute;top:12px;right:12px}
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--rule);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
+html.ws .ysThemeBtn{display:none}
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yield Sigma™ history</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,12 +26,9 @@
   --serif:'Newsreader',Georgia,'Times New Roman',serif;
   --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30;
-  --jade:#4CC28A; --rust:#E07A5B; --band:#7D8F83; --counter:#7FA8DC; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30;
-  --jade:#4CC28A; --rust:#E07A5B; --band:#7D8F83; --counter:#7FA8DC; color-scheme:dark}
+  --bg:#25292D; --panel:#2C3136; --ink:#DDE1E4; --muted:#9AA2A8; --rule:#3A4046;
+  --jade:#62BE95; --rust:#DA8A6E; --band:#7E868C; --counter:#86A9D6; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:4px 10px}
@@ -120,14 +126,13 @@ table.log tr.open td{font-weight:600}
 .premstack{display:inline-block;position:relative;vertical-align:baseline}.premstack .subpill{position:absolute;left:0;top:100%;margin-top:3px;white-space:nowrap}
 .subpill{display:inline-flex;align-items:center;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:999px;padding:1px 8px;text-decoration:none;font-weight:600}
 .subpill:hover{background:var(--jade);color:#fff}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lock,:root:not([data-theme="light"]) .premnote{color:#e8c77a;background:#2c2614;border-color:#5c4b22}}
 :root[data-theme="dark"] .lock,:root[data-theme="dark"] .premnote{color:#e8c77a;background:#2c2614;border-color:#5c4b22}
 .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .foot>span:first-child,.foot .footLinks{flex-basis:100%} .foot a,.foot a:visited{color:var(--jade);text-decoration:none} .foot a:hover{text-decoration:underline}
 .tag{font-size:11px;color:var(--muted);border:1px solid var(--rule);border-radius:999px;padding:2px 8px;justify-self:start}
 </style>
 
-<div class="wrap">
+<div class="ysThemeAnchor"><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><div class="wrap">
   <header>
     <span class="tag"><a href="https://www.stardustcapital.net/stardust-capital-labs" target="_blank" rel="noopener">Stardust Capital Labs</a></span>
     <h1><a class="ysl" href="https://www.yieldsigma.com" target="_blank" rel="noopener">Yield Sigma™</a> history</h1>
@@ -738,7 +743,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&BELL) setBell(fals
 window.addEventListener('resize',()=>requestAnimationFrame(drawBell));
 window.addEventListener('resize', ()=>requestAnimationFrame(drawSide));
 
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+
 new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 document.getElementById('showPx').addEventListener('change', draw);
 // Deep links from the Yield Sigma card: ?t=CLX#bell opens the flip-to-bell view, ?t=CLX#ranges points to the side histogram

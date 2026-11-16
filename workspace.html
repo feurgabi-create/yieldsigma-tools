@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yield Sigma™ workspace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,9 +23,7 @@
   --mono:'JetBrains Mono',ui-monospace,Menlo,monospace; --serif:'Newsreader',Georgia,serif;
   --bar:40px; --gap:6px;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30; --jade:#4CC28A; --jade-soft:#1E3328; color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0F1A14; --panel:#16241C; --ink:#E4ECE6; --muted:#9AAA9F; --rule:#2A3A30; --jade:#4CC28A; --jade-soft:#1E3328; color-scheme:dark}
+:root[data-theme="dark"]{--bg:#25292D; --panel:#1C1F22; --ink:#DDE1E4; --muted:#9AA2A8; --rule:#363C42; --jade:#62BE95; --jade-soft:#29362F; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--panel);color:var(--ink);font:13px/1.4 var(--mono);overflow:hidden}
 a{color:var(--jade)}
@@ -89,6 +88,9 @@ body.moving{user-select:none}
   .rz{display:none}
   .th{cursor:default}
 }
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border:1px solid var(--rule);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer;padding:0;flex:none}
+.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
 </style>
 </head>
 <body>
@@ -98,6 +100,7 @@ body.moving{user-select:none}
   <nav class="picks" id="picks" aria-label="Tools on screen"></nav>
   <span class="sp"></span>
   <button type="button" class="link" id="reset" title="Lay the open tools out evenly again">Reset layout</button>
+  <script>document.write(window.YS_THEME?YS_THEME.button():"")</script>
   <button type="button" class="pill" id="share">Copy link<span class="lg"> to this view</span></button>
 </div>
 <div class="desk" id="desk"></div>

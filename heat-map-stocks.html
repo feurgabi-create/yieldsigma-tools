@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
-<style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}</style>
+<style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
+/* light / dark switch (theme.js) */
+.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:1040px;z-index:5}
+.ysThemeAnchor .ysThemeBtn{position:absolute;top:12px;right:12px}
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--rule);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
+html.ws .ysThemeBtn{display:none}
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sigma Heat Map — Stocks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,17 +28,10 @@
   --paper:#FFFFFF;
   --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
-    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
-    --paper:#0F1B13;
-  }
-}
 :root[data-theme="dark"]{
-  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
-  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
-  --paper:#0F1B13;
+  --shell:#1C1F22; --panel:#25292D; --field:#2C3136; --ink:#DDE1E4; --muted:#9AA2A8; --rule:#363C42;
+  --jade:#62BE95; --jade-soft:#29362F; --rust:#DA8A6E; --rust-soft:#3A2C27; --gold:#D1B06C; --gold-soft:#38332A;
+  --paper:#25292D;
 }
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
@@ -228,7 +230,7 @@ body.public-mode .pubFootLive{display:inline}
   </aside>
 
   <main class="stage">
-    <article class="sheet" id="sheet"></article>
+    <div class="ysThemeAnchor"><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="sheet"></article>
   </main>
 </div>
 
@@ -1127,8 +1129,8 @@ function wire(){
   ['mzUnder','mzNormal','mzOver','mmEqual','mmProp','msExtreme','msEven'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',onMapChange);});
   $('#btnRender').addEventListener('click',function(){handleRaw($('#raw').value);});
   $('#raw').addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){handleRaw($('#raw').value);}});
-  $('#btnDark').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','dark');});
-  $('#btnLight').addEventListener('click',function(){document.documentElement.setAttribute('data-theme','light');});
+  $('#btnDark').addEventListener('click',function(){if(window.YS_THEME)YS_THEME.set(true);});
+  $('#btnLight').addEventListener('click',function(){if(window.YS_THEME)YS_THEME.set(false);});
   $('#btnFetchStocks').addEventListener('click',function(){fetchOneLive('stocks');});
   $('#btnPublish').addEventListener('click',function(){
     saveLiveUrls();

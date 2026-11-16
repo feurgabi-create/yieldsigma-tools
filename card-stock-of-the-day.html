@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--c-paper,#fff)!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -18,15 +19,9 @@
   --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
   --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
-    --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
-  }
-}
 :root[data-theme="dark"]{
-  --shell:#0A130D; --panel:#0F1B13; --field:#132419; --ink:#E7EEE7; --muted:#93A498; --rule:#23362A;
-  --jade:#4FCB94; --jade-soft:#12291D; --rust:#E77A57; --rust-soft:#2E1B14; --gold:#D9AE53; --gold-soft:#2A2413;
+  --shell:#1C1F22; --panel:#25292D; --field:#2C3136; --ink:#DDE1E4; --muted:#9AA2A8; --rule:#363C42;
+  --jade:#62BE95; --jade-soft:#29362F; --rust:#DA8A6E; --rust-soft:#3A2C27; --gold:#D1B06C; --gold-soft:#38332A;
 }
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
@@ -93,6 +88,13 @@ h2 .hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted)
 .ysNavL,.ysNavR{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
 .ysNav .backLink{font:600 12.5px var(--mono);color:var(--c-jade);text-decoration:underline;text-underline-offset:3px}
 .ysNav .subpill{cursor:pointer}
+.ysNavR{display:flex;align-items:center;gap:8px}
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--c-rule);border-radius:20px;background:transparent;color:var(--c-muted);cursor:pointer;padding:0}
+.ysThemeBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
+html[data-theme="dark"] .bellProbe .bubble,html[data-theme="dark"] .tick{background:#3A4046;color:#DDE1E4}
+html[data-theme="dark"] .bellProbe .dot{background:#DDE1E4}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
+html.ws .ysThemeBtn{display:none}
 .ysToolsWrap,.ysFind{position:relative}
 .ysMenu,.ysHits{position:absolute;top:calc(100% + 6px);display:none;background:var(--c-paper);border:1px solid var(--c-rule);border-radius:10px;box-shadow:0 14px 34px -14px rgba(10,25,20,.38);padding:6px;z-index:7}
 .ysMenu{left:0;width:250px}
@@ -1482,8 +1484,10 @@ function yearFanSVG(fan,T){
  * Card assembly
  * ------------------------------------------------------------------ */
 var THEME_LIGHT={paper:'#FFFFFF',ink:'#132419',muted:'#5E6F63',rule:'#DDE4DC',jade:'#1F7A52',jadeSoft:'#E4F1E9',rust:'#B54A2C',rustSoft:'#F6E8E2',gold:'#A5791F',goldSoft:'#F3ECD9',mono:"'JetBrains Mono',monospace"};
-var THEME_DARK={paper:'#132419',ink:'#E7EEE7',muted:'#93A498',rule:'#28392D',jade:'#4FCB94',jadeSoft:'#12291D',rust:'#E77A57',rustSoft:'#2E1B14',gold:'#D9AE53',goldSoft:'#2A2413',mono:"'JetBrains Mono',monospace"};
-var curTheme=THEME_LIGHT;
+var THEME_DARK={paper:'#25292D',ink:'#DDE1E4',muted:'#9AA2A8',rule:'#3A4046',jade:'#62BE95',jadeSoft:'#29362F',rust:'#DA8A6E',rustSoft:'#3A2C27',gold:'#D1B06C',goldSoft:'#38332A',mono:"'JetBrains Mono',monospace"};
+var curTheme=(window.YS_THEME&&YS_THEME.dark)?THEME_DARK:THEME_LIGHT;
+/* light / dark switch (theme.js): pages start light; the visitor's choice redraws the card */
+if(window.YS_THEME)YS_THEME.on(function(d){var nt=d?THEME_DARK:THEME_LIGHT;if(nt===curTheme)return;curTheme=nt;try{renderCurrent();}catch(e){}});
 
 function parseDirection(raw){
   if(!raw)return null;
@@ -2024,6 +2028,7 @@ function ysNavHtml(a){
       '<div class="ysMenuSep"></div>'+
       '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
     '</div></div></div>'+
+    (window.YS_THEME?'<div class="ysNavR">'+YS_THEME.button()+'</div>':'')+
     '</nav>';
   return h;
 }
@@ -2630,8 +2635,8 @@ function wire(){
   $('#pick').addEventListener('change',function(){selectedIdx=+(this.value||0);priceOverride=null;var pp=$('#pubPick');if(pp)pp.value=this.value;renderCurrent();});
   var pubPickEl=$('#pubPick');
   if(pubPickEl)pubPickEl.addEventListener('change',function(){selectedIdx=+(this.value||0);priceOverride=null;var p=$('#pick');if(p)p.value=this.value;renderCurrent();});
-  $('#btnDark').addEventListener('click',function(){curTheme=THEME_DARK;renderCurrent();});
-  $('#btnLight').addEventListener('click',function(){curTheme=THEME_LIGHT;renderCurrent();});
+  $('#btnDark').addEventListener('click',function(){if(window.YS_THEME)YS_THEME.set(true);else{curTheme=THEME_DARK;renderCurrent();}});
+  $('#btnLight').addEventListener('click',function(){if(window.YS_THEME)YS_THEME.set(false);else{curTheme=THEME_LIGHT;renderCurrent();}});
   $('#btnPrint').addEventListener('click',function(){window.print();});
   $('#btnPng').addEventListener('click',exportPng);
   $('#btnPublish').addEventListener('click',function(){
@@ -2717,9 +2722,8 @@ function selectTickerFromUrl(){
 
 if(PUBLIC_MODE){
   document.body.classList.add('public-mode');
-  /* Published embeds always render light, regardless of the visitor's
-     device dark-mode setting, so the tool matches the website around it. */
-  document.documentElement.setAttribute('data-theme','light');
+  /* Published pages start light, whatever the device setting; the visitor's own
+     switch (theme.js) is the only way to dark. */
 }
 if(SAMPLE_DATA_TYPE==='reits'){var dtr=$('#dtReits');if(dtr)dtr.checked=true;}
 wire();
