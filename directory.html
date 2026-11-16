@@ -66,7 +66,9 @@ button,input{font:inherit;color:inherit}
 /* LIST_HEIGHT 0 = the full list, page grows with it. Any other number = the list
    scrolls inside a box that tall (headers stay put), so the page has one fixed
    height and the Google Sites embed is sized once. */
-.tblWrap{overflow-x:auto}
+.tblWrap{overflow:visible}
+/* table wider than the screen: it becomes a box that scrolls both ways inside the screen, header frozen on top */
+.tblWrap.box{overflow:auto;max-height:calc(100vh - 24px);border-bottom:1px solid var(--rule)}
 .tblWrap.fixed{overflow:auto;border-bottom:1px solid var(--rule)}
 table.dir{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
 table.dir th,table.dir td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:left}
@@ -646,8 +648,13 @@ function render(){
 function syncTopScroll(){
   var ts=$('#topScroll'),tw=$('#tblWrap');if(!ts||!tw)return;
   var t=tw.querySelector('table');if(!t)return;
+  /* header row frozen while scrolling: the page holds it when the table fits; when it does not fit,
+     the table scrolls inside a screen-high box (sideways scrollbar always in view) and the box holds it */
+  tw.classList.remove('box');
+  var wide=t.scrollWidth>tw.clientWidth+2;
+  if(wide&&!tw.classList.contains('fixed'))tw.classList.add('box');
   ts.firstChild.style.width=t.scrollWidth+'px';
-  ts.classList.toggle('on',t.scrollWidth>tw.clientWidth+2);
+  ts.classList.remove('on');
   ts.onscroll=function(){if(tw.scrollLeft!==ts.scrollLeft)tw.scrollLeft=ts.scrollLeft;};
   tw.onscroll=function(){if(ts.scrollLeft!==tw.scrollLeft)ts.scrollLeft=tw.scrollLeft;};
 }
