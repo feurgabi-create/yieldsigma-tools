@@ -918,7 +918,7 @@ function render(complete){
   var shown=hmBandPick(complete).length;
   var sub=shown+' representative REITs from the dividend-growers universe of '+complete.length+'+.';
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — REITs</h2><div class="sub">'+esc(sub)+'<a class="dirPill subPill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof"><a class="dirPill" href="https://www.yieldsigma.com/directory" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
+    '<div class="asof"><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
   h+=legendHtml(sel);
   h+=hmControlsHtml();
   /* Display order: most overvalued through Normal to most undervalued,
