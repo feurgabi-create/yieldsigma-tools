@@ -86,7 +86,14 @@ a{color:var(--jade)}
 @media (min-width:1100px){
   .sheet.tiles{max-width:1680px}
   .sheet.tiles .tcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 44px;align-items:start}
-  .sheet.tiles .sec{margin-top:28px}
+  /* each section is its own panel, with clear space between panels */
+  .sheet.tiles .sec{margin-top:26px;border:1px solid var(--rule);border-top:3px solid var(--jade);border-radius:12px;padding:20px 24px 24px;
+    background:color-mix(in srgb,var(--shell) 35%,var(--paper))}
+  .sheet.tiles .tc .sec:first-child{margin-top:26px}
+  .sheet.tiles .tcols{gap:0 28px}
+  .sheet.tiles .sec h3{color:var(--ink);font-size:14.5px;margin-bottom:10px}
+  .sheet.tiles .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sheet.tiles .zdef{margin-bottom:4px}
   .sheet.tiles .sec h3 .fold,.sheet.tiles .foldAll{display:none}
 }
 .sec{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
@@ -1047,7 +1054,7 @@ function render(){
   if(tiles){
     /* Tile view: the month-by-month chart full width, then two columns, then the averages table full width */
     sheet.innerHTML=headHtml(U)+breadthHtml()+
-      '<div class="tcols"><div class="tc">'+todayHtml(U,LT)+pvHtml(U)+btHtml(U)+healthHtml(U)+'</div>'+
+      '<div class="tcols"><div class="tc"><section class="sec" id="today"><h3>Today</h3>'+todayHtml(U,LT)+'</section>'+pvHtml(U)+btHtml(U)+healthHtml(U)+'</div>'+
       '<div class="tc">'+normHtml(U,LT)+spreadHtml(U)+sectorHtml(U)+'</div></div>'+matrixHtml(U)+footHtml();
   }else{
     sheet.innerHTML=headHtml(U)+'<p class="foldAll"><button type="button" data-foldall="1">Collapse all</button> · <button type="button" data-foldall="0">Expand all</button></p>'+
