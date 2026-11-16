@@ -654,7 +654,7 @@ function render(){
     headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
     cols.map(function(k){return headCell(k,C[k][0],true);}).join('')+'<th class="cardCol">Card</th>'+
     '</tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="'+ncol+'" class="none">'+(STATE.watch&&window.YS_WATCH&&!YS_WATCH.list().length?'Your watchlist is empty. Click the ☆ next to a ticker to add it.':'No names match.')+'</td></tr>';
+  if(!rows.length)h+='<tr><td colspan="'+ncol+'" class="none">'+(STATE.watch&&window.YS_WATCH&&!YS_WATCH.list().length?'Your watchlist is empty. Hover over a row and click the ☆ at its end to add that name.':'No names match.')+'</td></tr>';
   rows.forEach(function(r){
     var card=r.free
       ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
