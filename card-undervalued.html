@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:#fff!important}html[data-theme="dark"].ws body{background:#25292D!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* ===== Tile view (Nov 2026): the whole card on one screen, rearranged into tiles (nothing left out).
@@ -14,6 +15,8 @@
 .tvBtn[aria-pressed="true"] .sw{background:var(--c-jade)}
 .tvBtn[aria-pressed="true"] .sw::after{left:14px}
 @media (max-width:900px){.tvBtn{display:none}}
+.ysStar{border:0;background:none;color:var(--c-muted);cursor:pointer;line-height:1;padding:0 2px;align-self:center}
+.ysStar:hover,.ysStar.on{color:var(--c-gold)}
 .ysNavR{display:flex;align-items:center;gap:8px}
 .ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--c-rule);border-radius:20px;background:transparent;color:var(--c-muted);cursor:pointer;padding:0}
 .ysThemeBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
@@ -1659,7 +1662,7 @@ function buildCard(rec,a){
   h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch"><span><a class="ysHome" href="https://www.yieldsigma.com/home" target="_blank" rel="noopener">Yield Sigma™</a> valuation card</span><button type="button" class="abPill" id="abPill" aria-expanded="false" aria-controls="abPanel">About '+esc(a.ticker||rec.ticker||'')+' <i aria-hidden="true">i</i></button></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
-    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+'</div>'+
+    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+(window.YS_WATCH?YS_WATCH.star(a.ticker,' style="font-size:20px"'):'')+'</div>'+
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
     '<div class="lbl">'+(priceOverride!==null?'<span class="pxAdj">adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
@@ -2347,6 +2350,9 @@ function ysDeepLink(){
   if(!t||ysTk(ROWS[selectedIdx])===t)return;
   ysOpenTicker(t,true);
 }
+/* watchlist star next to the ticker: adds or removes the stock from this browser's list */
+document.addEventListener('click',function(e){var st=e.target.closest&&e.target.closest('[data-star]');if(!st||!window.YS_WATCH)return;e.preventDefault();
+  var on=YS_WATCH.toggle(st.getAttribute('data-star'));st.classList.toggle('on',on);st.textContent=on?'★':'☆';st.setAttribute('aria-pressed',on);st.title=on?'Remove from my watchlist':'Add to my watchlist';},true);
 function ysNavHtml(a){
   var t=esc(String(a.ticker||'').trim().toUpperCase());
   var h='<nav class="ysNav" aria-label="Yield Sigma tools"><div class="ysNavL">';

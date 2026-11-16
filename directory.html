@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* light / dark switch (theme.js) */
@@ -121,6 +122,11 @@ table.dir.all th,table.dir.all td{padding:7px 7px}
 .topScroll.on{display:block}
 .topScroll>div{height:1px}
 .secSum{font-size:12.5px;margin:0 0 10px;color:var(--muted)}.secSum b{color:var(--ink)}.secSum b.up{color:var(--jade)}.secSum b.dn{color:var(--rust)}
+.ysStar{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 6px 0 0;vertical-align:-1px}
+.ysStar:hover{color:var(--gold)}.ysStar.on{color:var(--gold)}
+.wchip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted)}
+.wchip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.wcopy{border:0;background:none;color:var(--jade);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
 .labsBy{font-size:12px;color:var(--muted);margin-top:3px}
 .labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
 .labsBy a:hover{text-decoration:underline}
@@ -508,7 +514,7 @@ function zoneOf(kind,s){
 }
 
 var DATA={stocks:[],reits:[]};
-var STATE={kind:'stocks',sort:'name',dir:1,q:'',long25:false,set:'valuation',zone:'all',sector:''};
+var STATE={kind:'stocks',sort:'name',dir:1,q:'',long25:false,set:'valuation',zone:'all',sector:'',watch:/[?&]w=/.test(location.search)};
 var lastUpdated=null;
 
 function buildRows(lines,tags){
@@ -561,6 +567,7 @@ function visibleRows(){
   var rows=DATA[STATE.kind].filter(function(r){
     if(STATE.long25&&!(r.years!==null&&r.years>=25))return false;
     if(STATE.zone!=='all'&&zoneOf(STATE.kind,r.sigma)!==STATE.zone)return false;
+    if(STATE.watch&&!(window.YS_WATCH&&YS_WATCH.has(r.ticker)))return false;
     if(STATE.kind==='stocks'&&STATE.sector&&r.sector!==STATE.sector)return false;
     if(q&&r.name.toLowerCase().indexOf(q)<0&&r.ticker.toLowerCase().indexOf(q)<0)return false;
     return true;
@@ -609,7 +616,9 @@ function render(){
   var secs=HM_GROUPS.map(function(g){return g[0];});
   h+='<div class="ctl2"><div class="sets" role="group" aria-label="Columns">'+SETS.map(function(q){return '<button type="button" data-set="'+q[0]+'" class="'+(STATE.set===q[0]?'on':'')+'" aria-pressed="'+(STATE.set===q[0])+'">'+q[1]+'</button>';}).join('')+'</div>'+
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
-    '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span></div>';
+    '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
+    (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')</button>'+
+      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>';
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';
       return {v:(r.sigma>=0?'+':'−')+Math.abs(r.sigma).toFixed(2)+'σ',cls:'sg '+(r.sigma>=0?'up':'dn'),st:'background:color-mix(in srgb,'+c+' '+Math.round(a*22)+'%,transparent)'};}],
@@ -640,12 +649,12 @@ function render(){
     headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
     cols.map(function(k){return headCell(k,C[k][0],true);}).join('')+'<th class="cardCol">Card</th>'+
     '</tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="'+ncol+'" class="none">No names match.</td></tr>';
+  if(!rows.length)h+='<tr><td colspan="'+ncol+'" class="none">'+(STATE.watch&&window.YS_WATCH&&!YS_WATCH.list().length?'Your watchlist is empty. Click the ☆ next to a ticker to add it.':'No names match.')+'</td></tr>';
   rows.forEach(function(r){
     var card=r.free
       ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
       :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
-    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+esc(r.name)+'</td><td class="tk">'+esc(r.ticker)+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
+    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+esc(r.name)+'</td><td class="tk">'+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+esc(r.ticker)+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
       (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+esc(o.v)+'</td>';}).join('')+
       '<td class="cardCol">'+card+'</td></tr>';
@@ -675,6 +684,14 @@ function syncTopScroll(){
   tw.onscroll=function(){if(ts.scrollLeft!==tw.scrollLeft)ts.scrollLeft=tw.scrollLeft;};
 }
 window.addEventListener('resize',function(){try{syncTopScroll();}catch(e){}});
+/* watchlist: ☆ on each row, the My watchlist chip */
+document.addEventListener('click',function(e){
+  var st=e.target.closest&&e.target.closest('[data-star]');
+  if(st&&window.YS_WATCH){e.preventDefault();e.stopPropagation();YS_WATCH.toggle(st.getAttribute('data-star'));render();return;}
+  var wb=e.target.closest&&e.target.closest('[data-watch]');
+  if(wb){STATE.watch=!STATE.watch;render();}
+},true);
+if(window.YS_WATCH)YS_WATCH.on(function(){try{render();}catch(e){}});
 function wire(){
   Array.prototype.forEach.call(document.querySelectorAll('.sortBtn'),function(b){
     b.addEventListener('click',function(){
@@ -688,6 +705,8 @@ function wire(){
     b.addEventListener('click',function(){STATE.kind=b.getAttribute('data-kind');render();});
   });
   $('#q').addEventListener('input',function(e){STATE.q=e.target.value;render();});
+  var wc=$('#wCopy');if(wc)wc.addEventListener('click',function(){var l=YS_WATCH.link();var done=function(){wc.textContent='Link copied';setTimeout(function(){wc.textContent='Copy my list link';},1600);};
+    if(navigator.clipboard)navigator.clipboard.writeText(l).then(done,function(){prompt('Copy this link:',l);});else prompt('Copy this link:',l);});
   syncTopScroll();
   Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(b){b.addEventListener('click',function(){STATE.set=b.getAttribute('data-set');render();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-zone]'),function(b){b.addEventListener('click',function(){STATE.zone=b.getAttribute('data-zone');render();});});
