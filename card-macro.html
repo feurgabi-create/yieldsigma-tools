@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* light / dark switch (theme.js) */
@@ -69,6 +70,25 @@ a{color:var(--jade)}
 .st .l{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
 .st.u .v{color:var(--jade)} .st.o .v{color:var(--rust)}
 
+/* Tile view (wide screens) and folding sections, Nov 2026 */
+.tvBtn{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:20px;padding:5px 7px 5px 12px;cursor:pointer;margin:0 0 8px 8px;vertical-align:middle}
+.tvBtn .sw{width:26px;height:15px;border-radius:999px;background:var(--rule);position:relative;transition:background .15s}
+.tvBtn .sw::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tvBtn[aria-pressed="true"] .sw{background:var(--jade)}
+.tvBtn[aria-pressed="true"] .sw::after{left:13px}
+@media (max-width:1099px){.tvBtn{display:none}}
+.foldAll{font:600 11px var(--mono);color:var(--muted);margin:14px 0 0}
+.foldAll button{border:0;background:none;color:var(--jade);font:inherit;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.sec h3 .fold{border:0;background:none;color:var(--muted);font:inherit;cursor:pointer;padding:0 6px 0 0;width:1.3em;text-align:left}
+.sec h3 .fold:hover{color:var(--jade)}
+.sec.folded>*:not(h3){display:none!important}
+.sec.folded{padding-bottom:0}
+@media (min-width:1100px){
+  .sheet.tiles{max-width:1680px}
+  .sheet.tiles .tcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 44px;align-items:start}
+  .sheet.tiles .sec{margin-top:28px}
+  .sheet.tiles .sec h3 .fold,.sheet.tiles .foldAll{display:none}
+}
 .sec{margin-top:40px;border-top:1px solid var(--rule);padding-top:22px}
 .sec h3{font:600 14px var(--mono);text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 8px}
 .sec .desc{font-size:12px;color:var(--muted);margin:0 0 16px;max-width:78ch;line-height:1.6}
@@ -171,7 +191,7 @@ table.tb tr.thin td{opacity:.5}
 </style>
 </head>
 <body>
-<div class="stage"><div class="ysThemeAnchor"><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="sheet"><div class="empty">Loading the universe…</div></article></div>
+<div class="stage"><div class="ysThemeAnchor"><div id="ysToolsSlot" class="ysTSlot"></div><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="sheet"><div class="empty">Loading the universe…</div></article></div>
 <script src="https://tools.yieldsigma.com/pe-check.js?v=3"></script>
 <script>
 var LINKS={
@@ -694,7 +714,7 @@ function nm(x){return esc(shortCompanyName(x.a.name)||'');}
 function headHtml(U){
   var noun=UNI==='reits'?'REITs':'dividend-growth stocks';
   return '<div class="pageHead"><div><h2>Yield Sigma™ Macro</h2><div class="sub">The whole universe at a glance: '+U.length+' '+noun+'.</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof"><a class="dirPill" href="'+esc(LINKS.directory)+'" target="_blank" rel="noopener">Directory</a><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
+    '<div class="asof"><a class="dirPill" href="'+esc(LINKS.directory)+'" target="_blank" rel="noopener">Directory</a><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Universe</span>'+
       '<button type="button" class="btn'+(UNI==='stocks'?' on':'')+'" data-uni="stocks">Stocks</button><button type="button" class="btn'+(UNI==='reits'?' on':'')+'" data-uni="reits">REITs</button></span></div>'+
     '<p class="zdef"><b class="u">Undervalued</b>: yield at +1σ or more above its own 10-year average — the stock price, conversely, low. '+
@@ -1013,13 +1033,34 @@ function footHtml(){
     '<span>'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</span></footer>';
 }
 
+var TILES=false,FOLD={};
+try{TILES=localStorage.getItem('ysMacroTiles')==='1';FOLD=JSON.parse(localStorage.getItem('ysMacroFold')||'{}')||{};}catch(e){}
+function saveFold(){try{localStorage.setItem('ysMacroFold',JSON.stringify(FOLD));}catch(e){}}
 function render(){
   var U=universe(),sheet=document.getElementById('sheet');
   if(!U.length){sheet.innerHTML='<div class="empty">Couldn’t reach the data just now. Try again in a minute.</div>';return;}
   if(UNI==='reits'&&!withHist(U).length){/* no REIT history: still show today */}
   BR=breadth(U);HB=histBins(U);
   var LT=levelTable(U,SIDE);
-  sheet.innerHTML=headHtml(U)+todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+btHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  var tiles=TILES&&window.innerWidth>=1100;
+  sheet.classList.toggle('tiles',tiles);
+  if(tiles){
+    /* Tile view: the month-by-month chart full width, then two columns, then the averages table full width */
+    sheet.innerHTML=headHtml(U)+breadthHtml()+
+      '<div class="tcols"><div class="tc">'+todayHtml(U,LT)+pvHtml(U)+btHtml(U)+healthHtml(U)+'</div>'+
+      '<div class="tc">'+normHtml(U,LT)+spreadHtml(U)+sectorHtml(U)+'</div></div>'+matrixHtml(U)+footHtml();
+  }else{
+    sheet.innerHTML=headHtml(U)+'<p class="foldAll"><button type="button" data-foldall="1">Collapse all</button> · <button type="button" data-foldall="0">Expand all</button></p>'+
+      todayHtml(U,LT)+breadthHtml()+spreadHtml(U)+normHtml(U,LT)+pvHtml(U)+btHtml(U)+sectorHtml(U)+healthHtml(U)+matrixHtml(U)+footHtml();
+  }
+  /* folding: every section heading gets an arrow; folded sections are remembered */
+  sheet.querySelectorAll('section.sec').forEach(function(sec){
+    var h=sec.querySelector('h3');if(!h)return;
+    var k=sec.id||h.textContent.replace(/Labs/g,'').trim().toLowerCase().replace(/[^a-z]+/g,'-').slice(0,40);
+    sec.setAttribute('data-k',k);
+    var f=!tiles&&FOLD[k]===1;sec.classList.toggle('folded',f);
+    h.insertAdjacentHTML('afterbegin','<button type="button" class="fold" aria-expanded="'+(f?'false':'true')+'" title="'+(f?'Show':'Hide')+' this section">'+(f?'▸':'▾')+'</button>');
+  });
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
   sheet.querySelectorAll('thead th').forEach(function(th){th.innerHTML=th.innerHTML.replace(/\u03c3/g,'<span style="text-transform:none">\u03c3</span>');});
   drawBreadth(null);wireBreadth();drawHist(null);wireHist();
@@ -1027,6 +1068,16 @@ function render(){
 document.addEventListener('click',function(e){
   var lp=e.target.closest&&e.target.closest('.labsTag[data-pop]');
   if(lp){var pp=document.getElementById('pop-'+lp.dataset.pop);if(pp){pp.hidden=!pp.hidden;lp.setAttribute('aria-expanded',pp.hidden?'false':'true');}return;}
+  var tv=e.target.closest&&e.target.closest('#tvBtn');
+  if(tv){TILES=!TILES;try{localStorage.setItem('ysMacroTiles',TILES?'1':'0');}catch(err){}var y0=window.scrollY;render();window.scrollTo(0,y0);return;}
+  var fb=e.target.closest&&e.target.closest('.sec h3 .fold');
+  if(fb){var sec=fb.closest('section.sec'),k=sec.getAttribute('data-k'),f=!sec.classList.contains('folded');
+    sec.classList.toggle('folded',f);fb.textContent=f?'▸':'▾';fb.setAttribute('aria-expanded',f?'false':'true');fb.title=(f?'Show':'Hide')+' this section';
+    if(f)FOLD[k]=1;else delete FOLD[k];saveFold();if(!f){drawBreadth(null);drawHist(null);}return;}
+  var fa=e.target.closest&&e.target.closest('[data-foldall]');
+  if(fa){var all=fa.getAttribute('data-foldall')==='1';document.querySelectorAll('#sheet section.sec').forEach(function(sec){var k=sec.getAttribute('data-k'),b2=sec.querySelector('h3 .fold');
+      sec.classList.toggle('folded',all);if(b2){b2.textContent=all?'▸':'▾';b2.setAttribute('aria-expanded',all?'false':'true');}if(all)FOLD[k]=1;else delete FOLD[k];});
+    saveFold();if(!all){drawBreadth(null);drawHist(null);}return;}
   var b=e.target.closest&&e.target.closest('.btn');if(!b)return;
   var y=window.scrollY;
   if(b.dataset.uni){UNI=b.dataset.uni;}
@@ -1040,7 +1091,7 @@ document.addEventListener('click',function(e){
 });
 try{var sv=JSON.parse(localStorage.getItem('ysMacro')||'null');if(sv){if(sv.u==='reits'||sv.u==='stocks')UNI=sv.u;if(sv.s===1||sv.s===-1)SIDE=sv.s;if(LEVELS.indexOf(sv.t)>=0)THR=sv.t;}}catch(e){}
 try{var q=new URLSearchParams(location.search);if(q.get('u')==='reits')UNI='reits';}catch(e){}
-window.addEventListener('resize',function(){clearTimeout(window.__rz);window.__rz=setTimeout(function(){drawBreadth(null);drawHist(null);},120);});
+window.addEventListener('resize',function(){clearTimeout(window.__rz);window.__rz=setTimeout(function(){var want=TILES&&window.innerWidth>=1100,has=document.getElementById('sheet').classList.contains('tiles');if(want!==has)render();else{drawBreadth(null);drawHist(null);}},120);});
 if(window.YS_THEME)YS_THEME.on(function(){try{drawBreadth(null);drawHist(null);}catch(e){}});
 if(window.matchMedia)try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){drawBreadth(null);drawHist(null);});}catch(e){}
 load().then(render).catch(render);

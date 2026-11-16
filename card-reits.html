@@ -129,7 +129,8 @@ html.ws .ysThemeBtn{display:none}
 html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 .ysOv{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:var(--c-paper,#fbfaf6);transform-origin:left center;animation:ysTurn .38s cubic-bezier(.2,.7,.2,1)}
 @keyframes ysTurn{from{opacity:0;transform:perspective(1600px) rotateY(10deg) translateX(40px)}to{opacity:1;transform:none}}
-.ysOvBar{flex:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--c-rule,#d9ddd5);background:var(--c-paper,#fbfaf6)}
+.ysOvBar .ysToolsBtn{padding:5px 12px;font-size:11.5px}
+.ysOvBar{position:relative;z-index:3;flex:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--c-rule,#d9ddd5);background:var(--c-paper,#fbfaf6)}
 .ysOvBar .subpill{cursor:pointer}
 .ysOvTitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--c-muted,#5d6b62);text-align:right}
 .ysOv iframe{flex:1;width:100%;border:0;background:#fff}
@@ -2055,11 +2056,21 @@ function ysPage(url,title){
   var ov=document.createElement('div');
   ov.className='ysOv';ov.setAttribute('role','dialog');ov.setAttribute('aria-label',title);
   var c=$('#card');if(c&&c.getAttribute('style'))ov.setAttribute('style',c.getAttribute('style'));
-  ov.innerHTML='<div class="ysOvBar"><button type="button" class="subpill" id="ysOvBack">← Back to the card</button><span class="ysOvTitle">'+esc(title)+'</span></div>'+
+  /* the same All tools menu as the card, so one tool can open the next without going back */
+  var mm=$('#ysMenu'),mh=mm?mm.innerHTML:'',hs=mm&&mm.querySelector('[data-go="hist"] small'),tk=hs?hs.textContent:'';
+  ov.innerHTML='<div class="ysOvBar"><button type="button" class="subpill" id="ysOvBack">← Back to the card</button>'+
+    (mh?'<div class="ysToolsWrap"><button type="button" class="ysToolsBtn" id="ysOvTools" aria-haspopup="true" aria-expanded="false">All tools<i aria-hidden="true"></i></button><div class="ysMenu" id="ysOvMenu" role="menu">'+mh+'</div></div>':'')+
+    '<span class="ysOvTitle">'+esc(title)+'</span></div>'+
     '<iframe src="'+esc(url)+'" title="'+esc(title)+'"></iframe>';
   document.body.appendChild(ov);ysOvEl=ov;
   document.documentElement.classList.add('ysOvOpen');
   var b=ov.querySelector('#ysOvBack');b.addEventListener('click',ysClosePage);b.focus();
+  var ob=ov.querySelector('#ysOvTools'),om=ov.querySelector('#ysOvMenu');
+  if(ob&&om){
+    ob.addEventListener('click',function(e){e.stopPropagation();var on=!om.classList.contains('on');om.classList.toggle('on',on);ob.setAttribute('aria-expanded',on?'true':'false');});
+    om.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(!g)return;e.stopPropagation();ysGo(g.getAttribute('data-go'),tk);});
+    ov.addEventListener('click',function(e){if(!(e.target.closest&&e.target.closest('.ysToolsWrap'))){om.classList.remove('on');ob.setAttribute('aria-expanded','false');}});
+  }
 }
 function ysClosePage(){
   if(!ysOvEl)return;
