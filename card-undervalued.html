@@ -1610,8 +1610,8 @@ function parseDirection(raw){
   // second style is common enough in Gabe's sheets that only matching arrow
   // glyphs left some rows silently falling through to a mismatched-looking
   // fallback chip instead of the normal "up"/"down" styling.
-  var up=/[\u21e7\u2b06\u2191\u25b2\u25b4\u2197]/.test(raw);
-  var down=/[\u21e9\u2b07\u2193\u25bc\u25be\u2198]/.test(raw);
+  var up=/[\u21e7\u21e1\u21d1\u2b06\u2191\u25b2\u25b4\u2197]/.test(raw);
+  var down=/[\u21e9\u21e3\u21d3\u2b07\u2193\u25bc\u25be\u2198]/.test(raw);
   var m=raw.match(/[-+]?\d*\.?\d+/);
   var mag=m?parseFloat(m[0]):null;
   // If no glyph matched but the number itself carries a sign, fall back to

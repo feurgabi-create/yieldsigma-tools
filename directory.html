@@ -476,7 +476,7 @@ function csLoad(){
 }
 function parseDirection(raw){
   if(!raw)return null;
-  var up=/[⇧⬆↑▲▴↗]/.test(raw),down=/[⇩⬇↓▼▾↘]/.test(raw);
+  var up=/[⇧⇡⇑⬆↑▲▴↗]/.test(raw),down=/[⇩⇣⇓⬇↓▼▾↘]/.test(raw);
   var m=String(raw).match(/[-+]?\d*\.?\d+/),mag=m?Math.abs(parseFloat(m[0])):null;
   if(!up&&!down&&m){var v=parseFloat(m[0]);if(v<0)down=true;else if(v>0)up=true;}
   if(!up&&!down)return null;

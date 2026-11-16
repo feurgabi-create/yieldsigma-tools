@@ -459,8 +459,8 @@ var METRICS=[
 function directionValue(raw){
   if(raw===null||raw===undefined)return null;
   var s=String(raw);
-  var up=/[⇧⬆↑▲▴↗]/.test(s);
-  var down=/[⇩⇣⬇↓▼▾↘]/.test(s);
+  var up=/[⇧⇡⇑⬆↑▲▴↗]/.test(s);
+  var down=/[⇩⇣⇓⬇↓▼▾↘]/.test(s);
   var m=s.match(/[-+]?\d*\.?\d+/);
   if(!m)return null;
   var n=parseFloat(m[0]);
