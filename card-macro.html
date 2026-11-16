@@ -16,6 +16,9 @@ html.ws .ysThemeBtn{display:none}
 
 /* row highlight on hover, every table (works over shaded cells, light and dark) */
 table tbody tr:hover>td,table tbody tr:hover>th{box-shadow:inset 0 0 0 999px rgba(98,190,149,.11)}
+.infoI{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid currentColor;border-radius:50%;background:none;color:var(--muted);font:italic 600 10px/1 Georgia,serif;cursor:pointer;padding:0;vertical-align:1px;margin-left:4px}
+.infoI:hover{color:var(--jade)}
+.infoPop{font-size:12px;line-height:1.6;color:var(--ink);background:var(--jade-soft);border:1px solid color-mix(in srgb,var(--jade) 35%,transparent);border-radius:8px;padding:9px 12px;margin:6px 0 12px;max-width:80ch;text-transform:none;letter-spacing:0;font-weight:400}
 </style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yield Sigma Macro</title>
@@ -990,6 +993,11 @@ function btHtml(U){
     '<div class="btLists">'+lists+'</div>'+
     '</section>';
 }
+/* List / Broad: one explanation, opened by the small i next to them */
+var LB_TXT='<b>List</b>: the average Yield Sigma of the dividend growers on our list in this sector, each counted once. <b>Broad</b>: the sector ETF, where each company counts by its size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
+function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
+function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);
 function sectorHtml(U){
   if(UNI!=='stocks')return '';
   var rows=HM_GROUPS.map(function(gq,i){return {name:gq[0],etf:gq[1],items:U.filter(function(x){return GKEY[x.k]===i;})};}).filter(function(r){return r.items.length;});
@@ -1000,9 +1008,11 @@ function sectorHtml(U){
     r.med=kmMedian(mos);r.n=mos.length;r.good=gn?pctOf(good,gn):null;
   });
   rows.sort(function(p,q){return q.avg-p.avg;});
-  var tr=rows.map(function(r){var N=r.items.length;return '<tr><td>'+esc(r.name)+' <span class="m" style="font-weight:500">'+esc(r.etf)+'</span></td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  /* Broad: the sector ETF's own reading (weighted by company size), next to List (our names, each counted once) */
+  var etfS={};(D.stocks||[]).forEach(function(x){var t=String(x.a.ticker||'').trim().toUpperCase();if(x.a.sigma!==null&&isFinite(x.a.sigma))etfS[t]=x.a.sigma;});
+  var tr=rows.map(function(r){var N=r.items.length,b=etfS[r.etf];return '<tr><td>'+esc(r.name)+'</td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="m">'+(b===undefined?'–':esc(r.etf)+' '+sg(b))+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by their average sigma today. Months to 0σ follow the side and level picked under Normalizing ('+lvl(THR,SIDE)+'). σ move: the sector’s average sigma at the end of each of the last 12 months; the figure is the change over that time (+ toward undervalued, − toward overvalued). Reliable shape: share of names graded Textbook or Defined.</p>'+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>Average<br>σ</th><th>Undervalued</th><th>Overvalued</th><th class="spc">σ move,<br>last 12 months</th><th>Median months<br>to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable<br>shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
+    lbPop('lb')+'<div class="tbWrap"><table class="tb"><thead><tr><th>Sector</th><th>Names</th><th>List<br><span style="text-transform:none">σ</span></th><th>Broad<br><span style="text-transform:none">σ</span> '+lbBtn('lb')+'</th><th>Undervalued</th><th>Overvalued</th><th class="spc">σ move,<br>last 12 months</th><th>Median months<br>to 0σ from '+lvl(THR,SIDE)+'</th><th>Reliable<br>shape</th></tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
 function segBar(title,parts,N){
   var seg='',leg='';parts.forEach(function(p){if(!p.n)return;seg+='<span style="width:'+(p.n/N*100)+'%;background:'+p.c+'" title="'+esc(p.l)+'"></span>';leg+='<span><i style="background:'+p.c+'"></i>'+esc(p.l)+' <b>'+p.n+'</b> ('+pctOf(p.n,N)+'%)</span>';});
