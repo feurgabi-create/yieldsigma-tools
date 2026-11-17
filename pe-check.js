@@ -18,7 +18,9 @@
     return fetch(url+(url.indexOf('?')<0?'?':'&')+'h='+Math.floor(Date.now()/600000),{cache:'no-store'})
       .then(function(r){if(!r.ok)throw 0;return json?r.json():r.text();}).catch(function(){return json?{}:'';});
   }
-  var ready=Promise.all([get(GIST+'fund.csv'),get(BASE+'profiles.json',true)]).then(function(r){
+  /* raw: [fund.csv text, profiles.json] — the cards reuse these instead of downloading them again */
+  var raw=Promise.all([get(GIST+'fund.csv'),get(BASE+'profiles.json',true)]);
+  var ready=raw.then(function(r){
     var L=String(r[0]||'').split(/\r?\n/),prof=r[1]||{},P={};
     Object.keys(prof).forEach(function(t){P[key(t)]=prof[t];});
     if(!/^ticker,/.test(L[0]||''))return;
@@ -50,5 +52,5 @@
     if(rec.pe!==null&&rec.yield!==null&&rec.yield!==undefined&&isFinite(rec.yield)&&rec.yield>0)rec.payoutRatio=Math.round(rec.yield*rec.pe*100)/100;
     else rec.payoutRatio=null;
   }
-  window.YS_PE={ready:ready,fix:fix,MAX:MAX};
+  window.YS_PE={ready:ready,raw:raw,fix:fix,MAX:MAX};
 })();

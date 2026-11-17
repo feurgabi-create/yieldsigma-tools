@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* published card: hide the editor side from the first moment, and start the data downloads right away */document.documentElement.classList.add("pm");window.YS_PRE={};["stocks","reits"].forEach(function(k){var u="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/"+k+".csv";try{YS_PRE[u]=fetch(u,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});YS_PRE[u].catch(function(){});}catch(e){}});</script>
+<script src="https://tools.yieldsigma.com/pe-check.js?v=4"></script>
+<style>#ysWaitBox{max-width:760px;margin:40px auto;padding:90px 20px;text-align:center;font:600 14px "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.03em;color:var(--muted,#5e6f63);background:var(--paper,#fff);border:1px solid var(--rule,#d2dbd1);border-radius:12px}html.ysWait #card{display:none}</style>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
@@ -34,11 +37,11 @@ button,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 
 .app{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:100vh}
-body.public-mode .app{grid-template-columns:1fr;min-height:0}
-body.public-mode .side{display:none}
-body.public-mode .stage{padding:0}
+:is(html.pm body,body.public-mode) .app{grid-template-columns:1fr;min-height:0}
+:is(html.pm body,body.public-mode) .side{display:none}
+:is(html.pm body,body.public-mode) .stage{padding:0}
 .pubFootLive{display:none}
-body.public-mode .pubFootLive{display:inline}
+:is(html.pm body,body.public-mode) .pubFootLive{display:inline}
 .foot .pubLive{font-size:11.5px;color:var(--c-muted)}
 .foot .backlink{margin-left:10px;color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
 .foot .backlink:hover{text-decoration:underline}
@@ -486,7 +489,6 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://tools.yieldsigma.com/pe-check.js?v=3"></script>
 <script>
 /* ===== EDIT LINKS HERE =====
    Every page link used by the card. If a page moves, change it here only. */
@@ -1997,13 +1999,15 @@ function ysIndexFull(res){
     YS_FULL=full;YS_FULL_LIST=list;
   }catch(e){/* search just stays on this card's own list */}
 }
+function ysWaitShow(t){var c=$('#card');if(!c)return;document.documentElement.classList.add('ysWait');var b=document.getElementById('ysWaitBox');if(!b){b=document.createElement('div');b.id='ysWaitBox';c.parentNode.insertBefore(b,c);}b.textContent='Loading '+t+'\u2026';}
+function ysWaitHide(){document.documentElement.classList.remove('ysWait');var b=document.getElementById('ysWaitBox');if(b&&b.parentNode)b.parentNode.removeChild(b);}
 function ysTk(r){return r&&r.rec&&r.rec.ticker?String(r.rec.ticker).trim().toUpperCase():'';}
 function ysSyncPick(){var p=$('#pick'),pp=$('#pubPick');if(p)p.value=String(selectedIdx);if(pp)pp.value=String(selectedIdx);}
 function ysOpenTicker(t,force){
   t=String(t||'').trim().toUpperCase();if(!t)return false;
   for(var i=0;i<ROWS.length;i++){if(ysTk(ROWS[i])===t){selectedIdx=i;priceOverride=null;ysSyncPick();renderCurrent();return true;}}
   var f=YS_FULL[t];
-  if(!f&&force&&!YS_FULL_LIST.length){YS_PENDING=t;return false;}   /* full list still loading: open it when it lands */
+  if(!f&&force&&!YS_FULL_LIST.length){YS_PENDING=t;ysWaitShow(t);return false;}   /* full list still loading: open it when it lands */
   if(!f||(!force&&!f.free))return false;
   if(YS_VISIT.indexOf(t)<0)YS_VISIT.push(t);
   var r=parseRow(f.line,schemaForKind(f.tag));r.kind=f.tag;r.visit=true;
@@ -2361,6 +2365,7 @@ function fetchLiveRows0(stocksUrl,reitsUrl){
   if(reitsUrl)sources.push({url:reitsUrl,kind:'reits'});
   if(!sources.length)return Promise.resolve(null);
   return Promise.all(sources.map(function(s){
+    var pre=window.YS_PRE&&YS_PRE[s.url];if(pre){delete YS_PRE[s.url];return pre;}
     return fetch(s.url,{cache:'no-store'}).then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.text();
@@ -2489,7 +2494,9 @@ function refreshLiveData(){
     setLiveStamp(false);
     ysDeepLink();
     if(YS_PENDING){var yp=YS_PENDING;YS_PENDING=null;if(ysOpenTicker(yp,true)){var yc=$('#card');if(yc&&yc.scrollIntoView)yc.scrollIntoView({block:'start'});}}
+    ysWaitHide();
   }).catch(function(){
+    ysWaitHide();
     setLiveStamp(true);
   });
 }
@@ -2748,6 +2755,7 @@ if(SAMPLE_TAGS){try{bootTags=JSON.parse(SAMPLE_TAGS);}catch(e){bootTags=null;}}
 handleRaw(SAMPLE,bootTags||SAMPLE_DATA_TYPE);
 filterPickerByType();
 selectTickerFromUrl();
+if(PUBLIC_MODE){var ysIt=(INITIAL_TICKER_PARAM||'').trim().toUpperCase();if(ysIt&&ysTk(ROWS[selectedIdx])!==ysIt)ysWaitShow(ysIt);}
 
 if(PUBLIC_MODE){
   if(LIVE_URL_STOCKS)$('#urlStocks').value=LIVE_URL_STOCKS;
