@@ -743,7 +743,8 @@ setInterval(load,15*60*1000);
    link sends the ticker back to that card instead of opening a new tab. */
 (function(){
   if(window.parent===window)return;
-  var on=false;try{on=new URLSearchParams(location.search).get('embed')==='1';}catch(e){}
+  /* over a card (embed=1) or in the workspace (ws=1): a click loads the name there instead of a new tab */
+  var on=false;try{var q=new URLSearchParams(location.search);on=q.get('embed')==='1'||q.get('ws')==='1';}catch(e){}
   if(!on)return;
   document.addEventListener('click',function(e){
     var a=e.target.closest&&e.target.closest('a[href*="ticker="]');if(!a)return;
