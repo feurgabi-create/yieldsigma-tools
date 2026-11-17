@@ -5,6 +5,7 @@
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/access.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* light / dark switch (theme.js) */
@@ -546,7 +547,7 @@ function buildRows(lines,tags){
       free:false
     });
   });
-  ['stocks','reits'].forEach(function(kind){markFree(out[kind],kind);});
+  ['stocks','reits'].forEach(function(kind){markFree(out[kind],kind);if(window.YS_ACCESS&&YS_ACCESS.ok())out[kind].forEach(function(r){r.free=true;});});
   return out;
 }
 function markFree(rows,kind){
@@ -555,7 +556,7 @@ function markFree(rows,kind){
   /* normal band: closest to 0 sigma first */
   var normal=rows.filter(function(r){return zoneOf(kind,r.sigma)==='normal';}).sort(function(p,q){return Math.abs(p.sigma)-Math.abs(q.sigma);});
   [under,over,normal].forEach(function(list){
-    list.slice(0,FREE_BAND).forEach(function(r,i){if(i%FREE_STEP===0)r.free=true;});
+    list.forEach(function(r,i){if((window.YS_ACCESS&&YS_ACCESS.ok())||(i<FREE_BAND&&i%FREE_STEP===0))r.free=true;});
   });
 }
 
@@ -613,7 +614,7 @@ function render(){
     '<input type="search" id="q" placeholder="Search name or ticker" value="'+esc(STATE.q)+'" aria-label="Search name or ticker">'+
     '<label class="chk"><input type="checkbox" id="long25"'+(STATE.long25?' checked':'')+'> 25+ years of growth</label>'+
   '</div>';
-  h+='<p class="note">'+freeCount+' names in this list open their full sigma card. '+
+  h+=(window.YS_ACCESS&&YS_ACCESS.ok())?'<p class="note">Member access: all '+freeCount+' names open their full sigma card.</p>':'<p class="note">'+freeCount+' names in this list open their full sigma card. '+
      '<span class="lockNote">'+LOCK_SVG+' marks a card reserved for members.</span><a class="subpill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></p>';
   /* column sets, sector dropdown and zone chips */
   var isS=STATE.kind==='stocks';

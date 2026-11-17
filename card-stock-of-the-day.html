@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/access.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:#fff!important}html[data-theme="dark"].ws body{background:#25292D!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
 /* row highlight on hover, every table (works over shaded cells, light and dark) */
@@ -1976,7 +1977,7 @@ function ysMarkFree(rows,kind){
   var under=rows.filter(function(r){return ysZone(kind,r.s)==='under';}).sort(function(p,q){return q.s-p.s;});
   var over=rows.filter(function(r){return ysZone(kind,r.s)==='over';}).sort(function(p,q){return p.s-q.s;});
   var normal=rows.filter(function(r){return ysZone(kind,r.s)==='normal';}).sort(function(p,q){return Math.abs(p.s)-Math.abs(q.s);});
-  [under,over,normal].forEach(function(list){list.slice(0,YS_FREE_BAND).forEach(function(r,i){if(i%YS_FREE_STEP===0)r.free=true;});});
+  [under,over,normal].forEach(function(list){list.forEach(function(r,i){if((window.YS_ACCESS&&YS_ACCESS.ok())||(i<YS_FREE_BAND&&i%YS_FREE_STEP===0))r.free=true;});});
 }
 function ysIndexFull(res){
   try{
@@ -1990,7 +1991,7 @@ function ysIndexFull(res){
       var o={t:t,name:shortCompanyName(a.name)||t,line:line,tag:tag,s:(s!==null&&isFinite(s))?s:null,y:(rec.yield!==null&&isFinite(rec.yield))?rec.yield:null,free:false};
       full[t]=o;list.push(o);by[tag].push(o);
     });
-    ysMarkFree(by.stocks,'stocks');ysMarkFree(by.reits,'reits');
+    ysMarkFree(by.stocks,'stocks');ysMarkFree(by.reits,'reits');if(window.YS_ACCESS&&YS_ACCESS.ok())list.forEach(function(o){o.free=true;});
     list.sort(function(p,q){return p.t<q.t?-1:p.t>q.t?1:0;});
     YS_FULL=full;YS_FULL_LIST=list;
   }catch(e){/* search just stays on this card's own list */}
