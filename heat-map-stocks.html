@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
@@ -942,6 +943,7 @@ function render(complete){
   var sel=buildSelection(complete);
   var shown=hmBandPick(complete).length;
   var sub=shown+' representative stocks from the dividend-growers universe of '+complete.length+'+.';
+  if(window.YS_ACCESS&&YS_ACCESS.ok())sub='Member view \u00b7 '+sub;
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — Stocks</h2><div class="sub">'+esc(sub)+'<a class="dirPill subPill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="asof"><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
   h+=legendHtml(sel);

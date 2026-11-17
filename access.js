@@ -23,4 +23,14 @@
     }
   }catch(e){}
   window.YS_ACCESS={ok:function(){return !!CODES[get()];}};
+  /* members: every Subscribe pill reads "Member ✓" and the Premium tag on the history page goes away */
+  if(window.YS_ACCESS.ok()){
+    document.documentElement.classList.add('ysMember');
+    var css='html.ysMember .premstack .lock{display:none}html.ysMember .premstack .subpill{position:static;margin-left:6px}';
+    function fix(root){(root.querySelectorAll?root:document).querySelectorAll('a[href*="substack.com/subscribe"].subpill,a[href*="substack.com/subscribe"].subPill').forEach(function(a){
+      a.textContent='Member ✓';a.href='https://gabe948456.substack.com/';a.title='You have member access';});}
+    function go(){var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);fix(document);
+      try{new MutationObserver(function(){fix(document);}).observe(document.body,{childList:true,subtree:true});}catch(e){}}
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+  }
 })();

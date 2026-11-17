@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:var(--paper)!important}html.ws .stage{padding:0!important}html.ws .sheet{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}
@@ -809,12 +810,14 @@ var HM_BANDS={pos:[[0,1.5],[1.5,2],[2,2.5],[2.5,99]],neg:[[-99,-1],[-1,-0.5],[-0
 /* Spread view (All, Negative, Positive sigma): an equal number of names from each band,
    spread evenly within the band, so every shade is represented. */
 var HM_PER_BAND=8;
+var HM_MAX=64;   /* a universe this size or smaller shows every name */
 function hmBandPick(complete){
+  var allIn=complete.length<=HM_MAX;
   var bands=HM_SIGN==='neg'?HM_BANDS.neg:(HM_SIGN==='pos'?HM_BANDS.pos:HM_BANDS.neg.concat(HM_BANDS.pos)),out=[];
   bands.forEach(function(b){
     var inb=complete.filter(function(x){var s=x.a.sigma;return s!==null&&isFinite(s)&&s>=b[0]&&s<b[1]&&String(x.a.ticker||'').toUpperCase()!=='TNX';})
       .sort(function(p,q){return p.a.sigma-q.a.sigma;});
-    if(inb.length<=HM_PER_BAND){out=out.concat(inb);return;}
+    if(inb.length<=HM_PER_BAND||allIn){out=out.concat(inb);return;}
     for(var i=0;i<HM_PER_BAND;i++)out.push(inb[Math.round(i*(inb.length-1)/(HM_PER_BAND-1))]);
   });
   return out.sort(function(p,q){return p.a.sigma-q.a.sigma;});
@@ -916,7 +919,8 @@ function render(complete){
   LAST_COMPLETE=complete;
   var sel=buildSelection(complete);
   var shown=hmBandPick(complete).length;
-  var sub=shown+' representative REITs from the dividend-growers universe of '+complete.length+'+.';
+  var sub=(shown>=complete.length?shown+' REITs from the dividend-growers universe.':shown+' representative REITs from the dividend-growers universe of '+complete.length+'+.');
+  if(window.YS_ACCESS&&YS_ACCESS.ok())sub='Member view \u00b7 '+sub;
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — REITs</h2><div class="sub">'+esc(sub)+'<a class="dirPill subPill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="asof"><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
   h+=legendHtml(sel);
