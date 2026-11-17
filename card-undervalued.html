@@ -602,7 +602,7 @@ html.ysOvOpen,html.ysOvOpen body{overflow:hidden}
 /* ===== EDIT LINKS HERE =====
    Every page link used by the card. If a page moves, change it here only. */
 var LINKS={
-  back:        "https://www.yieldsigma.com/directory",
+  back:        "https://tools.yieldsigma.com/directory.html",
   labs:        "https://www.stardustcapital.net/stardust-capital-labs",
   methodology: "https://www.yieldsigma.com/methodology/yield-sigma-methodology",
   fieldGuide:  "https://www.yieldsigma.com/methodology/card-field-guide"
@@ -1780,8 +1780,8 @@ function buildCard(rec,a){
   }
 
   if(a.tnx){
-    var hmUrl=(ROWS[selectedIdx]&&ROWS[selectedIdx].kind==='reits')?'https://www.yieldsigma.com/heat-maps/heat-map-reits':'https://www.yieldsigma.com/heat-maps/heat-map-stocks';
-    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3><a class="subpill hmPill" href="'+hmUrl+'" target="_blank" rel="noopener">More macro context \u2192</a></summary>'+
+    var hmUrl='https://tools.yieldsigma.com/card-macro.html';
+    h+='<details class="sec"><summary><h3>Yield spread to the 10-year Treasury</h3><a class="subpill hmPill" href="'+hmUrl+'" target="_blank" rel="noopener" onclick="if(window.ysGo){event.preventDefault();event.stopPropagation();ysGo(\'macro\');}">More macro context \u2192</a></summary>'+
        '<p class="bpsNote">bps = basis points, the standard unit for a spread (100bps = 1 percentage point).</p>'+
        '<div class="tnx">'+
          '<div><div class="l">Now</div><div class="v">'+esc(pctToBps(a.tnx.now))+'</div><div class="cap">today’s dividend yield less the current 10Y</div></div>'+
@@ -2298,7 +2298,7 @@ function renderCurrentBase(){
    list and outside the Directory's free set show a lock and a
    Subscribe link. */
 var YS_BASE='https://tools.yieldsigma.com/';
-var YS_DIR='https://www.yieldsigma.com/directory';
+var YS_DIR='https://tools.yieldsigma.com/directory.html';
 var YS_SUBSTACK='https://gabe948456.substack.com/subscribe';
 var YS_FREE_BAND=40,YS_FREE_STEP=2;   /* keep in step with directory.html */
 var YS_FULL={},YS_FULL_LIST=[],YS_VISIT=[],ysDeepDone=false,ysOvEl=null;
