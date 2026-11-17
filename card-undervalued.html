@@ -2443,6 +2443,7 @@ function ysFindHtml(){
     '<button type="button" class="ysFiltBtn" id="ysFiltBtn" aria-haspopup="true" aria-expanded="false" aria-label="Filter the list" title="Filter the list">▾</button>'+
     '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
+window.ysGo=function(k,t){return ysGo(k,t);};
 function ysGo(k,t){
   if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
