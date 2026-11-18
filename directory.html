@@ -145,6 +145,7 @@ table.dir td.cardCol{white-space:nowrap}
 .bellPop .bpRow{display:flex;gap:6px;align-items:center;margin-bottom:8px}.bellPop input{width:90px}.bellPop .bpNow{color:var(--muted);font-size:11.5px;margin:0 0 10px}
 .bellPop .bpBtns{display:flex;gap:8px;flex-wrap:wrap}.bellPop button{font:inherit;font-weight:600;border-radius:999px;padding:5px 11px;cursor:pointer;border:1px solid var(--jade);background:transparent;color:var(--jade)}
 .bellPop button.pri{background:var(--jade);color:var(--paper)}.bellPop button.x{position:absolute;top:6px;right:8px;border:0;padding:2px 6px;color:var(--muted)}
+.preI{width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);background:none;color:var(--muted);font:italic 600 11px/1 Georgia,serif;cursor:pointer;padding:0;margin-left:-2px}.preI:hover,.preI[aria-expanded="true"]{border-color:var(--jade);color:var(--jade)}
 .preNote{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
 .pEdit{border:1px dashed var(--rule);background:transparent;border-radius:6px;padding:3px 8px;font:inherit;color:var(--ink);cursor:pointer}.pEdit:hover{border-color:var(--jade);color:var(--jade)}
 .pSel{display:inline-flex;gap:4px;align-items:center}.pSel .pInp{width:auto}.pClr{border:0;background:none;color:var(--jade);font:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:2px 4px}
@@ -697,8 +698,8 @@ function render(){
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
     (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')'+(bellRinging()?' <span class="bellCt">· '+BELL_SVG+' '+bellRinging()+'</span>':'')+'</button>'+
-      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button><button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
-    (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote">Click a cell to enter your purchase stock price and month. Your entries stay in this browser only and are not part of the shared list link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends paid since your purchase month (not reinvested), and its yearly average for holdings of a year or more.</p>':'');
+      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button>'+(STATE.pre?'<button type="button" class="preI" id="preI" aria-label="About My presets" aria-expanded="false">i</button>':'')+'<button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
+    (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote" id="preNote" hidden>Saved in this browser only, not in the shared link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends since purchase (not reinvested).</p>':'');
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';
       return {v:(r.sigma>=0?'+':'−')+Math.abs(r.sigma).toFixed(2)+'σ',cls:'sg '+(r.sigma>=0?'up':'dn'),st:'background:color-mix(in srgb,'+c+' '+Math.round(a*22)+'%,transparent)'};}],
@@ -781,6 +782,8 @@ document.addEventListener('click',function(e){
   if(st&&window.YS_WATCH){e.preventDefault();e.stopPropagation();YS_WATCH.toggle(st.getAttribute('data-star'));render();return;}
   var wb=e.target.closest&&e.target.closest('[data-watch]');
   if(wb){STATE.watch=!STATE.watch;render();return;}
+  var pi=e.target.closest&&e.target.closest('#preI');
+  if(pi){var pn=document.getElementById('preNote');if(pn){pn.hidden=!pn.hidden;pi.setAttribute('aria-expanded',pn.hidden?'false':'true');}return;}
   var pb=e.target.closest&&e.target.closest('[data-pre]');
   if(pb){STATE.pre=!STATE.pre;render();return;}
   var pe=e.target.closest&&e.target.closest('.pEdit');
