@@ -133,6 +133,9 @@ table.dir td.cardCol{white-space:nowrap}
 .ysStar:hover{color:var(--gold)}.ysStar.on{color:var(--gold)}
 .wchip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted)}
 .wchip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.preNote{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+.pEdit{border:1px dashed var(--rule);background:transparent;border-radius:6px;padding:3px 8px;font:inherit;color:var(--ink);cursor:pointer}.pEdit:hover{border-color:var(--jade);color:var(--jade)}
+.pInp{width:108px;font:inherit;padding:3px 6px;border:1px solid var(--jade);border-radius:6px;background:var(--panel,#fff);color:var(--ink)}
 .wcopy{border:0;background:none;color:var(--jade);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
 .labsBy{font-size:12px;color:var(--muted);margin-top:3px}
 .labsBy a,.labsBy a:visited{color:var(--jade,#1F7A52);text-decoration:none;font-weight:600}
@@ -423,7 +426,7 @@ function tkKey(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
    Needs history.csv (dividend amount per year), fund.csv (SEC 10-K) and profiles.json.
    Loaded once, after the list shows. Stocks only; foreign filers are not scored. */
 var CS_PARTS=[['streak',45],['steady',25],['fcf',15],['payout',10],['bal',5]];
-var CS={state:0,divy:{},fund:{},prof:{}};
+var CS={state:0,divy:{},fund:{},prof:{},hz:{}};
 function csBand(v){return v>=80?['Bedrock','up']:v>=60?['Solid','up']:v>=40?['Watch','gold']:['Fragile','dn'];}
 function csForeign(t){
   var F=CS.fund[t];if(F&&F.status==='Foreign filer')return true;
@@ -482,6 +485,8 @@ function csLoad(){
       if(!i)return;var f=line.split('\t');if(f.length<10||!f[0])return;
       var d={};f[9].split(',').forEach(function(x){var k=x.split(':');if(k.length===2&&k[1]!=='')d[k[0]]=+k[1];});
       CS.divy[tkKey(f[0])]=d;
+      /* monthly Yield Sigma readings, for "My presets" (sigma in the purchase month) */
+      if(/^\d{4}-\d{2}/.test(f[3]))CS.hz[tkKey(f[0])]={st:+f[3].slice(0,4)*12+(+f[3].slice(5,7)-1),z:f[7].split(',').map(function(v){return v===''?null:+v;})};
     });
     var L=String(a[1]).split(/\r?\n/);
     if(L.length>1){var H=L[0].split(',');for(var i=1;i<L.length;i++){if(!L[i])continue;var c=L[i].split(','),o={};for(var j=0;j<H.length;j++)o[H[j]]=c[j]===undefined?'':c[j];if(o.ticker)CS.fund[o.ticker.toUpperCase()]=o;}}
@@ -521,7 +526,33 @@ function zoneOf(kind,s){
 }
 
 var DATA={stocks:[],reits:[]};
-var STATE={kind:'stocks',sort:'name',dir:1,q:'',long25:false,set:'valuation',zone:'all',sector:'',watch:/[?&]w=/.test(location.search)};
+var STATE={kind:'stocks',sort:'name',dir:1,q:'',long25:false,set:'valuation',zone:'all',sector:'',watch:/[?&]w=/.test(location.search),pre:false,edit:null};
+/* My presets (watchlist view): purchase stock price and purchase month per name, saved in this browser only
+   (never in the shared list link). {TICKER:{p:80.5,d:'2023-05'}} */
+var PRE=(function(){var K='ysPresets',mem={};
+  function all(){try{var v=JSON.parse(localStorage.getItem(K)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return mem;}}
+  return {get:function(t){return all()[t]||{};},
+    set:function(t,f,v){var a=all(),o=a[t]||{};if(v===null||v===''||v===undefined)delete o[f];else o[f]=v;if(Object.keys(o).length)a[t]=o;else delete a[t];mem=a;try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}}};})();
+/* the card's sigma model (ysStats), for the stock price at which a name reaches the accumulate tier */
+var YS_N=11;
+function psStats(r,y){if(r.avg===null||!r.sd||r.yld===null||!isFinite(r.yld))return null;var n=YS_N,m=r.avg,sd=r.sd,y0=r.yld;
+  var S=n*m-y0,Q=(n-1)*sd*sd+n*m*m-y0*y0,m2=(S+y)/n,v=(Q+y*y-n*m2*m2)/(n-1);return v>0?{mean:m2,sd:Math.sqrt(v)}:null;}
+function psSig(r,y){var st=psStats(r,y);if(st)return (y-st.mean)/st.sd;return (r.avg!==null&&r.sd)?(y-r.avg)/r.sd:null;}
+function psPriceAt(r,z){if(r.avg===null||!r.sd||!(r.div>0))return null;var lo=1e-4,hi=Math.max(100,r.avg*100),sl=psSig(r,lo),sh=psSig(r,hi);
+  if(sl===null||sh===null||z<sl||z>sh)return null;for(var i=0;i<80;i++){var mid=(lo+hi)/2;if(psSig(r,mid)<z)lo=mid;else hi=mid;}return r.div/(((lo+hi)/2)/100);}
+var MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function preFill(kind){
+  var thr=kind==='reits'?1.5:1,now=new Date(),curM=now.getFullYear()*12+now.getMonth();
+  DATA[kind].forEach(function(r){
+    var o=PRE.get(r.ticker);r.bPx=o.p>0?o.p:null;r.bDt=o.d||null;
+    r.bDtN=r.bDt?(+r.bDt.slice(0,4)*12+(+r.bDt.slice(5,7)-1)):null;
+    r.yoc=(r.bPx&&r.div>0)?r.div/r.bPx*100:null;
+    r.chgB=(r.bPx&&r.price>0)?(r.price/r.bPx-1)*100:null;
+    var hz=CS.hz[tkKey(r.ticker)];r.sigB=null;
+    if(r.bDtN!==null){if(r.bDtN>=curM)r.sigB=r.sigma;else if(hz&&r.bDtN-hz.st>=0&&r.bDtN-hz.st<hz.z.length)r.sigB=hz.z[r.bDtN-hz.st];}
+    r.acc=psPriceAt(r,thr);
+  });
+}
 var lastUpdated=null;
 
 function buildRows(lines,tags){
@@ -541,7 +572,7 @@ function buildRows(lines,tags){
       sigma:a.sigma,
       sector:kind==='stocks'?(SECTOR_OF[tkKey(a.ticker)]||null):null,
       trend:parseDirection(rec.direction),
-      yld:rec.yield,avg:rec.avg10y,ma:rec.ma200diff,
+      yld:rec.yield,avg:rec.avg10y,sd:rec.oneSD,ma:rec.ma200diff,
       g10:rec.divGrowth10y,payout:rec.payoutRatio,
       pe:kind==='reits'?rec.pAffo:rec.pe,
       cs:(kind==='stocks'&&CS.state===2)?csScore(a.ticker.trim().toUpperCase(),rec.divGrowthYears):null,
@@ -579,7 +610,7 @@ function visibleRows(){
     if(q&&r.name.toLowerCase().indexOf(q)<0&&r.ticker.toLowerCase().indexOf(q)<0)return false;
     return true;
   });
-  var key=STATE.sort,dir=STATE.dir;
+  var key=STATE.sort==='bDt'?'bDtN':STATE.sort,dir=STATE.dir;
   rows.sort(function(a,b){
     var c=cmp(a,b,key);
     if((a[key]===null)!==(b[key]===null))return c; // keep blanks last in both directions
@@ -602,6 +633,7 @@ function render(){
   if(!DATA.stocks.length&&!DATA.reits.length){
     sheet.innerHTML='<div class="empty">Loading the universe…</div>';return;
   }
+  if(STATE.watch&&STATE.pre)preFill(STATE.kind);
   var rows=visibleRows();
   var freeCount=all.filter(function(r){return r.free;}).length;
   var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.home)+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">\u2122</sup></a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
@@ -625,7 +657,8 @@ function render(){
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
     (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')</button>'+
-      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>';
+      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button><button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
+    (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote">Click a cell to enter your purchase stock price and month. Your entries stay in this browser only and are not part of the shared list link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price.</p>':'');
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';
       return {v:(r.sigma>=0?'+':'−')+Math.abs(r.sigma).toFixed(2)+'σ',cls:'sg '+(r.sigma>=0?'up':'dn'),st:'background:color-mix(in srgb,'+c+' '+Math.round(a*22)+'%,transparent)'};}],
@@ -639,10 +672,18 @@ function render(){
     g10:['10-yr dividend growth',function(r){return fmtPct(r.g10);}],
     payout:[isS?'Payout ratio':'Payout ratio (AFFO)',function(r){if(r.payout===null||r.payout===undefined)return '–';return {v:Math.round(r.payout)+'%',cls:r.payout>90?'dn':''};}],
     pe:[isS?'P/E':'P/AFFO',function(r){return r.pe===null||r.pe===undefined?'–':fmtNum(r.pe,1);}],
+    bPx:['Purchase stock price',function(r){return {html:'<button type="button" class="pEdit" data-pe="'+esc(r.ticker)+'" data-f="p">'+(r.bPx?esc(fmtMoney(r.bPx)):'+ add')+'</button>'};}],
+    bDt:['Purchase month',function(r){return {html:'<button type="button" class="pEdit" data-pe="'+esc(r.ticker)+'" data-f="d">'+(r.bDt?MONS[+r.bDt.slice(5,7)-1]+' '+r.bDt.slice(0,4):'+ add')+'</button>'};}],
+    yoc:['Yield on cost',function(r){return r.yoc===null?'–':{v:fmtPct(r.yoc),cls:'up'};}],
+    chgB:['Stock price since purchase',function(r){if(r.chgB===null)return '–';return {v:(r.chgB>0?'+':r.chgB<0?'−':'')+Math.abs(r.chgB).toFixed(1)+'%',cls:r.chgB>=0?'up':'dn'};}],
+    sigB:['σ at purchase',function(r){if(r.sigB===null||!isFinite(r.sigB))return '–';return {v:(r.sigB>=0?'+':'−')+Math.abs(r.sigB).toFixed(2)+'σ',cls:r.sigB>=0?'up':'dn'};}],
+    acc:[(isS?'Accumulate (+1σ)':'Accumulate (+1.5σ)')+' at or below',function(r){if(r.acc===null)return '–';var inz=r.price!==null&&r.price<=r.acc;return {v:fmtMoney(r.acc)+(inz?' · now':''),cls:inz?'up':''};}],
     cs:['Constant Score',function(r){if(CS.state!==2)return {v:'…',cls:'mut'};if(r.cs===null)return {v:'–',cls:'mut'};var b=csBand(r.cs);return {v:r.cs+' · '+b[0],cls:b[1]==='gold'?'':b[1],st:b[1]==='gold'?'color:var(--gold)':''};}]
   };
   var SETCOLS={valuation:['sigma','trend','yld','avg','price','ma'],dividend:['div','yld','years','g10','payout'],quality:['pe','cs','payout','years'],all:['sigma','trend','yld','avg','price','ma','div','years','g10','payout','pe','cs']};
-  var cols=SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
+  var PREV=STATE.watch&&STATE.pre;
+  var cols=PREV?['sigma','price','bPx','bDt','yoc','chgB','sigB','acc']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
+  if(PREV)csLoad();
   if(isS&&cols.indexOf('cs')>=0)csLoad();
   var ncol=3+(isS?1:0)+cols.length;
   /* a sector picked: List (our names in it, each counted once) next to Broad (the sector ETF) */
@@ -664,7 +705,7 @@ function render(){
     var lk=function(txt){return r.free?'<a class="rowLk" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">'+txt+'</a>':txt;};
     h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
       (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
-      cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+esc(o.v)+'</td>';}).join('')+
+      cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+(o.html!==undefined?o.html:esc(o.v))+'</td>';}).join('')+
       '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+'</td></tr>';
   });
   h+='</tbody></table></div>';
@@ -697,7 +738,23 @@ document.addEventListener('click',function(e){
   var st=e.target.closest&&e.target.closest('[data-star]');
   if(st&&window.YS_WATCH){e.preventDefault();e.stopPropagation();YS_WATCH.toggle(st.getAttribute('data-star'));render();return;}
   var wb=e.target.closest&&e.target.closest('[data-watch]');
-  if(wb){STATE.watch=!STATE.watch;render();}
+  if(wb){STATE.watch=!STATE.watch;render();return;}
+  var pb=e.target.closest&&e.target.closest('[data-pre]');
+  if(pb){STATE.pre=!STATE.pre;render();return;}
+  var pe=e.target.closest&&e.target.closest('.pEdit');
+  if(pe){e.preventDefault();var t=pe.getAttribute('data-pe'),fld=pe.getAttribute('data-f'),cur=PRE.get(t)[fld];
+    var inp=document.createElement('input');inp.className='pInp';
+    if(fld==='d'){inp.type='month';inp.value=cur||'';inp.max=new Date().toISOString().slice(0,7);}
+    else{inp.type='text';inp.inputMode='decimal';inp.placeholder='e.g. 82.50';inp.value=cur?String(cur):'';}
+    pe.replaceWith(inp);inp.focus();
+    var done=false,save=function(keep){if(done)return;done=true;
+      if(keep){var v=inp.value.trim();
+        if(fld==='p'){v=v.replace(/[$,\s]/g,'');var n=parseFloat(v);PRE.set(t,'p',(n>0&&isFinite(n))?Math.round(n*10000)/10000:null);}
+        else PRE.set(t,'d',/^\d{4}-\d{2}$/.test(v)?v:null);}
+      render();};
+    inp.addEventListener('keydown',function(k){if(k.key==='Enter'){save(true);}else if(k.key==='Escape'){save(false);}});
+    inp.addEventListener('blur',function(){save(true);});
+    return;}
 },true);
 if(window.YS_WATCH)YS_WATCH.on(function(){try{render();}catch(e){}});
 function wire(){
