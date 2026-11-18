@@ -3221,7 +3221,8 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     var v=line.split(',').slice(1),out=[];
     for(var i=0;i<DATA.dates.length;i++){var x=parseFloat(v[i]);if(x>0)out.push({d:DATA.dates[i],c:x});}
     var n=new Date(),today=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2);
-    if(rec.price>0&&out.length&&out[out.length-1].d<today&&n.getDay()>0&&n.getDay()<6)out.push({d:today,c:rec.price,now:true});
+    /* today's point only once the stock price has moved off the last close (before the open it's the same number) */
+    if(rec.price>0&&out.length&&out[out.length-1].d<today&&n.getDay()>0&&n.getDay()<6&&Math.abs(rec.price-out[out.length-1].c)>0.004)out.push({d:today,c:rec.price,now:true});
     var sum=0;for(i=0;i<out.length;i++){sum+=out[i].c;if(i>=200)sum-=out[i-200].c;out[i].m=i>=199?sum/200:null;}
     return out;
   }
