@@ -3209,7 +3209,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
    Yield Sigma per point comes from the history's official monthly readings (see series()). */
 (function(){
   var PX_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/prices.csv';
-  var ST={on:false,rng:'6M'},DATA=null,LOADING=null,REC=null,HM={};
+  var ST={on:false,rng:'1Y'},DATA=null,LOADING=null,REC=null,HM={};
   var norm=function(t){return String(t||'').toUpperCase().replace(/[\s.\-\/]/g,'');};
   function load(){
     if(DATA)return Promise.resolve(DATA);
@@ -3345,7 +3345,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
   }
   window.ysPxWire=function(rec){REC=rec;if(ST.on)show();};
   document.addEventListener('click',function(e){
-    var f=e.target.closest&&e.target.closest('.pxFlip');if(f){ST.on=!ST.on;show();return;}
+    var f=e.target.closest&&e.target.closest('.pxFlip');if(f){ST.on=!ST.on;if(ST.on)ST.rng='1Y';show();return;}
     var r=e.target.closest&&e.target.closest('.pxRng');if(r){ST.rng=r.getAttribute('data-rng');show();}
   });
   var rt=null;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(ST.on&&DATA)show();},150);});
