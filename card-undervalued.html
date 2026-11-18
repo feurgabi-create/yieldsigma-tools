@@ -1205,7 +1205,7 @@ function wireMiniCalc(rec){
  * history flip. If it can't be reached, the built-in tables stay.
  * ------------------------------------------------------------------ */
 var YS_HIST_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/history.csv';
-var ysHist={state:0,cbs:[]},YS_DIVY={};
+var ysHist={state:0,cbs:[]},YS_DIVY={},YS_HMON={};
 function ysHistParse(txt){
   var lines=String(txt||'').split(/\r?\n/);if(lines.length<2||!/^ticker\t/.test(lines[0]))return 0;
   var now=new Date(),cur=now.getFullYear()*12+now.getMonth(),n=0;
@@ -1218,6 +1218,7 @@ function ysHistParse(txt){
     while(z.length&&st+z.length-1>=cur){z.pop();p.pop();}            /* completed months only */
     while(z.length&&(z[z.length-1]==null||p[z.length-1]==null)){z.pop();p.length=z.length;}
     for(var i=1;i<z.length;i++){if(z[i]==null)z[i]=z[i-1];if(p[i]==null)p[i]=p[i-1];}
+    if(z.length&&z[0]!=null&&p[0]!=null)YS_HMON[t]={st:st,z:z.slice(),p:p.slice()};   /* price chart: monthly readings + month-end stock prices */
     if(z.length<24||z[0]==null||p[0]==null)continue;
     var ym=function(i){var m=st+i;return Math.floor(m/12)+'-'+('0'+(m%12+1)).slice(-2);};
     var D=[],lastD=0;for(i=0;i<z.length;i++){var yv=d[String(Math.floor((st+i)/12))];if(yv!=null)lastD=yv;D.push(lastD);}
@@ -1249,6 +1250,8 @@ function ysHistParse(txt){
   }
   return n;
 }
+/* price chart: monthly Yield Sigma readings, month-end stock prices and yearly dividend amounts of one name */
+window.ysHistMonthly=function(t,cb){ysLoadHist(function(ok){t=String(t||'').toUpperCase();cb(ok&&YS_HMON[t]?{st:YS_HMON[t].st,z:YS_HMON[t].z,p:YS_HMON[t].p,div:YS_DIVY[t]||{}}:null);});};
 window.ysHistInfo=function(t){return {state:ysHist.state,flip:YS_FLIP[t]||null,ext:YS_EXT[t]||null};};
 function ysLoadHist(cb){
   if(ysHist.state===2){if(cb)cb(true);return;}
@@ -3202,10 +3205,11 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 /* Price chart (Nov 2026): the valuation anchors section flips to a chart of daily closing stock prices.
    Data: prices.csv on the Gist (ModuleYSPrices), loaded only when someone flips. Today's point = the card's
    current stock price. Lines: stock price, 200-day average (computed from the daily closes), Par, DDM fair
-   value and the 52-week low (today's values, flat). Ranges: 1W 1M 6M YTD 1Y. */
+   value and the 52-week low (today's values, flat). Ranges: 1M 6M YTD 1Y (daily), 3Y 5Y (monthly, from history.csv).
+   Yield Sigma per point comes from the history's official monthly readings (see series()). */
 (function(){
   var PX_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/prices.csv';
-  var ST={on:false,rng:'6M'},DATA=null,LOADING=null,REC=null;
+  var ST={on:false,rng:'6M'},DATA=null,LOADING=null,REC=null,HM={};
   var norm=function(t){return String(t||'').toUpperCase().replace(/[\s.\-\/]/g,'');};
   function load(){
     if(DATA)return Promise.resolve(DATA);
@@ -3217,7 +3221,15 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
       .catch(function(e){LOADING=null;throw e;});
     return LOADING;
   }
-  function series(rec){
+  var ymKey=function(m){return Math.floor(m/12)+'-'+('0'+(m%12+1)).slice(-2);};
+  /* today's Yield Sigma on the card */
+  function sigNow(rec){if(rec.sigma!==null&&rec.sigma!==undefined&&isFinite(rec.sigma))return rec.sigma;
+    if(!(rec.divDollar>0)||!(rec.price>0)||!window.ysSigmaAtYield)return null;var z=window.ysSigmaAtYield(rec,rec.divDollar/rec.price*100);return isFinite(z)?z:null;}
+  /* dividend amount for a year: the history's yearly amount, today's for the current year */
+  function divFor(h,rec,y){var v=h&&h.div?h.div[String(y)]:null;return v>0?v:rec.divDollar;}
+  /* daily series. Yield Sigma per day: anchored on the history's official month-end reading (today's reading in the
+     current month) and moved from there with that day's stock price: change in dividend yield / 1 SD of dividend yield */
+  function series(rec,h){
     var line=DATA.rows[norm(rec.ticker)];if(!line)return null;
     var v=line.split(',').slice(1),out=[];
     for(var i=0;i<DATA.dates.length;i++){var x=parseFloat(v[i]);if(x>0)out.push({d:DATA.dates[i],c:x});}
@@ -3225,23 +3237,40 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     /* today's point only once the stock price has moved off the last close (before the open it's the same number) */
     if(rec.price>0&&out.length&&out[out.length-1].d<today&&n.getDay()>0&&n.getDay()<6&&Math.abs(rec.price-out[out.length-1].c)>0.004)out.push({d:today,c:rec.price,now:true});
     var sum=0;for(i=0;i<out.length;i++){sum+=out[i].c;if(i>=200)sum-=out[i-200].c;out[i].m=i>=199?sum/200:null;}
+    var sd=rec.oneSD,zN=sigNow(rec),curM=n.getFullYear()*12+n.getMonth();
+    out.forEach(function(p){
+      var mi=+p.d.slice(0,4)*12+(+p.d.slice(5,7)-1),az=null,ap=null;
+      if(h&&mi-h.st>=0&&mi-h.st<h.z.length){az=h.z[mi-h.st];ap=h.p[mi-h.st];}
+      else if(mi>=curM||(h&&mi-h.st>=h.z.length)){az=zN;ap=rec.price;}
+      var dv=divFor(h,rec,+p.d.slice(0,4));
+      p.z=(az!==null&&az!==undefined&&ap>0&&sd>0&&dv>0)?az+(dv/p.c-dv/ap)*100/sd:null;
+    });
     return out;
   }
-  function pick(all){
-    var hist=all.filter(function(p){return !p.now;}),nowP=all.length&&all[all.length-1].now?all[all.length-1]:null,start;
-    if(ST.rng==='YTD'){var y=(nowP?nowP.d:hist[hist.length-1].d).slice(0,4)+'-01-01';start=0;while(start<hist.length-1&&hist[start].d<y)start++;}
-    else{var cnt={'1W':5,'1M':21,'6M':126,'1Y':252}[ST.rng]||126;start=Math.max(0,hist.length-cnt);if(nowP&&ST.rng==='1W')start=Math.max(0,hist.length-4);}
+  /* monthly series for 3Y / 5Y: the history's month-end stock prices and official readings, plus today */
+  function monthly(rec,h){
+    if(!h)return null;
+    var out=[];for(var i=0;i<h.z.length;i++)out.push({d:ymKey(h.st+i),c:h.p[i],z:h.z[i],mon:true});
+    if(rec.price>0)out.push({d:'now',c:rec.price,z:sigNow(rec),now:true,mon:true});
+    var sum=0;for(i=0;i<out.length;i++){sum+=out[i].c;if(i>=10)sum-=out[i-10].c;out[i].m=i>=9?sum/10:null;}
+    return out;
+  }
+  function pick(rec,h){
+    if(ST.rng==='3Y'||ST.rng==='5Y'){var mo=monthly(rec,h);if(!mo)return null;var k=ST.rng==='3Y'?36:60;return mo.slice(Math.max(0,mo.length-1-k));}
+    var all=series(rec,h);if(!all||all.length<2)return null;
+    var hist=all.filter(function(p){return !p.now;}),nowP=all[all.length-1].now?all[all.length-1]:null,start;
+    if(ST.rng==='YTD'){var y=(nowP?nowP.d:hist[hist.length-1].d).slice(0,4)+'-01-01';start=0;while(start<hist.length-1&&hist[start].d<y)start++;if(start>0)start--;}
+    else{var cnt={'1M':21,'6M':126,'1Y':252}[ST.rng]||126;start=Math.max(0,hist.length-cnt);}
     var w=hist.slice(start);if(nowP)w.push(nowP);
-    if(ST.rng!=='1W'&&ST.rng!=='1M'&&start>0)w.unshift(hist[start-1]);   // the change is measured from the close before the range
     return w;
   }
   var money=function(v){return '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});};
   var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function lab(d,short){var m=MON[+d.slice(5,7)-1];return short?m+' '+(+d.slice(8,10)):m+" '"+d.slice(2,4);}
+  function lab(d,short){if(d==='now')return 'Today';var m=MON[+d.slice(5,7)-1];return short&&d.length>7?m+' '+(+d.slice(8,10)):m+" '"+d.slice(2,4);}
   function draw(box,rec){
-    var all=series(rec);
-    if(!all||all.length<2){box.innerHTML='<div class="pxMsg">No daily stock prices for '+(rec.ticker||'this name')+' yet.</div>';return;}
-    var w=pick(all),n=w.length,W=Math.max(320,box.clientWidth||700),H=Math.round(Math.min(320,Math.max(220,W*0.36)));
+    var h=HM[norm(rec.ticker)]||null,w=pick(rec,h);
+    if(!w||w.length<2){box.innerHTML='<div class="pxMsg">No stock price history for '+(rec.ticker||'this name')+' yet.</div>';return;}
+    var MONV=!!w[0].mon,n=w.length,W=Math.max(320,box.clientWidth||700),H=Math.round(Math.min(320,Math.max(220,W*0.36)));
     var mL=58,mR=235,mT=12,mB=26,iw=W-mL-mR,ih=H-mT-mB;
     var vals=[];w.forEach(function(p){vals.push(p.c);if(p.m)vals.push(p.m);});
     var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals),span=(hi-lo)||hi*0.02;
@@ -3251,7 +3280,6 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     span=(hi-lo)||hi*0.02;lo-=span*0.08;hi+=span*0.08;
     var X=function(i){return mL+(n<2?iw/2:i*iw/(n-1));},Y=function(v){return mT+(hi-v)/(hi-lo)*ih;};
     /* Yield Sigma at a stock price: today's dividend amount / that stock price = dividend yield, read on the card's own bell */
-    var sigAt=function(pr){if(!(rec.divDollar>0)||!(pr>0))return null;var z=window.ysSigmaAtYield?window.ysSigmaAtYield(rec,rec.divDollar/pr*100):null;return isFinite(z)?z:null;};
     /* side bell: its own scale, -3 sigma at the top to +3 sigma at the bottom (lower stock price = higher sigma) */
     var bx0=mL+iw+26,bw=42,LX=mL+iw+bw+40;
     var cz=function(z){return Math.max(-3.2,Math.min(3.2,z));};
@@ -3262,7 +3290,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     for(var g=0;g<=4;g++){var gv=lo+(hi-lo)*g/4,gy=Y(gv);
       s+='<line x1="'+mL+'" x2="'+(mL+iw)+'" y1="'+gy.toFixed(1)+'" y2="'+gy.toFixed(1)+'" style="stroke:var(--c-rule);stroke-width:1"/>';
       s+='<text x="'+(mL-8)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end" style="fill:var(--c-muted);font:500 10.5px var(--mono)">'+money(gv)+'</text>';}
-    var nt=Math.min(5,n),short=(ST.rng==='1W'||ST.rng==='1M');
+    var nt=Math.min(5,n),short=(ST.rng==='1M');
     for(var t=0;t<nt;t++){var ti=Math.round(t*(n-1)/Math.max(1,nt-1));
       s+='<text x="'+X(ti).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(t===0?'start':t===nt-1?'end':'middle')+'" style="fill:var(--c-muted);font:500 10.5px var(--mono)">'+(w[ti].now?'Today':lab(w[ti].d,short))+'</text>';}
     /* anchors: flat lines at today's values; off the chart = a marker at the edge */
@@ -3274,7 +3302,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     var dm='';w.forEach(function(p,i){if(p.m)dm+=(dm?'L':'M')+X(i).toFixed(1)+' '+Y(p.m).toFixed(1);});
     if(dm)s+='<path d="'+dm+'" style="fill:none;stroke:var(--c-muted);stroke-width:1.5;stroke-dasharray:1 0;opacity:.7"/>';
     var lastM=null;for(var q=n-1;q>=0;q--)if(w[q].m){lastM=w[q];break;}
-    if(lastM&&lastM.m>=lo&&lastM.m<=hi)tags.push({y:Y(lastM.m),t:'200 dma '+money(lastM.m),col:'var(--c-muted)'});
+    if(lastM&&lastM.m>=lo&&lastM.m<=hi)tags.push({y:Y(lastM.m),t:(MONV?'10-mo avg ':'200 dma ')+money(lastM.m),col:'var(--c-muted)'});
     /* stock price */
     var pp='';w.forEach(function(p,i){pp+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(p.c).toFixed(1);});
     var up=w[n-1].c>=w[0].c;
@@ -3288,7 +3316,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     var over=tags.length?tags[tags.length-1].y-(mT+ih+4):0;if(over>0)tags.forEach(function(tg){tg.y-=over;});
     tags.forEach(function(tg){s+='<text x="'+LX+'" y="'+(tg.y+4).toFixed(1)+'" style="fill:'+tg.col+';font:'+(tg.b?'700':'500')+' 11px var(--mono)">'+tg.t+'</text>';});
     /* hairline bell on the side: its height follows the stock price axis (higher stock price = lower dividend yield = lower sigma) */
-    var z0=sigAt(w[n-1].c);
+    var z0=w[n-1].z;if(z0===undefined)z0=null;
     if(z0!==null){var bp='';for(var zz=-3.2;zz<=3.2001;zz+=0.05)bp+=(bp?'L':'M')+bX(zz).toFixed(1)+' '+bY(zz).toFixed(1);
       s+='<line x1="'+bx0+'" x2="'+bx0+'" y1="'+mT+'" y2="'+(mT+ih)+'" style="stroke:var(--c-rule);stroke-width:1"/>';
       [-2,-1,0,1,2].forEach(function(t){s+='<text x="'+(bx0-5)+'" y="'+(bY(t)+3).toFixed(1)+'" text-anchor="end" style="fill:var(--c-muted);font:500 9px var(--mono)">'+(t>0?'+':t<0?'\u2212':'')+Math.abs(t)+'\u03c3</text>';});
@@ -3297,32 +3325,34 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     s+='<line class="pxX" x1="0" x2="0" y1="'+mT+'" y2="'+(mT+ih)+'" style="stroke:var(--c-muted);stroke-width:1;display:none"/>';
     s+='<rect class="pxHit" x="'+mL+'" y="'+mT+'" width="'+iw+'" height="'+ih+'" style="fill:transparent;cursor:crosshair"/></svg>';
     var chg=(w[n-1].c/w[0].c-1)*100;
-    var rngTxt={'1W':'1 week','1M':'1 month','6M':'6 months','YTD':'year to date','1Y':'1 year'}[ST.rng];
-    var bar='<div class="pxBar">'+['1W','1M','6M','YTD','1Y'].map(function(r){return '<button type="button" class="pxRng'+(r===ST.rng?' on':'')+'" data-rng="'+r+'">'+r+'</button>';}).join('')+
+    var rngTxt={'1M':'1 month','6M':'6 months','YTD':'year to date','1Y':'1 year','3Y':'3 years','5Y':'5 years'}[ST.rng];
+    var bar='<div class="pxBar">'+['1M','6M','YTD','1Y','3Y','5Y'].map(function(r){return '<button type="button" class="pxRng'+(r===ST.rng?' on':'')+'" data-rng="'+r+'">'+r+'</button>';}).join('')+
       '<span class="pxChg">Stock price change, '+rngTxt+': <b style="color:var('+(up?'--c-jade':'--c-rust')+')">'+(chg>=0?'+':'')+chg.toFixed(1)+'%</b></span></div>';
-    var key='<div class="pxKey"><span><i style="border-color:var(--c-ink)"></i>Daily closing stock price</span><span><i style="border-color:var(--c-muted)"></i>200-day average</span>'+
+    var key='<div class="pxKey"><span><i style="border-color:var(--c-ink)"></i>'+(MONV?'Month-end stock price':'Daily closing stock price')+'</span><span><i style="border-color:var(--c-muted)"></i>'+(MONV?'10-month average':'200-day average')+'</span>'+
       (anc.length?'<span><i style="border-color:var(--c-gold);border-top-style:dashed"></i>Par, DDM fair value, 52-week low: today’s values</span>':'')+'</div>';
     box.innerHTML=bar+'<div style="position:relative">'+s+'<div class="pxTip"></div></div>'+key;
     var svg=box.querySelector('svg'),hit=box.querySelector('.pxHit'),xl=box.querySelector('.pxX'),tip=box.querySelector('.pxTip');
     function move(ev){var r=svg.getBoundingClientRect(),sc=W/r.width,x=(ev.clientX-r.left)*sc;
       var i=Math.max(0,Math.min(n-1,Math.round((x-mL)/iw*(n-1)))),p=w[i],px=X(i);
       xl.setAttribute('x1',px);xl.setAttribute('x2',px);xl.style.display='';
-      var z=sigAt(p.c);
-      tip.innerHTML=(p.now?'Today (current)':lab(p.d,true)+', '+p.d.slice(0,4))+'<br>Stock price '+money(p.c)+(p.m?'<br>200 dma '+money(p.m)+' ('+(p.c>=p.m?'+':'')+((p.c/p.m-1)*100).toFixed(1)+'%)':'')+
+      var z=(p.z===undefined)?null:p.z;
+      tip.innerHTML=(p.now?'Today (current)':MONV?MON[+p.d.slice(5,7)-1]+' '+p.d.slice(0,4)+', month end':lab(p.d,true)+', '+p.d.slice(0,4))+'<br>Stock price '+money(p.c)+(p.m?'<br>'+(MONV?'10-mo avg ':'200 dma ')+money(p.m)+' ('+(p.c>=p.m?'+':'')+((p.c/p.m-1)*100).toFixed(1)+'%)':'')+
         (z!==null?'<br>Yield Sigma <b style="color:'+zCol(z)+'">'+(z>=0?'+':'')+z.toFixed(2)+'\u03c3</b>':'');
       var bd=box.querySelector('.pxBd');if(bd&&z!==null){bd.setAttribute('cx',bX(z).toFixed(1));bd.setAttribute('cy',bY(z).toFixed(1));bd.style.fill=dotCol(z);}
       tip.style.display='block';tip.style.left=(px/sc)+'px';tip.style.top=(Y(p.c)/sc-10)+'px';}
     hit.addEventListener('mousemove',move);hit.addEventListener('touchstart',function(e){if(e.touches[0])move(e.touches[0]);},{passive:true});
     hit.addEventListener('mouseleave',function(){xl.style.display='none';tip.style.display='none';
-      var bd=box.querySelector('.pxBd'),z0=sigAt(w[n-1].c);if(bd&&z0!==null){bd.setAttribute('cx',bX(z0).toFixed(1));bd.setAttribute('cy',bY(z0).toFixed(1));bd.style.fill=dotCol(z0);}});
+      var bd=box.querySelector('.pxBd'),z0=w[n-1].z;if(bd&&z0!==null){bd.setAttribute('cx',bX(z0).toFixed(1));bd.setAttribute('cy',bY(z0).toFixed(1));bd.style.fill=dotCol(z0);}});
   }
   function show(){
     var wrap=document.querySelector('.pxWrap');if(!wrap||!REC)return;
     var lad=wrap.querySelector('.pxLad'),ch=wrap.querySelector('.pxCh'),b=wrap.querySelector('.pxFlip');
     b.textContent=ST.on?'⤾ Flip to anchors':'⤾ Flip to chart';b.setAttribute('aria-expanded',ST.on?'true':'false');
     lad.hidden=ST.on;ch.hidden=!ST.on;if(!ST.on)return;
-    if(!DATA){ch.innerHTML='<div class="pxMsg">Loading daily stock prices…</div>';
-      load().then(function(){show();}).catch(function(){ch.innerHTML='<div class="pxMsg">Daily stock prices could not be loaded. Try again in a moment.</div>';});return;}
+    var key=norm(REC.ticker);
+    if(!DATA||!(key in HM)){ch.innerHTML='<div class="pxMsg">Loading stock prices…</div>';
+      var hp=new Promise(function(res){if(key in HM||!window.ysHistMonthly)return res();window.ysHistMonthly(REC.ticker,function(h){HM[key]=h;res();});});
+      Promise.all([load(),hp]).then(function(){if(!(key in HM))HM[key]=null;show();}).catch(function(){ch.innerHTML='<div class="pxMsg">Stock prices could not be loaded. Try again in a moment.</div>';});return;}
     draw(ch,REC);
   }
   window.ysPxWire=function(rec){REC=rec;if(ST.on)show();};
