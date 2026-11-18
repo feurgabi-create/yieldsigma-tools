@@ -551,7 +551,13 @@ function preFill(kind){
     r.chgB=(r.bPx&&r.price>0)?(r.price/r.bPx-1)*100:null;
     var hz=CS.hz[tkKey(r.ticker)];r.sigB=null;
     if(r.bDtN!==null){if(r.bDtN>=curM)r.sigB=r.sigma;else if(hz&&r.bDtN-hz.st>=0&&r.bDtN-hz.st<hz.z.length)r.sigB=hz.z[r.bDtN-hz.st];}
-    r.acc=psPriceAt(r,thr);
+    /* total return since purchase: stock price change + dividends paid since the purchase month (the history's
+       yearly dividend amounts, 1/12 per month; this year at today's dividend amount), not reinvested */
+    r.tr=null;r.trY=null;
+    if(r.bPx&&r.bDtN!==null&&r.price>0&&r.bDtN<curM){var dy=CS.divy[tkKey(r.ticker)]||{},sum=0;
+      for(var mo=r.bDtN+1;mo<=curM;mo++){var yr=Math.floor(mo/12),dv=(yr>=now.getFullYear())?r.div:(dy[String(yr)]>0?dy[String(yr)]:r.div);if(dv>0)sum+=dv/12;}
+      r.tr=(r.price-r.bPx+sum)/r.bPx*100;var yrs=(curM-r.bDtN)/12;
+      if(yrs>=1&&r.tr>-100)r.trY=(Math.pow(1+r.tr/100,1/yrs)-1)*100;}
   });
 }
 var lastUpdated=null;
@@ -659,7 +665,7 @@ function render(){
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
     (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')</button>'+
       (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button><button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
-    (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote">Click a cell to enter your purchase stock price and month. Your entries stay in this browser only and are not part of the shared list link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price.</p>':'');
+    (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote">Click a cell to enter your purchase stock price and month. Your entries stay in this browser only and are not part of the shared list link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends paid since your purchase month (not reinvested), and its yearly average for holdings of a year or more.</p>':'');
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';
       return {v:(r.sigma>=0?'+':'−')+Math.abs(r.sigma).toFixed(2)+'σ',cls:'sg '+(r.sigma>=0?'up':'dn'),st:'background:color-mix(in srgb,'+c+' '+Math.round(a*22)+'%,transparent)'};}],
@@ -678,12 +684,13 @@ function render(){
     yoc:['Yield on cost',function(r){return r.yoc===null?'–':{v:fmtPct(r.yoc),cls:'up'};}],
     chgB:['Stock price since purchase',function(r){if(r.chgB===null)return '–';return {v:(r.chgB>0?'+':r.chgB<0?'−':'')+Math.abs(r.chgB).toFixed(1)+'%',cls:r.chgB>=0?'up':'dn'};}],
     sigB:['σ at purchase',function(r){if(r.sigB===null||!isFinite(r.sigB))return '–';return {v:(r.sigB>=0?'+':'−')+Math.abs(r.sigB).toFixed(2)+'σ',cls:r.sigB>=0?'up':'dn'};}],
-    acc:[(isS?'Accumulate (+1σ)':'Accumulate (+1.5σ)')+' at or below',function(r){if(r.acc===null)return '–';var inz=r.price!==null&&r.price<=r.acc;return {v:fmtMoney(r.acc)+(inz?' · now':''),cls:inz?'up':''};}],
+    tr:['Total return (per year)',function(r){if(r.tr===null)return '–';var f=function(v){return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+'%';};
+      return {v:f(r.tr)+(r.trY!==null?' · '+f(r.trY)+'/yr':''),cls:r.tr>=0?'up':'dn'};}],
     cs:['Constant Score',function(r){if(CS.state!==2)return {v:'…',cls:'mut'};if(r.cs===null)return {v:'–',cls:'mut'};var b=csBand(r.cs);return {v:r.cs+' · '+b[0],cls:b[1]==='gold'?'':b[1],st:b[1]==='gold'?'color:var(--gold)':''};}]
   };
   var SETCOLS={valuation:['sigma','trend','yld','avg','price','ma'],dividend:['div','yld','years','g10','payout'],quality:['pe','cs','payout','years'],all:['sigma','trend','yld','avg','price','ma','div','years','g10','payout','pe','cs']};
   var PREV=STATE.watch&&STATE.pre;
-  var cols=PREV?['sigma','price','bPx','bDt','yoc','chgB','sigB','acc']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
+  var cols=PREV?['sigma','price','bPx','bDt','yoc','chgB','tr','sigB']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
   if(PREV)csLoad();
   if(isS&&cols.indexOf('cs')>=0)csLoad();
   var ncol=3+(isS?1:0)+cols.length;
