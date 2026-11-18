@@ -133,6 +133,18 @@ table.dir td.cardCol{white-space:nowrap}
 .ysStar:hover{color:var(--gold)}.ysStar.on{color:var(--gold)}
 .wchip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted)}
 .wchip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.bellCol{width:30px;text-align:center;padding-left:4px!important;padding-right:0!important}th.bellCol{color:var(--muted)}
+.bell{border:0;background:none;padding:2px;cursor:pointer;color:var(--muted);opacity:.45;line-height:0;border-radius:6px}.bell:hover{opacity:1;color:var(--jade)}
+.bell.arm{opacity:1;color:var(--jade)}.bell.met{opacity:1;color:var(--gold);--bf:.35}
+.bell.ring{opacity:1;color:var(--gold);--bf:1;animation:bellRing 1.1s ease-in-out infinite}
+@keyframes bellRing{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}75%{transform:rotate(0)}}
+.bellCt{color:var(--gold);white-space:nowrap}.bellCt svg{vertical-align:-3px;--bf:1}
+.bellPop{position:absolute;z-index:60;width:290px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:10px;box-shadow:0 14px 34px -14px rgba(10,25,20,.38);padding:12px 14px;font-size:12px}
+.bellPop h5{margin:0 0 8px;font-size:12.5px}.bellPop .bpRang{margin:0 0 10px;padding:7px 9px;border-radius:7px;background:var(--gold-soft);color:var(--ink)}
+.bellPop select,.bellPop input{font:inherit;padding:5px 7px;border:1px solid var(--rule);border-radius:6px;background:var(--field,#fff);color:var(--ink)}
+.bellPop .bpRow{display:flex;gap:6px;align-items:center;margin-bottom:8px}.bellPop input{width:90px}.bellPop .bpNow{color:var(--muted);font-size:11.5px;margin:0 0 10px}
+.bellPop .bpBtns{display:flex;gap:8px;flex-wrap:wrap}.bellPop button{font:inherit;font-weight:600;border-radius:999px;padding:5px 11px;cursor:pointer;border:1px solid var(--jade);background:transparent;color:var(--jade)}
+.bellPop button.pri{background:var(--jade);color:var(--paper)}.bellPop button.x{position:absolute;top:6px;right:8px;border:0;padding:2px 6px;color:var(--muted)}
 .preNote{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
 .pEdit{border:1px dashed var(--rule);background:transparent;border-radius:6px;padding:3px 8px;font:inherit;color:var(--ink);cursor:pointer}.pEdit:hover{border-color:var(--jade);color:var(--jade)}
 .pSel{display:inline-flex;gap:4px;align-items:center}.pSel .pInp{width:auto}.pClr{border:0;background:none;color:var(--jade);font:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:2px 4px}
@@ -534,6 +546,27 @@ var PRE=(function(){var K='ysPresets',mem={};
   function all(){try{var v=JSON.parse(localStorage.getItem(K)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return mem;}}
   return {get:function(t){return all()[t]||{};},
     set:function(t,f,v){var a=all(),o=a[t]||{};if(v===null||v===''||v===undefined)delete o[f];else o[f]=v;if(Object.keys(o).length)a[t]=o;else delete a[t];mem=a;try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}}};})();
+/* Watchlist bells: one condition per name, saved in this browser only. Checked against the latest data on every
+   load; a bell rings (flashes) when its condition becomes true, keeps quiet once acknowledged, and re-arms itself
+   when the condition stops being true. {TICKER:{k:'sigUp',v:2,hit:'2026-11-18'|null,ack:bool}} */
+var BELL=(function(){var K='ysBells',mem={};
+  function all(){try{var v=JSON.parse(localStorage.getItem(K)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return mem;}}
+  function put(a){mem=a;try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}}
+  return {all:all,get:function(t){return all()[t]||null;},set:function(t,o){var a=all();if(o)a[t]=o;else delete a[t];put(a);},put:put};})();
+var BELL_K={sigUp:['Yield Sigma at or above','σ'],sigDn:['Yield Sigma at or below','σ'],yldUp:['Dividend yield at or above','%'],pxDn:['Stock price at or below','$'],pxUp:['Stock price at or above','$']};
+function bellNow(r,k){if(!r)return null;var v=k.indexOf('sig')===0?r.sigma:k==='yldUp'?r.yld:r.price;return (v===null||v===undefined||!isFinite(v))?null:v;}
+function bellMet(r,b){var v=bellNow(r,b.k);if(v===null)return null;return (b.k==='sigUp'||b.k==='yldUp'||b.k==='pxUp')?v>=b.v:v<=b.v;}
+function bellFmt(k,v){if(v===null||v===undefined)return '–';var u=BELL_K[k][1];return u==='σ'?(v>=0?'+':'−')+Math.abs(v).toFixed(2)+'σ':u==='%'?trimZ(v.toFixed(2))+'%':'$'+v.toFixed(2);}
+function bellRow(t){var k=tkKey(t);return DATA.stocks.filter(function(r){return tkKey(r.ticker)===k;})[0]||DATA.reits.filter(function(r){return tkKey(r.ticker)===k;})[0]||null;}
+function bellCheck(){var a=BELL.all(),ch=false,today=new Date().toISOString().slice(0,10);
+  Object.keys(a).forEach(function(t){var b=a[t],m=bellMet(bellRow(t),b);if(m===null)return;
+    if(m&&!b.hit){b.hit=today;b.ack=false;ch=true;}else if(!m&&b.hit){b.hit=null;b.ack=false;ch=true;}});
+  if(ch)BELL.put(a);}
+function bellRinging(){var a=BELL.all();return Object.keys(a).filter(function(t){return a[t].hit&&!a[t].ack&&(!window.YS_WATCH||YS_WATCH.has(t));}).length;}
+var BELL_SVG='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M8 1.8a3.9 3.9 0 0 0-3.9 3.9v2.6L2.8 10.6v.9h10.4v-.9l-1.3-2.3V5.7A3.9 3.9 0 0 0 8 1.8z" fill="currentColor" fill-opacity="var(--bf,0)" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.4 12.8a1.6 1.6 0 0 0 3.2 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+function bellBtn(t){var b=BELL.get(t),c=!b?'':b.hit&&!b.ack?' ring':b.hit?' met':' arm';
+  var ti=!b?'Set an alert for '+t:b.hit&&!b.ack?'Alert rang: '+BELL_K[b.k][0]+' '+bellFmt(b.k,b.v):BELL_K[b.k][0]+' '+bellFmt(b.k,b.v);
+  return '<button type="button" class="bell'+c+'" data-bell="'+esc(t)+'" title="'+esc(ti)+'">'+BELL_SVG+'</button>';}
 /* the card's sigma model (ysStats), for the stock price at which a name reaches the accumulate tier */
 var YS_N=11;
 function psStats(r,y){if(r.avg===null||!r.sd||r.yld===null||!isFinite(r.yld))return null;var n=YS_N,m=r.avg,sd=r.sd,y0=r.yld;
@@ -663,7 +696,7 @@ function render(){
   h+='<div class="ctl2"><div class="sets" role="group" aria-label="Columns">'+SETS.map(function(q){return '<button type="button" data-set="'+q[0]+'" class="'+(STATE.set===q[0]?'on':'')+'" aria-pressed="'+(STATE.set===q[0])+'">'+q[1]+'</button>';}).join('')+'</div>'+
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
-    (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')</button>'+
+    (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')'+(bellRinging()?' <span class="bellCt">· '+BELL_SVG+' '+bellRinging()+'</span>':'')+'</button>'+
       (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button><button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
     (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote">Click a cell to enter your purchase stock price and month. Your entries stay in this browser only and are not part of the shared list link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends paid since your purchase month (not reinvested), and its yearly average for holdings of a year or more.</p>':'');
   var C={
@@ -693,7 +726,8 @@ function render(){
   var cols=PREV?['sigma','price','bPx','bDt','yoc','chgB','tr','sigB']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
   if(PREV)csLoad();
   if(isS&&cols.indexOf('cs')>=0)csLoad();
-  var ncol=3+(isS?1:0)+cols.length;
+  var BELLV=STATE.watch&&!!window.YS_WATCH;
+  var ncol=3+(isS?1:0)+cols.length+(BELLV?1:0);
   /* a sector picked: List (our names in it, each counted once) next to Broad (the sector ETF) */
   if(isS&&STATE.sector){
     var gi=HM_GROUPS.filter(function(g){return g[0]===STATE.sector;})[0],sec=DATA.stocks.filter(function(r){return r.sector===STATE.sector&&r.sigma!==null&&isFinite(r.sigma);});
@@ -702,7 +736,7 @@ function render(){
     if(lst!==null)h+='<p class="secSum"><b>'+esc(STATE.sector)+'</b> · List (EW) <b class="'+(lst>=0?'up':'dn')+'">'+f2(lst)+'</b> ('+sec.length+' names)'+(etf&&etf.sigma!==null&&isFinite(etf.sigma)?' · Broad '+esc(gi[1])+' <b>'+f2(etf.sigma)+'</b>':'')+' '+lbBtn('dir')+'</p>'+lbPop('dir');
   }
   h+='<div class="topScroll" id="topScroll"><div></div></div><div class="tblWrap'+(LIST_HEIGHT>0?' fixed" style="height:'+LIST_HEIGHT+'px':'')+'" id="tblWrap"><table class="dir'+(STATE.set==='all'?' all':'')+'"><thead><tr>'+
-    headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
+    (BELLV?'<th class="bellCol" title="Alerts">'+BELL_SVG+'</th>':'')+headCell('name','Company',false).replace('<th class="','<th class="nmCol ')+headCell('ticker','Ticker',false)+(isS?headCell('sector','Sector',false):'')+
     cols.map(function(k){return headCell(k,C[k][0],true);}).join('')+'<th class="cardCol">Card</th>'+
     '</tr></thead><tbody>';
   if(!rows.length)h+='<tr><td colspan="'+ncol+'" class="none">'+(STATE.watch&&window.YS_WATCH&&!YS_WATCH.list().length?'Your watchlist is empty. Hover over a row and click the ☆ at its end to add that name.':'No names match.')+'</td></tr>';
@@ -711,7 +745,7 @@ function render(){
       ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
       :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
     var lk=function(txt){return r.free?'<a class="rowLk" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">'+txt+'</a>':txt;};
-    h+='<tr class="'+(r.free?'free':'')+'"><td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
+    h+='<tr class="'+(r.free?'free':'')+'">'+(BELLV?'<td class="bellCol">'+bellBtn(r.ticker)+'</td>':'')+'<td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
       (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+(o.html!==undefined?o.html:esc(o.v))+'</td>';}).join('')+
       '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+'</td></tr>';
@@ -803,12 +837,45 @@ function load(){
   return fetchLiveRows(LIVE_URL_STOCKS,LIVE_URL_REITS).then(function(res){
     if(!res||!res.lines||!res.lines.length)throw new Error('empty');
     DATA=buildRows(res.lines,res.tags);
+    bellCheck();
     lastUpdated=new Date();
     render();
   }).catch(function(){
     if(!DATA.stocks.length&&!DATA.reits.length)$('#sheet').innerHTML='<div class="empty">Couldn’t reach the data just now. Try Refresh in a minute.</div>';
   });
 }
+/* bell popover */
+function bellClose(){var p=document.getElementById('bellPop');if(p)p.remove();}
+function bellOpen(btn){
+  bellClose();var t=btn.getAttribute('data-bell'),b=BELL.get(t),r=bellRow(t),k=b?b.k:'sigUp';
+  var p=document.createElement('div');p.className='bellPop';p.id='bellPop';
+  var rang=b&&b.hit?'<p class="bpRang">'+(b.ack?'Condition met':'Rang')+': '+esc(BELL_K[b.k][0])+' <b>'+esc(bellFmt(b.k,b.v))+'</b> \u00b7 now <b>'+esc(bellFmt(b.k,bellNow(r,b.k)))+'</b> \u00b7 since '+esc(new Date(b.hit+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'</p>':'';
+  p.innerHTML='<button type="button" class="x" data-bp="close" aria-label="Close">\u2715</button><h5>Alert for '+esc(t)+'</h5>'+rang+
+    '<div class="bpRow"><select id="bpK">'+Object.keys(BELL_K).map(function(x){return '<option value="'+x+'"'+(x===k?' selected':'')+'>'+BELL_K[x][0]+'</option>';}).join('')+'</select>'+
+    '<input id="bpV" type="text" inputmode="decimal" value="'+(b?esc(String(b.v)):'')+'" placeholder="level"></div>'+
+    '<p class="bpNow" id="bpNow"></p>'+
+    '<div class="bpBtns"><button type="button" class="pri" data-bp="save">'+(b?'Update':'Set alert')+'</button>'+(b&&b.hit&&!b.ack?'<button type="button" data-bp="ack">Keep armed</button>':'')+(b?'<button type="button" data-bp="del">Remove</button>':'')+'</div>';
+  document.body.appendChild(p);
+  var rc=btn.getBoundingClientRect();p.style.left=Math.max(8,Math.min(window.scrollX+rc.left,window.scrollX+document.documentElement.clientWidth-300))+'px';p.style.top=(window.scrollY+rc.bottom+6)+'px';
+  var nowLine=function(){var kk=$('#bpK').value;$('#bpNow').textContent='Now: '+bellFmt(kk,bellNow(r,kk))+'. It rings the next time this becomes true.';};
+  nowLine();$('#bpK').addEventListener('change',nowLine);$('#bpV').focus();
+  $('#bpV').addEventListener('keydown',function(e){if(e.key==='Enter')p.querySelector('[data-bp="save"]').click();if(e.key==='Escape')bellClose();});
+  p.addEventListener('click',function(e){var a=e.target.closest('[data-bp]');if(!a)return;var act=a.getAttribute('data-bp');
+    if(act==='close'){bellClose();return;}
+    if(act==='del'){BELL.set(t,null);bellClose();render();return;}
+    if(act==='ack'){var o=BELL.get(t);if(o){o.ack=true;BELL.set(t,o);}bellClose();render();return;}
+    if(act==='save'){var kk=$('#bpK').value,v=parseFloat(String($('#bpV').value).replace(/[$%σ,\s+]/g,'').replace('\u2212','-'));
+      if(!isFinite(v)){$('#bpV').focus();$('#bpV').style.borderColor='var(--rust)';return;}
+      /* already true when set: counted as met (quiet); it rings after it has been false and becomes true again */
+      var m=bellMet(r,{k:kk,v:v});BELL.set(t,{k:kk,v:v,hit:m?new Date().toISOString().slice(0,10):null,ack:!!m});bellClose();render();}
+  });
+}
+document.addEventListener('click',function(e){
+  var bb=e.target.closest&&e.target.closest('[data-bell]');
+  if(bb){e.preventDefault();e.stopPropagation();var open=document.getElementById('bellPop');if(open&&open.getAttribute('data-t')===bb.getAttribute('data-bell')){bellClose();return;}bellOpen(bb);var p=document.getElementById('bellPop');if(p)p.setAttribute('data-t',bb.getAttribute('data-bell'));return;}
+  if(!(e.target.closest&&e.target.closest('#bellPop')))bellClose();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')bellClose();});
 render();
 load();
 setInterval(load,15*60*1000);
