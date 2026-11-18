@@ -136,9 +136,9 @@ table.dir td.cardCol{white-space:nowrap}
 .bellCol{width:30px;text-align:center;padding-left:4px!important;padding-right:0!important}th.bellCol{color:var(--muted)}
 .bell{border:0;background:none;padding:2px;cursor:pointer;color:var(--muted);opacity:.45;line-height:0;border-radius:6px}.bell:hover{opacity:1;color:var(--jade)}
 .bell.arm{opacity:1;color:var(--jade)}.bell.met{opacity:1;color:var(--gold);--bf:.35}
-.bell.ring{opacity:1;color:var(--gold);--bf:1;animation:bellRing 1.1s ease-in-out infinite}
+.bell svg{display:block}.bell.ring{opacity:1;color:var(--gold);--bf:1}.bell.ring svg,.bellCt.ring svg{transform-origin:50% 12%;animation:bellRing 1.1s ease-in-out infinite}
 @keyframes bellRing{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}75%{transform:rotate(0)}}
-.bellCt{color:var(--gold);white-space:nowrap}.bellCt svg{vertical-align:-3px;--bf:1}
+.bellCt{color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:3px}.bellCt svg{display:inline-block}.bellCt.ring{color:var(--gold);--bf:1}
 .bellPop{position:absolute;z-index:60;width:290px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:10px;box-shadow:0 14px 34px -14px rgba(10,25,20,.38);padding:12px 14px;font-size:12px}
 .bellPop h5{margin:0 0 8px;font-size:12.5px}.bellPop .bpRang{margin:0 0 10px;padding:7px 9px;border-radius:7px;background:var(--gold-soft);color:var(--ink)}
 .bellPop select,.bellPop input{font:inherit;padding:5px 7px;border:1px solid var(--rule);border-radius:6px;background:var(--field,#fff);color:var(--ink)}
@@ -563,8 +563,9 @@ function bellCheck(){var a=BELL.all(),ch=false,today=new Date().toISOString().sl
   Object.keys(a).forEach(function(t){var b=a[t],m=bellMet(bellRow(t),b);if(m===null)return;
     if(m&&!b.hit){b.hit=today;b.ack=false;ch=true;}else if(!m&&b.hit){b.hit=null;b.ack=false;ch=true;}});
   if(ch)BELL.put(a);}
+function bellSet(){var a=BELL.all();return Object.keys(a).filter(function(t){return !window.YS_WATCH||YS_WATCH.has(t);}).length;}
 function bellRinging(){var a=BELL.all();return Object.keys(a).filter(function(t){return a[t].hit&&!a[t].ack&&(!window.YS_WATCH||YS_WATCH.has(t));}).length;}
-var BELL_SVG='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M8 1.8a3.9 3.9 0 0 0-3.9 3.9v2.6L2.8 10.6v.9h10.4v-.9l-1.3-2.3V5.7A3.9 3.9 0 0 0 8 1.8z" fill="currentColor" fill-opacity="var(--bf,0)" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.4 12.8a1.6 1.6 0 0 0 3.2 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+var BELL_SVG='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M8 1.8a3.9 3.9 0 0 0-3.9 3.9v2.6L2.8 10.6v.9h10.4v-.9l-1.3-2.3V5.7A3.9 3.9 0 0 0 8 1.8z" style="fill:currentColor;fill-opacity:var(--bf,0)" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.4 12.8a1.6 1.6 0 0 0 3.2 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
 function bellBtn(t){var b=BELL.get(t),c=!b?'':b.hit&&!b.ack?' ring':b.hit?' met':' arm';
   var ti=!b?'Set an alert for '+t:b.hit&&!b.ack?'Alert rang: '+BELL_K[b.k][0]+' '+bellFmt(b.k,b.v):BELL_K[b.k][0]+' '+bellFmt(b.k,b.v);
   return '<button type="button" class="bell'+c+'" data-bell="'+esc(t)+'" title="'+esc(ti)+'">'+BELL_SVG+'</button>';}
@@ -697,7 +698,7 @@ function render(){
   h+='<div class="ctl2"><div class="sets" role="group" aria-label="Columns">'+SETS.map(function(q){return '<button type="button" data-set="'+q[0]+'" class="'+(STATE.set===q[0]?'on':'')+'" aria-pressed="'+(STATE.set===q[0])+'">'+q[1]+'</button>';}).join('')+'</div>'+
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
-    (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')'+(bellRinging()?' <span class="bellCt">· '+BELL_SVG+' '+bellRinging()+'</span>':'')+'</button>'+
+    (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')'+(bellRinging()?' <span class="bellCt ring" title="Alerts that rang">· '+BELL_SVG+bellRinging()+'</span>':bellSet()?' <span class="bellCt" title="Alerts set">· '+BELL_SVG+bellSet()+'</span>':'')+'</button>'+
       (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button>'+(STATE.pre?'<button type="button" class="preI" id="preI" aria-label="About My presets" aria-expanded="false">i</button>':'')+'<button type="button" class="wcopy" id="wCopy">Copy my list link</button>':''):'')+'</div>'+
     (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote" id="preNote" hidden>Saved in this browser only, not in the shared link. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends since purchase (not reinvested).</p>':'');
   var C={
@@ -860,7 +861,7 @@ function bellOpen(btn){
     '<div class="bpBtns"><button type="button" class="pri" data-bp="save">'+(b?'Update':'Set alert')+'</button>'+(b&&b.hit&&!b.ack?'<button type="button" data-bp="ack">Keep armed</button>':'')+(b?'<button type="button" data-bp="del">Remove</button>':'')+'</div>';
   document.body.appendChild(p);
   var rc=btn.getBoundingClientRect();p.style.left=Math.max(8,Math.min(window.scrollX+rc.left,window.scrollX+document.documentElement.clientWidth-300))+'px';p.style.top=(window.scrollY+rc.bottom+6)+'px';
-  var nowLine=function(){var kk=$('#bpK').value;$('#bpNow').textContent='Now: '+bellFmt(kk,bellNow(r,kk))+'. It rings the next time this becomes true.';};
+  var nowLine=function(){var kk=$('#bpK').value;$('#bpNow').textContent='Now: '+bellFmt(kk,bellNow(r,kk));};
   nowLine();$('#bpK').addEventListener('change',nowLine);$('#bpV').focus();
   $('#bpV').addEventListener('keydown',function(e){if(e.key==='Enter')p.querySelector('[data-bp="save"]').click();if(e.key==='Escape')bellClose();});
   p.addEventListener('click',function(e){var a=e.target.closest('[data-bp]');if(!a)return;var act=a.getAttribute('data-bp');
@@ -869,8 +870,8 @@ function bellOpen(btn){
     if(act==='ack'){var o=BELL.get(t);if(o){o.ack=true;BELL.set(t,o);}bellClose();render();return;}
     if(act==='save'){var kk=$('#bpK').value,v=parseFloat(String($('#bpV').value).replace(/[$%σ,\s+]/g,'').replace('\u2212','-'));
       if(!isFinite(v)){$('#bpV').focus();$('#bpV').style.borderColor='var(--rust)';return;}
-      /* already true when set: counted as met (quiet); it rings after it has been false and becomes true again */
-      var m=bellMet(r,{k:kk,v:v});BELL.set(t,{k:kk,v:v,hit:m?new Date().toISOString().slice(0,10):null,ack:!!m});bellClose();render();}
+      /* already true when set: it rings right away (Keep armed quiets it until it has been false and comes true again) */
+      var m=bellMet(r,{k:kk,v:v});BELL.set(t,{k:kk,v:v,hit:m?new Date().toISOString().slice(0,10):null,ack:false});bellClose();render();}
   });
 }
 document.addEventListener('click',function(e){
