@@ -3205,7 +3205,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 /* Price chart (Nov 2026): the valuation anchors section flips to a chart of daily closing stock prices.
    Data: prices.csv on the Gist (ModuleYSPrices), loaded only when someone flips. Today's point = the card's
    current stock price. Lines: stock price, 200-day average (computed from the daily closes), Par, DDM fair
-   value and the 52-week low (today's values, flat). Ranges: 1M 6M YTD 1Y (daily), 3Y 5Y (monthly, from history.csv).
+   value and the 52-week low (today's values, flat). Ranges: 1M 6M YTD 1Y (daily), 5Y (monthly, from history.csv).
    Yield Sigma per point comes from the history's official monthly readings (see series()). */
 (function(){
   var PX_URL='https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/prices.csv';
@@ -3247,7 +3247,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     });
     return out;
   }
-  /* monthly series for 3Y / 5Y: the history's month-end stock prices and official readings, plus today */
+  /* monthly series for 5Y: the history's month-end stock prices and official readings, plus today */
   function monthly(rec,h){
     if(!h)return null;
     var out=[];for(var i=0;i<h.z.length;i++)out.push({d:ymKey(h.st+i),c:h.p[i],z:h.z[i],mon:true});
@@ -3256,7 +3256,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     return out;
   }
   function pick(rec,h){
-    if(ST.rng==='3Y'||ST.rng==='5Y'){var mo=monthly(rec,h);if(!mo)return null;var k=ST.rng==='3Y'?36:60;return mo.slice(Math.max(0,mo.length-1-k));}
+    if(ST.rng==='5Y'){var mo=monthly(rec,h);if(!mo)return null;var k=60;return mo.slice(Math.max(0,mo.length-1-k));}
     var all=series(rec,h);if(!all||all.length<2)return null;
     var hist=all.filter(function(p){return !p.now;}),nowP=all[all.length-1].now?all[all.length-1]:null,start;
     if(ST.rng==='YTD'){var y=(nowP?nowP.d:hist[hist.length-1].d).slice(0,4)+'-01-01';start=0;while(start<hist.length-1&&hist[start].d<y)start++;if(start>0)start--;}
@@ -3326,7 +3326,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
     s+='<rect class="pxHit" x="'+mL+'" y="'+mT+'" width="'+iw+'" height="'+ih+'" style="fill:transparent;cursor:crosshair"/></svg>';
     var chg=(w[n-1].c/w[0].c-1)*100;
     var rngTxt={'1M':'1 month','6M':'6 months','YTD':'year to date','1Y':'1 year','3Y':'3 years','5Y':'5 years'}[ST.rng];
-    var bar='<div class="pxBar">'+['1M','6M','YTD','1Y','3Y','5Y'].map(function(r){return '<button type="button" class="pxRng'+(r===ST.rng?' on':'')+'" data-rng="'+r+'">'+r+'</button>';}).join('')+
+    var bar='<div class="pxBar">'+['1M','6M','YTD','1Y','5Y'].map(function(r){return '<button type="button" class="pxRng'+(r===ST.rng?' on':'')+'" data-rng="'+r+'">'+r+'</button>';}).join('')+
       '<span class="pxChg">Stock price change, '+rngTxt+': <b style="color:var('+(up?'--c-jade':'--c-rust')+')">'+(chg>=0?'+':'')+chg.toFixed(1)+'%</b></span></div>';
     var key='<div class="pxKey"><span><i style="border-color:var(--c-ink)"></i>'+(MONV?'Month-end stock price':'Daily closing stock price')+'</span><span><i style="border-color:var(--c-muted)"></i>'+(MONV?'10-month average':'200-day average')+'</span>'+
       (anc.length?'<span><i style="border-color:var(--c-gold);border-top-style:dashed"></i>Par, DDM fair value, 52-week low: today’s values</span>':'')+'</div>';
