@@ -7,6 +7,7 @@
 <style>#ysWaitBox{max-width:760px;margin:40px auto;padding:90px 20px;text-align:center;font:600 14px "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.03em;color:var(--muted,#5e6f63);background:var(--paper,#fff);border:1px solid var(--rule,#d2dbd1);border-radius:12px}html.ysWait #card{display:none}</style>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/bells.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
 <style>html.ws body{background:#fff!important}html[data-theme="dark"].ws body{background:#25292D!important}html.ws .stage{padding:0!important;background:transparent}html.ws .card{max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:22px 26px 18px!important}html.ws:not(.tiles) .card{max-width:1100px!important;margin-left:auto!important;margin-right:auto!important}
@@ -1670,7 +1671,7 @@ function buildCard(rec,a){
   h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch"><span><a class="ysHome" href="https://www.yieldsigma.com/home" target="_blank" rel="noopener">Yield Sigma™</a> valuation card</span><button type="button" class="abPill" id="abPill" aria-expanded="false" aria-controls="abPanel">About '+esc(a.ticker||rec.ticker||'')+' <i aria-hidden="true">i</i></button></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
-    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+(window.YS_WATCH?YS_WATCH.star(a.ticker,' style="font-size:20px"'):'')+'</div>'+
+    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+(window.YS_WATCH?YS_WATCH.star(a.ticker,' style="font-size:20px"'):'')+(window.YS_BELLS?YS_BELLS.btn(a.ticker):'')+'</div>'+
     '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
     '<div class="lbl">'+(priceOverride!==null?'<span class="pxAdj">adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
     '</div></header>';
@@ -2289,6 +2290,7 @@ function renderCurrentBase(){
   wireBell(rec,a);
   wireFlip(rec,a);
   if(window.ysPxWire)window.ysPxWire(rec);
+  if(window.YS_BELLS)YS_BELLS.check(a.ticker,{sigma:a.sigma,yld:rec.yield,price:rec.price});
   wireGrowthFan(rec);
   wireMiniCalc(rec);
   ysHistKick(rec,a);

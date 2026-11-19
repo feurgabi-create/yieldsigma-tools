@@ -148,6 +148,7 @@ table.dir td.cardCol{white-space:nowrap}
 .preI{width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);background:none;color:var(--muted);font:italic 600 11px/1 Georgia,serif;cursor:pointer;padding:0;margin-left:-2px}.preI:hover,.preI[aria-expanded="true"]{border-color:var(--jade);color:var(--jade)}
 .trY{display:block;font-size:10.5px;color:var(--muted);margin-top:1px;white-space:nowrap}
 table.dir tfoot .avgRow td{border-top:2px solid var(--rule);font-weight:700;padding-top:10px;padding-bottom:10px}.avgSub{font-weight:400;font-size:10.5px;color:var(--muted)}
+.tkBell{display:inline-block;margin-left:4px;vertical-align:-3px}.tkBell .bell{padding:0}
 .preNote{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
 .pEdit{border:1px dashed var(--rule);background:transparent;border-radius:6px;padding:3px 8px;font:inherit;color:var(--ink);cursor:pointer}.pEdit:hover{border-color:var(--jade);color:var(--jade)}
 .pSel{display:inline-flex;gap:4px;align-items:center}.pSel .pInp{width:auto}.pClr{border:0;background:none;color:var(--jade);font:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:2px 4px}
@@ -749,7 +750,7 @@ function render(){
       ?'<a class="open" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">Open ↗</a>'
       :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
     var lk=function(txt){return r.free?'<a class="rowLk" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">'+txt+'</a>':txt;};
-    h+='<tr class="'+(r.free?'free':'')+'">'+(BELLV?'<td class="bellCol">'+bellBtn(r.ticker)+'</td>':'')+'<td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
+    h+='<tr class="'+(r.free?'free':'')+'">'+(BELLV?'<td class="bellCol">'+bellBtn(r.ticker)+'</td>':'')+'<td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+(!BELLV&&BELL.get(r.ticker)?'<span class="tkBell">'+bellBtn(r.ticker)+'</span>':'')+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
       (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+(o.html!==undefined?o.html:esc(o.v))+'</td>';}).join('')+
       '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+'</td></tr>';
