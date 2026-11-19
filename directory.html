@@ -727,7 +727,7 @@ function render(){
   };
   var SETCOLS={valuation:['sigma','trend','yld','avg','price','ma'],dividend:['div','yld','years','g10','payout'],quality:['pe','cs','payout','years'],all:['sigma','trend','yld','avg','price','ma','div','years','g10','payout','pe','cs']};
   var PREV=STATE.watch&&STATE.pre;
-  var cols=PREV?['sigma','price','bPx','bDt','yoc','chgB','tr','sigB']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
+  var cols=PREV?['sigma','price','yld','bPx','bDt','yoc','chgB','tr','sigB']:SETCOLS[STATE.set].filter(function(k){return isS||k!=='cs';});
   if(PREV)csLoad();
   if(isS&&cols.indexOf('cs')>=0)csLoad();
   var BELLV=STATE.watch&&!!window.YS_WATCH;
@@ -759,9 +759,9 @@ function render(){
   if(PREV&&rows.length>1){
     var avgOf=function(k){var v=rows.map(function(r){return r[k];}).filter(function(x){return x!==null&&x!==undefined&&isFinite(x);});return v.length?v.reduce(function(a,b){return a+b;},0)/v.length:null;};
     var sg=function(v,u){return v===null?'–':(v>0?'+':v<0?'\u2212':'')+Math.abs(v).toFixed(u==='σ'?2:1)+u;};
-    var AV={sigma:avgOf('sigma'),yoc:avgOf('yoc'),chgB:avgOf('chgB'),tr:avgOf('tr'),sigB:avgOf('sigB')};
+    var AV={sigma:avgOf('sigma'),yld:avgOf('yld'),yoc:avgOf('yoc'),chgB:avgOf('chgB'),tr:avgOf('tr'),sigB:avgOf('sigB')};
     var cellA=function(k){var v=AV[k];if(!(k in AV))return '<td></td>';
-      var txt=k==='yoc'?(v===null?'–':trimZ(v.toFixed(2))+'%'):sg(v,k==='sigma'||k==='sigB'?'σ':'%');
+      var txt=(k==='yoc'||k==='yld')?(v===null?'–':trimZ(v.toFixed(2))+'%'):sg(v,k==='sigma'||k==='sigB'?'σ':'%');
       return '<td class="num '+(v===null?'':v>=0?'up':'dn')+'">'+esc(txt)+'</td>';};
     h+='<tfoot><tr class="avgRow">'+(BELLV?'<td></td>':'')+'<td class="nm nmCol">Average <span class="avgSub">(each name counts once)</span></td><td class="tk"><span class="nmSub">Average</span></td>'+(isS?'<td></td>':'')+cols.map(cellA).join('')+'<td></td></tr></tfoot>';
   }
