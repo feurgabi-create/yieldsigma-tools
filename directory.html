@@ -147,6 +147,7 @@ table.dir td.cardCol{white-space:nowrap}
 .bellPop button.pri{background:var(--jade);color:var(--paper)}.bellPop button.x{position:absolute;top:6px;right:8px;border:0;padding:2px 6px;color:var(--muted)}
 .preI{width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);background:none;color:var(--muted);font:italic 600 11px/1 Georgia,serif;cursor:pointer;padding:0;margin-left:-2px}.preI:hover,.preI[aria-expanded="true"]{border-color:var(--jade);color:var(--jade)}
 .trY{display:block;font-size:10.5px;color:var(--muted);margin-top:1px;white-space:nowrap}
+table.dir tfoot .avgRow td{border-top:2px solid var(--rule);font-weight:700;padding-top:10px;padding-bottom:10px}.avgSub{font-weight:400;font-size:10.5px;color:var(--muted)}
 .preNote{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
 .pEdit{border:1px dashed var(--rule);background:transparent;border-radius:6px;padding:3px 8px;font:inherit;color:var(--ink);cursor:pointer}.pEdit:hover{border-color:var(--jade);color:var(--jade)}
 .pSel{display:inline-flex;gap:4px;align-items:center}.pSel .pInp{width:auto}.pClr{border:0;background:none;color:var(--jade);font:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:2px 4px}
@@ -753,7 +754,18 @@ function render(){
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+(o.html!==undefined?o.html:esc(o.v))+'</td>';}).join('')+
       '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+'</td></tr>';
   });
-  h+='</tbody></table></div>';
+  h+='</tbody>';
+  /* My presets: average row (equal weight: each name counts once, blanks left out) */
+  if(PREV&&rows.length>1){
+    var avgOf=function(k){var v=rows.map(function(r){return r[k];}).filter(function(x){return x!==null&&x!==undefined&&isFinite(x);});return v.length?v.reduce(function(a,b){return a+b;},0)/v.length:null;};
+    var sg=function(v,u){return v===null?'–':(v>0?'+':v<0?'\u2212':'')+Math.abs(v).toFixed(u==='σ'?2:1)+u;};
+    var AV={sigma:avgOf('sigma'),yoc:avgOf('yoc'),chgB:avgOf('chgB'),tr:avgOf('tr'),sigB:avgOf('sigB')};
+    var cellA=function(k){var v=AV[k];if(!(k in AV))return '<td></td>';
+      var txt=k==='yoc'?(v===null?'–':trimZ(v.toFixed(2))+'%'):sg(v,k==='sigma'||k==='sigB'?'σ':'%');
+      return '<td class="num '+(v===null?'':v>=0?'up':'dn')+'">'+esc(txt)+'</td>';};
+    h+='<tfoot><tr class="avgRow">'+(BELLV?'<td></td>':'')+'<td class="nm nmCol">Average <span class="avgSub">(each name counts once)</span></td><td class="tk"><span class="nmSub">Average</span></td>'+(isS?'<td></td>':'')+cols.map(cellA).join('')+'<td></td></tr></tfoot>';
+  }
+  h+='</table></div>';
   h+='<footer class="foot"><span>Model output, not investment advice.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
      '<span>'+(lastUpdated?'Live · updated '+esc(lastUpdated.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})):'Live')+
      ' <button type="button" class="linkbtn" id="refresh">Refresh</button></span></footer>';
