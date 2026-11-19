@@ -721,7 +721,7 @@ function render(){
     chgB:['Stock price since purchase',function(r){if(r.chgB===null)return '–';return {v:(r.chgB>0?'+':r.chgB<0?'−':'')+Math.abs(r.chgB).toFixed(1)+'%',cls:r.chgB>=0?'up':'dn'};}],
     sigB:['σ at purchase',function(r){if(r.sigB===null||!isFinite(r.sigB))return '–';return {v:(r.sigB>=0?'+':'−')+Math.abs(r.sigB).toFixed(2)+'σ',cls:r.sigB>=0?'up':'dn'};}],
     tr:['Total return (per year)',function(r){if(r.tr===null)return '–';var f=function(v){return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+'%';};
-      return {html:esc(f(r.tr))+(r.trY!==null?'<span class="trY">'+esc(f(r.trY))+' per year</span>':''),cls:r.tr>=0?'up':'dn'};}],
+      return {html:esc(f(r.tr))+(r.trY!==null?'<span class="trY">'+esc(f(r.trY))+'/yr</span>':''),cls:r.tr>=0?'up':'dn'};}],
     cs:['Constant Score',function(r){if(CS.state!==2)return {v:'…',cls:'mut'};if(r.cs===null)return {v:'–',cls:'mut'};var b=csBand(r.cs);return {v:r.cs+' · '+b[0],cls:b[1]==='gold'?'':b[1],st:b[1]==='gold'?'color:var(--gold)':''};}]
   };
   var SETCOLS={valuation:['sigma','trend','yld','avg','price','ma'],dividend:['div','yld','years','g10','payout'],quality:['pe','cs','payout','years'],all:['sigma','trend','yld','avg','price','ma','div','years','g10','payout','pe','cs']};
