@@ -774,7 +774,8 @@ function render(soft){
   }else{
     stats+=st(PO.word+' in year '+Y,money(a.flow),b?money(b.flow):undefined)+
       (PO.all?'':st('Growth share of balance',pct((a.value-a.contrib)/a.value*100,0),b?pct((b.value-b.contrib)/b.value*100,0):undefined))+
-      st('Real growth rate',pct(((1+S.A.ret/100)/(1+S.infl/100)-1)*100,2),b?pct(((1+S.B.ret/100)/(1+S.infl/100)-1)*100,2):undefined);
+      st('Real growth rate',pct(((1+S.A.ret/100)/(1+S.infl/100)-1)*100,2),b?pct(((1+S.B.ret/100)/(1+S.infl/100)-1)*100,2):undefined)+
+      st((PO.all?'Paid out per month':PO.mix?'Per month':'Growth per month')+', year '+Y,money(a.flow/12),b?money(b.flow/12):undefined);
     if(S.A.comp===0||(b&&S.B.comp===0))stats+=st('Paid out (not in balance)',money(a.cash),b?money(b.cash):undefined);
   }
   h+='<div class="stats">'+stats+'</div>';
