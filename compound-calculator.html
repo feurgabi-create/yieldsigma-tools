@@ -531,14 +531,17 @@ function simulate(sh,r,mode){
   var cf=[];for(var ci=0;ci<=12*Y;ci++)cf.push(0);cf[0]-=sh.start;
   rows.push({y:0,contrib:contrib,value:sh.start,flow:0,cash:0,inc:0});
   if(mode==='fixed'){
-    var n=r.comp,bal=sh.start,rate=r.ret/100;
+    /* comp 0 = "None (paid out)": the return is paid out each month instead of added to the
+       balance (like dividends not reinvested), so the balance stays at the money put in */
+    var n=r.comp,bal=sh.start,rate=r.ret/100,fcash=0;
     for(var y=1;y<=Y;y++){
-      var startBal=bal,added=0;
+      var startBal=bal,added=0,paid=0;
       for(var mo=1;mo<=12;mo++){
         bal+=m;contrib+=m;added+=m;cf[(y-1)*12+mo-1]-=m;
-        if(mo%(12/n)===0)bal*=1+rate/n;
+        if(n===0){var e=bal*rate/12;paid+=e;fcash+=e;cf[(y-1)*12+mo]+=e;}
+        else if(mo%(12/n)===0)bal*=1+rate/n;
       }
-      rows.push({y:y,contrib:contrib,value:bal,flow:bal-startBal-added,cash:0,inc:0});
+      rows.push({y:y,contrib:contrib,value:bal,flow:n===0?paid:bal-startBal-added,cash:fcash,inc:0});
       m*=1+sh.raise/100;
     }
   }else{
@@ -606,7 +609,7 @@ function rateField(label,key,unit,step,sub,off){
 }
 function compSelect(side){
   var v=S[side].comp;
-  return '<select data-side="'+side+'" data-key="comp">'+[[12,'Monthly'],[4,'Quarterly'],[1,'Yearly']].map(function(o){
+  return '<select data-side="'+side+'" data-key="comp">'+[[12,'Monthly'],[4,'Quarterly'],[1,'Yearly'],[0,'None (paid out)']].map(function(o){
     return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
 }
 function pickBox(side){
@@ -769,6 +772,7 @@ function render(){
     stats+=st('Growth in year '+Y,money(a.flow),b?money(b.flow):undefined)+
       st('Growth share of balance',pct((a.value-a.contrib)/a.value*100,0),b?pct((b.value-b.contrib)/b.value*100,0):undefined)+
       st('Real growth rate',pct(((1+S.A.ret/100)/(1+S.infl/100)-1)*100,2),b?pct(((1+S.B.ret/100)/(1+S.infl/100)-1)*100,2):undefined);
+    if(S.A.comp===0||(b&&S.B.comp===0))stats+=st('Paid out (not in balance)',money(a.cash),b?money(b.cash):undefined);
   }
   h+='<div class="stats">'+stats+'</div>';
   if(B){
