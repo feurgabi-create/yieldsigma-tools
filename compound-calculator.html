@@ -855,7 +855,8 @@ function wire(){
       var r=S[side],y=round2(r.div/v*100),yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb)yb.value=y;
       clearTimeout(pt);pt=setTimeout(function(){if(document.activeElement!==el){setP(v);render();}},900);});
     el.addEventListener('keydown',function(e){if(e.key==='Enter'){el.blur();}});
-    el.addEventListener('change',function(){clearTimeout(pt);if(!setP(pv()))el.value=S[side].price;renderSoon();});
+    var commit=function(){clearTimeout(pt);var v=pv();if(isFinite(v)&&v>0&&v===S[side].price)return;if(!setP(v))el.value=S[side].price;renderSoon();};
+    el.addEventListener('change',commit);el.addEventListener('blur',commit);
   });
   $('#i_compare').addEventListener('change',function(e){S.compare=e.target.checked;render();});
   var fadeEl=document.getElementById('i_fade');if(fadeEl)fadeEl.addEventListener('change',function(e){S.fade=e.target.checked;render();});
