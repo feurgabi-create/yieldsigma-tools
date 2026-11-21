@@ -758,9 +758,12 @@ function render(soft){
       '<div class="v">'+money(row.value)+'</div><div class="r">'+(S[side].ticker&&div?'after '+Y+' years \u00b7 ':'')+money(row.real)+' in today’s dollars</div></div>';
   }
   h+='<div class="big" style="--n:'+(S.compare?2:1)+'">'+bigCard('A',a)+(b?bigCard('B',b):'')+'</div>';
+  /* fixed return with "None (paid out)": the yearly amounts are payouts, not growth added to the balance */
+  var PO={a:!div&&S.A.comp===0,b:!div&&!!b&&S.B.comp===0};PO.any=PO.a||PO.b;PO.all=PO.a&&(!b||PO.b);PO.mix=PO.any&&!PO.all;
+  PO.word=PO.all?'Paid out':PO.mix?'Earned':'Growth';
   function st(k,fa,fb,note){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+fa+(b!==null&&fb!==undefined?'<span class="bv">'+fb+'</span>':'')+'</div>'+(note?'<small class="wm">'+note+'</small>':'')+'</div>';}
   var stats=st('Contribution',money(a.contrib),b?money(b.contrib):undefined)+
-    st('Growth',money(a.value-a.contrib),b?money(b.value-b.contrib):undefined);
+    st(PO.any?'Growth kept in balance':'Growth',money(a.value-a.contrib),b?money(b.value-b.contrib):undefined);
   if(div){
     var yocA=a.fwd/a.contrib*100,yocB=b?b.fwd/b.contrib*100:0;
     stats+=st('Annualized return',pct(A.irr,2),b?pct(B.irr,2):undefined,'IRR · price + dividends')+
@@ -769,8 +772,8 @@ function render(soft){
       st('Dividends received, total',money(a.divCum),b?money(b.divCum):undefined);
     if(!S.A.reinvest||(b&&!S.B.reinvest))stats+=st('Taken as cash (not in balance)',money(a.cash),b?money(b.cash):undefined);
   }else{
-    stats+=st('Growth in year '+Y,money(a.flow),b?money(b.flow):undefined)+
-      st('Growth share of balance',pct((a.value-a.contrib)/a.value*100,0),b?pct((b.value-b.contrib)/b.value*100,0):undefined)+
+    stats+=st(PO.word+' in year '+Y,money(a.flow),b?money(b.flow):undefined)+
+      (PO.all?'':st('Growth share of balance',pct((a.value-a.contrib)/a.value*100,0),b?pct((b.value-b.contrib)/b.value*100,0):undefined))+
       st('Real growth rate',pct(((1+S.A.ret/100)/(1+S.infl/100)-1)*100,2),b?pct(((1+S.B.ret/100)/(1+S.infl/100)-1)*100,2):undefined);
     if(S.A.comp===0||(b&&S.B.comp===0))stats+=st('Paid out (not in balance)',money(a.cash),b?money(b.cash):undefined);
   }
@@ -794,9 +797,9 @@ function render(soft){
   h+='<h3>Balance year by year</h3><div class="chartWrap">'+growthChart(A,B,cxBal)+'<div class="tip" id="gTip"></div></div>'+
     '<div class="legend"><span><i style="background:var(--jade-mid);opacity:.7"></i>Contribution</span><span><i style="background:var(--jade)"></i>Growth'+(div?(S.A.reinvest?' (price + reinvested dividends)':' (price)'):'')+'</span>'+
     (B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+' balance</span>':'')+'</div>';
-  h+='<h3>'+(div?'Dividend income each year':'Growth each year')+'</h3><div class="chartWrap">'+flowChart(A,B,cxInc)+'<div class="tip" id="fTip"></div></div>'+
-    '<div class="legend"><span><i style="background:var(--jade)"></i>'+(div?'Dividends paid that year':'Growth earned that year')+(S.compare?' ('+esc(div?sideLabel('A'):'A')+')':'')+'</span>'+(B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+'</span>':'')+'</div>';
-  h+='<h3>Year by year</h3><div class="tbl"><table><thead><tr><th>Year</th><th>Contribution</th><th>Balance</th><th>'+(div?'Dividends':'Growth')+'</th>'+(div?'<th>Yield on cost</th>':'')+(div&&S.fade?'<th>Div growth</th>':'')+'<th>Today’s $</th>'+(B?'<th>'+esc(div?sideLabel('B'):'B')+' balance</th>':'')+'</tr></thead><tbody>';
+  h+='<h3>'+(div?'Dividend income each year':PO.word+' each year')+'</h3><div class="chartWrap">'+flowChart(A,B,cxInc)+'<div class="tip" id="fTip"></div></div>'+
+    '<div class="legend"><span><i style="background:var(--jade)"></i>'+(div?'Dividends paid that year':PO.a?'Paid out that year':'Growth earned that year')+(S.compare?' ('+esc(div?sideLabel('A'):'A')+')':'')+'</span>'+(B?'<span><i style="background:var(--gold)"></i>'+(S.B.ticker&&div?esc(S.B.ticker):'Scenario B')+(PO.mix?(PO.b?' (paid out)':' (growth added)'):'')+'</span>':'')+'</div>';
+  h+='<h3>Year by year</h3><div class="tbl"><table><thead><tr><th>Year</th><th>Contribution</th><th>Balance</th><th>'+(div?'Dividends':PO.a?'Paid out':'Growth')+'</th>'+(div?'<th>Yield on cost</th>':'')+(div&&S.fade?'<th>Div growth</th>':'')+'<th>Today’s $</th>'+(B?'<th>'+esc(div?sideLabel('B'):'B')+' balance</th>':'')+'</tr></thead><tbody>';
   A.forEach(function(r,i){
     h+='<tr><td>'+(r.y===0?'Now':r.y)+'</td><td>'+money(r.contrib)+'</td><td>'+money(r.value)+'</td><td>'+(r.y?money(r.flow):'–')+'</td>'+
       (div?'<td>'+(r.y?pct(r.fwd/r.contrib*100,2):'–')+'</td>':'')+(div&&S.fade?'<td>'+(r.y?pct(r.g,2):'–')+'</td>':'')+'<td>'+money(r.real)+'</td>'+(B?'<td class="bcol">'+money(B[i].value)+'</td>':'')+'</tr>';
@@ -823,7 +826,7 @@ function render(soft){
   var TIP_A='#86D7A9',TIP_B='#E9C979';
   wireHover('gChart','gCross','gTip',A,B,function(r,rb){
     var when=r.y?'Year '+r.y:'Now';
-    if(!rb)return '<b>'+when+'</b><br>Balance '+money(r.value)+'<br>Contribution '+money(r.contrib)+'<br>Growth '+money(r.value-r.contrib);
+    if(!rb)return '<b>'+when+'</b><br>Balance '+money(r.value)+'<br>Contribution '+money(r.contrib)+(PO.a?'<br>Paid out so far '+money(r.cash):'<br>Growth '+money(r.value-r.contrib));
     return '<b>'+when+' balance</b>'+
       '<br><span style="color:'+TIP_A+'">A  '+money(r.value)+' · growth '+money(r.value-r.contrib)+'</span>'+
       '<br><span style="color:'+TIP_B+'">B  '+money(rb.value)+' · growth '+money(rb.value-rb.contrib)+'</span>'+
@@ -831,10 +834,11 @@ function render(soft){
   });
   wireHover('fChart','fCross','fTip',A,B,function(r,rb){
     if(!r.y)return '<b>Now</b>';
-    if(!rb)return '<b>Year '+r.y+'</b><br>'+(div?'Dividends ':'Growth ')+money(r.flow);
-    return '<b>Year '+r.y+' '+(div?'dividends':'growth')+'</b>'+
-      '<br><span style="color:'+TIP_A+'">A  '+money(r.flow)+'</span>'+
-      '<br><span style="color:'+TIP_B+'">B  '+money(rb.flow)+'</span>';
+    if(!rb)return '<b>Year '+r.y+'</b><br>'+(div?'Dividends ':PO.a?'Paid out ':'Growth ')+money(r.flow);
+    var kA=div?'':PO.a?'paid out ':'growth ',kB=div?'':PO.b?'paid out ':'growth ';
+    return '<b>Year '+r.y+' '+(div?'dividends':PO.word.toLowerCase())+'</b>'+
+      '<br><span style="color:'+TIP_A+'">A  '+(PO.mix?kA:'')+money(r.flow)+'</span>'+
+      '<br><span style="color:'+TIP_B+'">B  '+(PO.mix?kB:'')+money(rb.flow)+'</span>';
   });
 }
 function wire(){
