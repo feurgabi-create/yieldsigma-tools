@@ -616,7 +616,7 @@ function pickBox(side){
   var ph=dataState==='ok'?'Ticker or name':(dataState==='error'?'Unavailable':'Loading…');
   var pr=hasPrice(side);
   return '<div class="pick'+(pr?' withPrice':'')+'"><input type="text" id="pick'+side+'" placeholder="'+ph+'" autocomplete="off" spellcheck="false" value="'+esc(S[side].ticker||'')+'"'+(dataState==='ok'?'':' disabled')+'>'+
-    (pr?'<div class="unit pre price"><input type="number" id="price'+side+'" value="'+esc(S[side].price)+'" step="0.5" min="0" title="Price per share"><span>$</span></div>':'')+
+    (pr?'<div class="unit pre price"><input type="text" inputmode="decimal" id="price'+side+'" value="'+esc(S[side].price)+'" title="Stock price per share"><span>$</span></div>':'')+
     '<div class="pickList'+(side==='B'?' right':'')+'" id="pickList'+side+'" hidden></div></div>';
 }
 function srcLine(side){
@@ -847,8 +847,15 @@ function wire(){
   ['A','B'].forEach(function(side){
     var el=document.getElementById('price'+side);if(!el)return;
     function setP(v){if(!(isFinite(v)&&v>0))return false;var r=S[side];r.price=v;r.yield=round2(r.div/v*100);r.edited=true;return true;}
-    el.addEventListener('input',function(){if(setP(parseFloat(el.value)))softRender();});
-    el.addEventListener('change',function(){if(!setP(parseFloat(el.value)))el.value=S[side].price;renderSoon();});
+    /* While typing: only the yield box next to it follows (no redraw, so the field keeps focus and what you typed).
+       The results redraw when you press Enter or leave the box; arrows redraw after a short pause. */
+    var pt=null;
+    var pv=function(){return parseFloat(String(el.value).replace(/[$,\s]/g,''));};
+    el.addEventListener('input',function(){var v=pv();if(!(isFinite(v)&&v>0))return;
+      var r=S[side],y=round2(r.div/v*100),yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb)yb.value=y;
+      clearTimeout(pt);pt=setTimeout(function(){if(document.activeElement!==el){setP(v);render();}},900);});
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'){el.blur();}});
+    el.addEventListener('change',function(){clearTimeout(pt);if(!setP(pv()))el.value=S[side].price;renderSoon();});
   });
   $('#i_compare').addEventListener('change',function(e){S.compare=e.target.checked;render();});
   var fadeEl=document.getElementById('i_fade');if(fadeEl)fadeEl.addEventListener('change',function(e){S.fade=e.target.checked;render();});
