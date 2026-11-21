@@ -732,7 +732,7 @@ function wireHover(svgId,crossId,tipId,A,B,fmt){
 }
 
 /* ---------------- render ---------------- */
-function render(){
+function render(soft){
   clearTimeout(softTimer);   /* a full redraw makes any pending typing redraw unnecessary */
   var sh={start:S.start,monthly:S.monthly,raise:S.raise,years:S.years,infl:S.infl,fade:!!S.fade,revert:!!S.revert,revLock:S.revLock!==false};
   var A=simulate(sh,S.A,S.mode),B=S.compare?simulate(sh,S.B,S.mode):null;
@@ -806,9 +806,17 @@ function render(){
   var focusId=document.activeElement&&(document.activeElement.id||(document.activeElement.dataset&&document.activeElement.dataset.key?document.activeElement.dataset.side+document.activeElement.dataset.key:''));
   /* keep anything half-typed in a Stock box across the redraw */
   var typing=(document.activeElement&&/^pick[AB]$/.test(document.activeElement.id))?{id:document.activeElement.id,v:document.activeElement.value}:null;
-  $('#calc').innerHTML=h;
-  wire();
-  if(focusId){var el=document.getElementById(focusId)||document.querySelector('[data-side="'+focusId.charAt(0)+'"][data-key="'+focusId.slice(1)+'"]');if(el){el.focus();}}
+  /* keep exactly what is being typed in a number box (e.g. "7.0" on the way to "7.09"), not the redrawn "7" */
+  var ae=document.activeElement,raw=(ae&&ae.tagName==='INPUT'&&ae.type!=='checkbox')?String(ae.value):null;
+  /* while typing (soft redraw): only the results are redrawn; the input boxes stay as they are, so the box
+     being typed in keeps its focus, its cursor and exactly what was typed */
+  var oldOut=soft&&document.querySelector('#calc .out'),oldIn=soft&&document.getElementById('inputs');
+  if(oldOut&&oldIn){var tmp=document.createElement('div');tmp.innerHTML=h;var nOut=tmp.querySelector('.out');
+    if(nOut){oldOut.replaceWith(nOut);focusId=null;}else{$('#calc').innerHTML=h;wire();}}
+  else{$('#calc').innerHTML=h;wire();}
+  if(focusId){var el=document.getElementById(focusId)||document.querySelector('[data-side="'+focusId.charAt(0)+'"][data-key="'+focusId.slice(1)+'"]');
+    if(el){if(raw!==null&&el.tagName==='INPUT'&&raw!==el.value&&parseFloat(String(raw).replace(/[$,\s]/g,''))===parseFloat(String(el.value).replace(/[$,\s]/g,'')))el.value=raw;
+      el.focus();try{if(el.type==='text')el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}}
   if(typing){var pi=document.getElementById(typing.id);if(pi&&typing.v!==(pi.value||'')){pi.value=typing.v;try{pi.setSelectionRange(typing.v.length,typing.v.length);}catch(e){}pi.dispatchEvent(new Event('input'));}}
   /* Hover boxes: single scenario unchanged; with a comparison, one line per
      scenario (A green, B gold) and the shared contribution shown once. */
@@ -924,8 +932,7 @@ function renderSoon(){clearTimeout(softTimer);softTimer=setTimeout(render,0);}
 /* While typing, redraw once the keystrokes pause, keeping the cursor where it was. */
 function softRender(){clearTimeout(softTimer);softTimer=setTimeout(function(){
   var el=document.activeElement,pos=null;try{pos=el&&el.selectionStart;}catch(e){}
-  render();
-  try{var now=document.activeElement;if(now&&pos!==null&&now.setSelectionRange)now.setSelectionRange(pos,pos);}catch(e){}
+  render(true);
 },350);}
 window.__calc={getState:function(){return JSON.parse(JSON.stringify(S));},simulate:simulate,
   setPick:function(p){S.pick=Object.assign({},S.pick,p);markOpen();render();},
