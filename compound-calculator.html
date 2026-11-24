@@ -130,6 +130,10 @@ td.bcol{color:var(--gold)}
 /* price sits right after the $ sign; the arrows keep the space on the right */
 .pick.withPrice .price input{width:100%;padding:7px 1px 7px 13px;border:1px solid var(--rule);border-radius:7px;background:var(--field);font:600 11px var(--mono);color:var(--ink);text-align:left}
 .pick.withPrice .price span{left:5px}
+.tgtPx{border:1px dashed var(--rule);border-radius:7px;padding:5px 7px;white-space:nowrap;font-family:var(--mono);line-height:1.25;display:flex;flex-direction:column;align-items:flex-end;margin-right:0}
+.tgtPx b{font-size:13px;color:var(--ink)}
+.tgtPx small{font-size:10px;color:var(--muted)}
+.tgtPx.none{align-items:center;color:var(--muted)}
 /* the stock price box is a text box (so typing works), with its own up/down arrows: 1 cent per click, hold to repeat */
 .pick.withPrice .price input{padding-right:15px}
 .pxStep{position:absolute;right:2px;top:3px;bottom:3px;width:12px;display:flex;flex-direction:column;font-style:normal;opacity:.55}
@@ -608,6 +612,21 @@ function field(label,id,val,unit,post,step){
   return '<div class="f"><label for="'+id+'">'+label+'</label><div class="unit '+(post?'post':'pre')+'">'+
     '<input type="number" id="'+id+'" value="'+esc(val)+'" step="'+(step||'any')+'"'+minAttr(id.replace('i_',''))+'><span>'+unit+'</span></div></div>';
 }
+/* Price at target yield: the dividend amount grown by this side's dividend growth (with the fade, if on)
+   to the year the reversion completes, divided by the target yield; "now" = today's dividend amount at the
+   target yield. Shown only where a dividend amount is known (a picked stock, or your own price). */
+function tgtPx(side){var r=S[side];if(!S.revert||!hasPrice(side)||!(r.ty>0))return null;
+  var ry=Math.max(1,Math.round(isFinite(r.ry)?r.ry:4)),D=r.div;
+  for(var y=2;y<=ry;y++){var g=r.dgr;if(S.fade){var fy=Math.max(1,Math.round(isFinite(r.fy)?r.fy:10)),lr=isFinite(r.lr)?r.lr:6;if(g>lr)g=g-(g-lr)*Math.min(y-1,fy)/fy;}D*=1+g/100;}
+  return {now:r.div/(r.ty/100),end:D/(r.ty/100),ry:ry,price:r.price};}
+function tgtCell(side){var t=tgtPx(side);
+  if(!t)return '<div class="tgtPx none" title="Needs a stock picked, or your own price typed">–</div>';
+  var ch=(t.end/t.price-1)*100;
+  return '<div class="tgtPx" title="Price at the target yield when the reversion completes (year '+t.ry+'), and today">'+
+    '<b>$'+t.end.toFixed(2)+'</b><small>yr '+t.ry+' · '+(ch>=0?'+':'−')+Math.abs(ch).toFixed(0)+'%</small><small>now $'+t.now.toFixed(2)+'</small></div>';}
+function tgtRow(){if(!(hasPrice('A')||(S.compare&&hasPrice('B'))))return '';
+  var lab='<label>Price at target<small class="wm">div grown as set up</small></label>';
+  return S.compare?'<div class="f two sub">'+lab+tgtCell('A')+tgtCell('B')+'</div>':'<div class="f sub">'+lab+tgtCell('A')+'</div>';}
 function rateField(label,key,unit,step,sub,off){
   var tag=(sub&&sub.indexOf('<input')>=0)?'div':'label';
   var lab='<'+tag+(tag==='div'?' class="lab"':'')+'>'+label+(sub?'<small class="wm">'+sub+'</small>':'')+'</'+tag+'>',cls=sub?' sub':'';
@@ -655,7 +674,7 @@ function inputsHtml(){
     h+='<label class="chk"><input type="checkbox" id="i_fade"'+(S.fade?' checked':'')+'> Fade div growth to a long-run rate</label>';
     if(S.fade)h+=rateField('Long-run growth','lr','%/yr',0.25)+rateField('Fade over','fy','yrs',1);
     h+='<label class="chk"><input type="checkbox" id="i_revert"'+(S.revert?' checked':'')+'> Dividend reversion to its 10-yr average (0σ)</label>';
-    if(S.revert)h+=rateField('Target yield','ty','%',0.1,live?'10-yr average':'')+rateField('Reversion over','ry','yrs',1,live?'by volatility':'');
+    if(S.revert)h+=rateField('Target yield','ty','%',0.1,live?'10-yr average':'')+rateField('Reversion over','ry','yrs',1,live?'by volatility':'')+tgtRow();
     h+='<label class="chk"><input type="checkbox" data-side="A" data-key="reinvest"'+(S.A.reinvest?' checked':'')+'> Reinvest dividends'+(S.compare?' (A)':'')+'</label>';
     if(S.compare)h+='<label class="chk"><input type="checkbox" data-side="B" data-key="reinvest"'+(S.B.reinvest?' checked':'')+'> Reinvest dividends (B)</label>';
     h+=srcLine('A')+(S.compare?srcLine('B'):'');
