@@ -485,7 +485,7 @@ function applyPick(side,u){
      Volatility (yield gap/σ ratio) tier: below 21% = 2 yrs, 21–40% = 4, 40%+ = 6. */
   if(u.avg10y!==null)r.ty=round2(u.avg10y);
   if(u.vol!==null)r.ry=u.vol<21?2:(u.vol<40?4:6);
-  r.ticker=u.ticker;r.tname=u.name;r.edited=false;
+  r.ticker=u.ticker;r.tname=u.name;r.edited=false;r.custom=false;
   r.div=(u.div&&u.price)?u.div:null;r.price=r.div?round2(u.price):null;
   render();
 }
@@ -500,10 +500,12 @@ function matches(q){
   return starts.concat(inName).slice(0,8);
 }
 /* Ticker names belong to the dividend tab only; Fixed return always says A and B. */
-function unlink(side){var r=S[side];r.ticker=null;r.tname=null;r.edited=false;r.note='';r.price=null;r.div=null;render();}
+function unlink(side){var r=S[side];r.ticker=null;r.tname=null;r.edited=false;r.note='';r.price=null;r.div=null;r.custom=false;render();}
 /* Price box: shown once a stock with a dividend on file is picked. Price and
    starting yield are tied together: yield = dividend / price. */
-function hasPrice(side){var r=S[side];return !!(r.ticker&&r.div>0&&r.price>0);}
+/* No stock picked: the price box is still there. The first price typed fixes a dividend amount from the starting yield
+   (price x yield); after that price and yield are tied the same way as for a stock. Clearing the box unties them. */
+function hasPrice(side){var r=S[side];return !!((r.ticker||r.custom)&&r.div>0&&r.price>0);}
 function sideLabel(side){return (S.mode==='div'&&S[side].ticker)||side;}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function num(v,d){var x=parseFloat(v);return isFinite(x)?x:d;}
@@ -622,9 +624,9 @@ function compSelect(side){
 }
 function pickBox(side){
   var ph=dataState==='ok'?'Ticker or name':(dataState==='error'?'Unavailable':'Loading…');
-  var pr=hasPrice(side);
-  return '<div class="pick'+(pr?' withPrice':'')+'"><input type="text" id="pick'+side+'" placeholder="'+ph+'" autocomplete="off" spellcheck="false" value="'+esc(S[side].ticker||'')+'"'+(dataState==='ok'?'':' disabled')+'>'+
-    (pr?'<div class="unit pre price"><input type="text" inputmode="decimal" id="price'+side+'" value="'+esc(S[side].price)+'" title="Stock price per share"><span>$</span><i class="pxStep" aria-hidden="true"><b data-step="1" data-side="'+side+'">▴</b><b data-step="-1" data-side="'+side+'">▾</b></i></div>':'')+
+  var pr=hasPrice(side),own=!S[side].ticker,show=pr||own;
+  return '<div class="pick'+(show?' withPrice':'')+'"><input type="text" id="pick'+side+'" placeholder="'+ph+'" autocomplete="off" spellcheck="false" value="'+esc(S[side].ticker||'')+'"'+(dataState==='ok'?'':' disabled')+'>'+
+    (show?'<div class="unit pre price"><input type="text" inputmode="decimal" id="price'+side+'" value="'+(pr?esc(S[side].price):'')+'" placeholder="price" title="'+(own?'Your own price (no stock picked): type it after setting the starting yield':'Stock price per share')+'"><span>$</span><i class="pxStep" aria-hidden="true"><b data-step="1" data-side="'+side+'">▴</b><b data-step="-1" data-side="'+side+'">▾</b></i></div>':'')+
     '<div class="pickList'+(side==='B'?' right':'')+'" id="pickList'+side+'" hidden></div></div>';
 }
 function srcLine(side){
@@ -867,21 +869,21 @@ function wire(){
   });
   ['A','B'].forEach(function(side){
     var el=document.getElementById('price'+side);if(!el)return;
-    function setP(v){if(!(isFinite(v)&&v>0))return false;var r=S[side];r.price=v;r.yield=round2(r.div/v*100);r.edited=true;return true;}
+    function setP(v){if(!(isFinite(v)&&v>0))return false;var r=S[side];if(!r.ticker&&!(r.div>0&&r.custom)){if(!(r.yield>0))return false;r.div=v*r.yield/100;r.custom=true;}r.price=v;r.yield=round2(r.div/v*100);r.edited=true;return true;}
     /* While typing: only the yield box next to it follows (no redraw, so the field keeps focus and what you typed).
        The results redraw when you press Enter or leave the box; arrows redraw after a short pause. */
     var pt=null;
     var pv=function(){return parseFloat(String(el.value).replace(/[$,\s]/g,''));};
     el.addEventListener('input',function(){var v=pv();if(!(isFinite(v)&&v>0))return;
-      var r=S[side],y=round2(r.div/v*100),yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb)yb.value=y;
+      var r=S[side];if(!(r.div>0))return;var y=round2(r.div/v*100),yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb)yb.value=y;
       clearTimeout(pt);pt=setTimeout(function(){if(document.activeElement!==el){setP(v);render();}},900);});
     el.addEventListener('keydown',function(e){if(e.key==='Enter'){el.blur();}});
-    var commit=function(){clearTimeout(pt);var v=pv();if(isFinite(v)&&v>0&&v===S[side].price)return;if(!setP(v))el.value=S[side].price;renderSoon();};
+    var commit=function(){clearTimeout(pt);if(!String(el.value).trim()&&S[side].custom){var c=S[side];c.custom=false;c.price=null;c.div=null;renderSoon();return;}if(!String(el.value).trim()&&!S[side].ticker)return;var v=pv();if(isFinite(v)&&v>0&&v===S[side].price)return;if(!setP(v))el.value=S[side].price;renderSoon();};
     el.addEventListener('change',commit);el.addEventListener('blur',commit);
     /* arrows: 1 cent per click (or up/down arrow key in the box), hold to repeat; the yield box follows at once, the results after a short pause */
     var st=null,rt=null,lt=null;
-    function step(d){var v=pv();if(!(isFinite(v)&&v>0))v=S[side].price||0;v=Math.max(0.01,Math.round((v+d*0.01)*100)/100);
-      el.value=v.toFixed(2);var r=S[side],yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb&&r.div>0)yb.value=round2(r.div/v*100);
+    function step(d){var v=pv();if(!(isFinite(v)&&v>0))v=S[side].price||0;if(!(v>0))return;v=Math.max(0.01,Math.round((v+d*0.01)*100)/100);
+      el.value=v.toFixed(2);var r=S[side],yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb&&r.div>0)yb.value=round2(r.div/v*100);else if(!(r.div>0)&&!(r.yield>0))return;
       clearTimeout(lt);lt=setTimeout(function(){if(setP(v))render();},600);}
     function stop(){clearTimeout(st);clearInterval(rt);st=rt=null;}
     var box=el.parentNode;
