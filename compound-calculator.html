@@ -130,6 +130,12 @@ td.bcol{color:var(--gold)}
 /* price sits right after the $ sign; the arrows keep the space on the right */
 .pick.withPrice .price input{width:100%;padding:7px 1px 7px 13px;border:1px solid var(--rule);border-radius:7px;background:var(--field);font:600 11px var(--mono);color:var(--ink);text-align:left}
 .pick.withPrice .price span{left:5px}
+/* the stock price box is a text box (so typing works), with its own up/down arrows: 1 cent per click, hold to repeat */
+.pick.withPrice .price input{padding-right:15px}
+.pxStep{position:absolute;right:2px;top:3px;bottom:3px;width:12px;display:flex;flex-direction:column;font-style:normal;opacity:.55}
+.price:hover .pxStep,.price:focus-within .pxStep{opacity:1}
+.pxStep b{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;color:var(--muted);cursor:pointer;border-radius:3px;user-select:none}
+.pxStep b:hover{background:var(--rule);color:var(--ink)}
 .pick.withPrice > input{padding-left:5px;padding-right:3px;font-size:11px}
 .foot{margin-top:22px;padding-top:12px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media(max-width:860px){
@@ -618,7 +624,7 @@ function pickBox(side){
   var ph=dataState==='ok'?'Ticker or name':(dataState==='error'?'Unavailable':'Loading…');
   var pr=hasPrice(side);
   return '<div class="pick'+(pr?' withPrice':'')+'"><input type="text" id="pick'+side+'" placeholder="'+ph+'" autocomplete="off" spellcheck="false" value="'+esc(S[side].ticker||'')+'"'+(dataState==='ok'?'':' disabled')+'>'+
-    (pr?'<div class="unit pre price"><input type="text" inputmode="decimal" id="price'+side+'" value="'+esc(S[side].price)+'" title="Stock price per share"><span>$</span></div>':'')+
+    (pr?'<div class="unit pre price"><input type="text" inputmode="decimal" id="price'+side+'" value="'+esc(S[side].price)+'" title="Stock price per share"><span>$</span><i class="pxStep" aria-hidden="true"><b data-step="1" data-side="'+side+'">▴</b><b data-step="-1" data-side="'+side+'">▾</b></i></div>':'')+
     '<div class="pickList'+(side==='B'?' right':'')+'" id="pickList'+side+'" hidden></div></div>';
 }
 function srcLine(side){
@@ -872,6 +878,18 @@ function wire(){
     el.addEventListener('keydown',function(e){if(e.key==='Enter'){el.blur();}});
     var commit=function(){clearTimeout(pt);var v=pv();if(isFinite(v)&&v>0&&v===S[side].price)return;if(!setP(v))el.value=S[side].price;renderSoon();};
     el.addEventListener('change',commit);el.addEventListener('blur',commit);
+    /* arrows: 1 cent per click (or up/down arrow key in the box), hold to repeat; the yield box follows at once, the results after a short pause */
+    var st=null,rt=null,lt=null;
+    function step(d){var v=pv();if(!(isFinite(v)&&v>0))v=S[side].price||0;v=Math.max(0.01,Math.round((v+d*0.01)*100)/100);
+      el.value=v.toFixed(2);var r=S[side],yb=document.querySelector('input[data-side="'+side+'"][data-key="yield"]');if(yb&&r.div>0)yb.value=round2(r.div/v*100);
+      clearTimeout(lt);lt=setTimeout(function(){if(setP(v))render();},600);}
+    function stop(){clearTimeout(st);clearInterval(rt);st=rt=null;}
+    var box=el.parentNode;
+    box.querySelectorAll('[data-step]').forEach(function(b){
+      b.addEventListener('mousedown',function(e){e.preventDefault();var d=+b.getAttribute('data-step');step(d);
+        st=setTimeout(function(){rt=setInterval(function(){step(d);},60);},400);});
+      b.addEventListener('mouseup',stop);b.addEventListener('mouseleave',stop);});
+    el.addEventListener('keydown',function(e){if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();step(e.key==='ArrowUp'?1:-1);}});
   });
   $('#i_compare').addEventListener('change',function(e){S.compare=e.target.checked;render();});
   var fadeEl=document.getElementById('i_fade');if(fadeEl)fadeEl.addEventListener('change',function(e){S.fade=e.target.checked;render();});
