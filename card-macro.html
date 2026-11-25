@@ -796,7 +796,7 @@ function normHtml(U,LT){
   var li=function(arr,f){return arr.length?'<ol>'+arr.map(function(e){return '<li>'+tkLink(e.x)+'<span class="nm">'+nm(e.x)+'</span><span class="val">'+f(e)+'</span></li>';}).join('')+'</ol>':'<p class="none">None at this level.</p>';};
   var mo=function(e){return Math.round(e.med)+' mo<span class="m" style="font-weight:500"> · '+e.n+'×</span>';};
   var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(v===cur?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
-  return '<section class="sec" id="norm"><h3>Normalizing: how fast sigma comes back</h3>'+
+  return '<section class="sec" id="norm"><h3>Normalizing: how fast sigma came back</h3>'+
     '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. Read down the table to see at which level normalizing has been fastest. “Still away” counts moves not back yet; the median counts them too, as trips still running.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span>'+
       '<span class="grp"><span class="lbl">Level for the lists</span>'+LEVELS.map(function(T){return btn('thr',String(T),String(THR),lvl(T,SIDE));}).join('')+'</span></div>'+
