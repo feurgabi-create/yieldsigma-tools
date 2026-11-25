@@ -1038,11 +1038,14 @@ function refreshLiveData(){
       if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
     });
     var newLines=[],newTags=[];
+    var used={};
     ROWS.forEach(function(r){
-      var t=r.rec.ticker;
-      var hit=t&&byTicker[t.trim().toUpperCase()];
-      if(hit){newLines.push(hit.line);newTags.push(hit.tag);}
+      var t=r.rec.ticker,k=t&&t.trim().toUpperCase();
+      var hit=k&&byTicker[k];
+      if(hit){newLines.push(hit.line);newTags.push(hit.tag);used[k]=1;}
     });
+    /* names added to the workbook after this page was built come in too, so the map covers the whole live list */
+    Object.keys(byTicker).forEach(function(k){if(!used[k]){newLines.push(byTicker[k].line);newTags.push(byTicker[k].tag);}});
     if(!newLines.length)throw new Error('no matching tickers in live feed');
     handleRaw(newLines.join('\n'),newTags);
     liveLastUpdated=new Date();
