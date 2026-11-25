@@ -796,7 +796,7 @@ var HM_PROF=null;
 function hmK(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
 var HM_GK=(function(){var m={};HM_GROUPS.forEach(function(g){g[2].split(' ').forEach(function(t){m[hmK(t)]=1;});});return m;})();
 function hmIsCo(x){var k=hmK(x.a.ticker||(x.rec&&x.rec.ticker));return !!(HM_GK[k]||(HM_PROF&&HM_PROF[k]));}
-try{fetch('https://tools.yieldsigma.com/profiles.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).then(function(p){HM_PROF=p||{};if(window.LAST_COMPLETE&&LAST_COMPLETE.length)render(LAST_COMPLETE);}).catch(function(){HM_PROF={};});}catch(e){HM_PROF={};}
+try{fetch('https://tools.yieldsigma.com/profiles.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).then(function(p){HM_PROF=p||{};if(LAST_COMPLETE&&LAST_COMPLETE.length)render(LAST_COMPLETE);}).catch(function(){HM_PROF={};});}catch(e){HM_PROF={};}
 var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
 function hmShade(s,zone){
   if(s===null||!isFinite(s)||zone==='normal')return '';
