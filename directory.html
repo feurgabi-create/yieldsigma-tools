@@ -686,7 +686,7 @@ function render(){
   var rows=visibleRows();
   var freeCount=all.filter(function(r){return r.free;}).length;
   var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.home)+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">\u2122</sup></a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
-    '<div class="sub">'+DATA.stocks.length+' dividend growers · '+DATA.reits.length+' REITs</div></div>'+
+    '<div class="sub">'+(function(){var co=DATA.stocks.filter(function(r){var k=tkKey(r.ticker);return !!(SECTOR_OF[k]||(CS.prof&&CS.prof[k]));}).length;return co+' stocks + '+(DATA.stocks.length-co)+' funds · '+DATA.reits.length+' REITs';})()+'</div></div>'+
     '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
   h+='<div class="controls">'+
     '<div class="tabs" role="tablist">'+

@@ -789,6 +789,14 @@ function HM_SHADE(s,zone){var a=Math.abs(s);return a<1.5?1:(a<2?2:3);}
 /* ---- Live play: shades, sign filter, sector view ---- */
 var HM_VIEW='spread', HM_SIGN='all';
 try{if(new URLSearchParams(location.search).get('view')==='sector')HM_VIEW='sector';}catch(e){}
+/* Stocks vs funds: the statistics cover companies only (a fund holds many of the same stocks, so averaging it in
+   would count them twice). A row is a company when it's in a sector group or has a company profile, the same rule as
+   the macro card; everything else (SPY, sector ETFs, other funds) is a fund, still shown on the map for reference. */
+var HM_PROF=null;
+function hmK(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+var HM_GK=(function(){var m={};HM_GROUPS.forEach(function(g){g[2].split(' ').forEach(function(t){m[hmK(t)]=1;});});return m;})();
+function hmIsCo(x){var k=hmK(x.a.ticker||(x.rec&&x.rec.ticker));return !!(HM_GK[k]||(HM_PROF&&HM_PROF[k]));}
+try{fetch('https://tools.yieldsigma.com/profiles.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).then(function(p){HM_PROF=p||{};if(window.LAST_COMPLETE&&LAST_COMPLETE.length)render(LAST_COMPLETE);}).catch(function(){HM_PROF={};});}catch(e){HM_PROF={};}
 var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
 function hmShade(s,zone){
   if(s===null||!isFinite(s)||zone==='normal')return '';
@@ -944,8 +952,9 @@ function render(complete){
   }
   LAST_COMPLETE=complete;
   var sel=buildSelection(complete);
+  var cos=complete.filter(hmIsCo),nFund=complete.length-cos.length,selCo=buildSelection(cos);
   var shown=hmBandPick(complete).length;
-  var sub=shown+' representative stocks from the dividend-growers universe of '+complete.length+'+.';
+  var sub=shown+' representative names from the dividend-growers universe: '+cos.length+' stocks + '+nFund+' funds.';
   if(window.YS_ACCESS&&YS_ACCESS.ok())sub='Member view \u00b7 '+sub;
   var h='<div class="pageHead"><div><h2>Yield Sigma\u2122 Heat Map — Stocks</h2><div class="sub">'+esc(sub)+'<a class="dirPill subPill" href="https://gabe948456.substack.com/subscribe" target="_blank" rel="noopener">Subscribe</a></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
     '<div class="asof"><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>';
@@ -961,7 +970,8 @@ function render(complete){
   if(HM_VIEW!=='sector')allTiles=hmBandPick(complete).map(function(x){return tileHtml(x,' '+(zone3(x.a.sigma)||'normal'));}).join('');
   if(HM_VIEW==='sector')h+=hmSectorHtml(complete);
   else h+='<div class="tiles">'+(allTiles||'<span style="color:var(--muted);font-size:12.5px">No names in range.</span>')+'</div>';
-  h+=matrixHtml(sel);
+  h+=matrixHtml(selCo);
+  h+='<p class="coNote" style="font-size:11.5px;color:var(--muted);margin:6px 0 0">Stocks only ('+cos.length+'): funds are left out of these averages, since they hold many of the same stocks.</p>';
   h+='<footer class="foot"><span>Model output, not investment advice \u2014 each name\u2019s own dividend safety and payout ratio deserve their own check.</span>'+'<span class="footLinks"><a href="'+esc(LINKS.methodology)+'" target="_blank" rel="noopener">Yield Sigma methodology</a> · <a href="'+esc(LINKS.fieldGuide)+'" target="_blank" rel="noopener">Card field guide</a></span>'+
      '<span>Rendered '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+
      '<span class="pubFootLive"><span class="pubLive" id="pubLiveStamp" hidden></span><button type="button" class="linkbtn" id="pubRefresh" hidden>Refresh</button></span></span></footer>';
