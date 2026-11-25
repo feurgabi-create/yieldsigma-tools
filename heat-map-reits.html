@@ -650,6 +650,7 @@ function buildSelection(items){
 }
 var METRICS=[
   {k:'yield',label:'Yield',type:'pct',get:function(rec,a){return rec.yield;}},
+  {k:'avg10y',label:'10y average yield',type:'pct',get:function(rec,a){return rec.avg10y;}},
   {k:'sigma',label:'Sigma',type:'sigma',get:function(rec,a){return a.sigma;}},
   {k:'ma200diff',label:'200 dma, % diff',type:'pct',get:function(rec,a){return rec.ma200diff;}},
   {k:'pAffo',label:'P/AFFO',type:'num',get:function(rec,a){return rec.pAffo;}},
