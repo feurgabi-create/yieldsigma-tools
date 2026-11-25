@@ -5,6 +5,7 @@
 <!-- Google Analytics (same property as yieldsigma.com); only on a page opened on its own, not inside the Sites embeds, the workspace tiles or the card's overlays, so nothing is counted twice -->
 <script>(function(){try{if(window.top!==window.self)return;}catch(e){return;}var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-1RSYCK579K';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config','G-1RSYCK579K');})();</script>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
@@ -686,7 +687,7 @@ function render(){
   var rows=visibleRows();
   var freeCount=all.filter(function(r){return r.free;}).length;
   var h='<div class="pageHead"><div><h2><a class="fwLink" href="'+esc(LINKS.home)+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">\u2122</sup></a> directory</h2><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
-    '<div class="sub">'+(function(){var co=DATA.stocks.filter(function(r){var k=tkKey(r.ticker);return !!(SECTOR_OF[k]||(CS.prof&&CS.prof[k]));}).length;return co+' stocks + '+(DATA.stocks.length-co)+' funds · '+DATA.reits.length+' REITs';})()+'</div></div>'+
+    '<div class="sub">'+(function(){var co=DATA.stocks.filter(function(r){return !(window.YS_FUNDS&&YS_FUNDS.isFund(r.ticker));}).length;return co+' stocks + '+(DATA.stocks.length-co)+' funds · '+DATA.reits.length+' REITs';})()+'</div></div>'+
     '<div class="asof">As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div>';
   h+='<div class="controls">'+
     '<div class="tabs" role="tablist">'+

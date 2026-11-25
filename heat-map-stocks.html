@@ -5,6 +5,7 @@
 <!-- Google Analytics (same property as yieldsigma.com); only on a page opened on its own, not inside the Sites embeds, the workspace tiles or the card's overlays, so nothing is counted twice -->
 <script>(function(){try{if(window.top!==window.self)return;}catch(e){return;}var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-1RSYCK579K';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config','G-1RSYCK579K');})();</script>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
@@ -790,13 +791,11 @@ function HM_SHADE(s,zone){var a=Math.abs(s);return a<1.5?1:(a<2?2:3);}
 var HM_VIEW='spread', HM_SIGN='all';
 try{if(new URLSearchParams(location.search).get('view')==='sector')HM_VIEW='sector';}catch(e){}
 /* Stocks vs funds: the statistics cover companies only (a fund holds many of the same stocks, so averaging it in
-   would count them twice). A row is a company when it's in a sector group or has a company profile, the same rule as
-   the macro card; everything else (SPY, sector ETFs, other funds) is a fund, still shown on the map for reference. */
-var HM_PROF=null;
+   would count them twice). A row is a fund when its ticker is on the funds list (funds.js, shared with the macro card and the directory);
+   fund tiles stay on the map for reference. */
 function hmK(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
 var HM_GK=(function(){var m={};HM_GROUPS.forEach(function(g){g[2].split(' ').forEach(function(t){m[hmK(t)]=1;});});return m;})();
-function hmIsCo(x){var k=hmK(x.a.ticker||(x.rec&&x.rec.ticker));return !!(HM_GK[k]||(HM_PROF&&HM_PROF[k]));}
-try{fetch('https://tools.yieldsigma.com/profiles.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).then(function(p){HM_PROF=p||{};if(LAST_COMPLETE&&LAST_COMPLETE.length)render(LAST_COMPLETE);}).catch(function(){HM_PROF={};});}catch(e){HM_PROF={};}
+function hmIsCo(x){return !(window.YS_FUNDS&&YS_FUNDS.isFund(x.a.ticker||(x.rec&&x.rec.ticker)));}
 var HM_GMAP=(function(){var m={};HM_GROUPS.forEach(function(g,i){g[2].split(' ').forEach(function(t){m[t.replace('_',' ')]=i;});});return m;})();
 function hmShade(s,zone){
   if(s===null||!isFinite(s)||zone==='normal')return '';
