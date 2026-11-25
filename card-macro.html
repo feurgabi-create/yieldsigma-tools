@@ -480,13 +480,13 @@ function directionValue(raw){
 function div3InBand(rec){var v=rec.divGrowth3y;return v!==null&&v!==undefined&&isFinite(v)&&v>=0&&v<=20;}
 var MORE_METRICS=[
   {k:'volatility',label:'Volatility (yield gap/\u03c3 ratio)',type:'pct',get:function(rec,a){return rec.volatility;}},
-  {k:'direction',label:'Direction (σ trend, short-term)',type:'signed',get:function(rec,a){return directionValue(rec.direction);}},
+  {k:'direction',label:'Direction (σ trend, 30 days)',type:'signed',get:function(rec,a){return directionValue(rec.direction);}},
   {k:'parDiff',label:'Price vs Par (yield-parity price)',type:'pct',get:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.par!==null&&rec.par!==undefined&&rec.par>0)?(rec.price-rec.par)/rec.par*100:null;}},
   {k:'divGrowthYears',label:'Years of dividend growth',type:'yrs',get:function(rec,a){return rec.divGrowthYears;}}
 ];
 /* "Number of names" section: each test returns true/false (null = no data). */
 var COUNT_METRICS=[
-  {k:'risingCount',label:'Rising σ trend',test:function(rec,a){var d=directionValue(rec.direction);return d===null?null:d>0;}},
+  {k:'risingCount',label:'Rising σ trend, 30 days',test:function(rec,a){var d=directionValue(rec.direction);return d===null?null:d>0;}},
   {k:'payoutOver100',label:'Payout ratio above 100%',test:function(rec,a){return (rec.payoutRatio!==null&&rec.payoutRatio!==undefined&&isFinite(rec.payoutRatio))?rec.payoutRatio>100:null;}},
   {k:'slowingCount',label:'Slowing div growth',test:function(rec,a){if(!div3InBand(rec)||rec.divGrowth10y===null||rec.divGrowth10y===undefined||!isFinite(rec.divGrowth10y))return null;return rec.divGrowth3y-rec.divGrowth10y<-1;}},
   {k:'belowDdm',label:'Priced below DDM fair value',test:function(rec,a){return (rec.price!==null&&rec.price!==undefined&&rec.ddm!==null&&rec.ddm!==undefined&&rec.ddm>0)?rec.price<rec.ddm:null;}},

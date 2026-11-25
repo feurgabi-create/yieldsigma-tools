@@ -711,7 +711,7 @@ function render(){
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';
       return {v:(r.sigma>=0?'+':'−')+Math.abs(r.sigma).toFixed(2)+'σ',cls:'sg '+(r.sigma>=0?'up':'dn'),st:'background:color-mix(in srgb,'+c+' '+Math.round(a*22)+'%,transparent)'};}],
-    trend:['σ Trend',function(r){if(r.trend===null)return '–';return {v:(r.trend>=0?'↑ ':'↓ ')+trimZ(Math.abs(r.trend).toFixed(3)),cls:r.trend>=0?'up':'dn'};}],
+    trend:['σ Trend, 30 days',function(r){if(r.trend===null)return '–';return {v:(r.trend>=0?'↑ ':'↓ ')+trimZ(Math.abs(r.trend).toFixed(3)),cls:r.trend>=0?'up':'dn'};}],
     yld:['Dividend yield',function(r){return fmtPct(r.yld);}],
     avg:['10-yr average yield',function(r){return fmtPct(r.avg);}],
     price:['Stock price',function(r){return fmtMoney(r.price);}],
