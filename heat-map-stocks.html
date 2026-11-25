@@ -1034,8 +1034,11 @@ function refreshLiveData(){
     var byTicker={};
     res.lines.forEach(function(line,i){
       var tag=res.tags[i];
-      var t=parseRow(line,schemaForKind(tag)).rec.ticker;
-      if(t)byTicker[t.trim().toUpperCase()]={line:line,tag:tag};
+      var rec=parseRow(line,schemaForKind(tag)).rec,t=rec.ticker;
+      if(!t)return;
+      /* a ticker on two rows (e.g. a duplicate in the workbook): keep the one with a reading */
+      var k=t.trim().toUpperCase(),sg=analyzeRow(rec).sigma,has=sg!==null&&isFinite(sg);
+      if(!byTicker[k]||(has&&!byTicker[k].has))byTicker[k]={line:line,tag:tag,has:has};
     });
     var newLines=[],newTags=[];
     var used={};
