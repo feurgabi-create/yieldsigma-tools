@@ -7,6 +7,7 @@
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/auth.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/sectors.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script>/* inside the Yield Sigma workspace (?ws=1): fill the tile, no side margins */try{if(/[?&]ws=1/.test(location.search))document.documentElement.classList.add("ws")}catch(e){}</script>
@@ -786,7 +787,7 @@ function setStatus(msg,isErr){
    subdomain in a new tab (that card build pulls the full live universe,
    so any ticker shown here resolves). */
 var CARD_URL=LINKS.card;
-var HM_GROUPS=[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
+var HM_GROUPS=(window.YS_SECTORS&&YS_SECTORS.groups)||[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
 function HM_SHADE(s,zone){var a=Math.abs(s);return a<1.5?1:(a<2?2:3);}
 /* ---- Live play: shades, sign filter, sector view ---- */
 var HM_VIEW='spread', HM_SIGN='all';

@@ -7,6 +7,7 @@
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/auth.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/sectors.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/access.js?v=2"></script>
@@ -440,7 +441,7 @@ function fetchLiveRows0(stocksUrl,reitsUrl){
  * matches the current sigma ranking.
  * ------------------------------------------------------------------ */
 /* ---- sectors: the same groups as the heat map and the macro card ---- */
-var HM_GROUPS=[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
+var HM_GROUPS=(window.YS_SECTORS&&YS_SECTORS.groups)||[["Health Care", "XLV", "ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"], ["Technology", "XLK", "ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"], ["Consumer Staples", "XLP", "ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"], ["Consumer Discretionary", "XLY", "BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"], ["Financials", "XLF", "AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"], ["Industrials", "XLI", "BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"], ["Materials", "XLB", "AMCR APD EMN NTR SCL SHW SON WLK"], ["Energy", "XLE", "CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"], ["Utilities", "XLU", "AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"], ["Communication Services", "XLC", "CMCSA VZ WLY"]];var HM_OTHER="Funds and ETFs";
 var SEC_SHORT={'Health Care':'Health Care','Technology':'Technology','Consumer Staples':'Staples','Consumer Discretionary':'Discretionary','Financials':'Financials','Industrials':'Industrials','Materials':'Materials','Energy':'Energy','Utilities':'Utilities','Communication Services':'Communication'};
 var SECTOR_OF={};HM_GROUPS.forEach(function(g){g[2].split(' ').forEach(function(t){SECTOR_OF[t.replace(/[^A-Z0-9]/g,'')]=g[0];});});
 function tkKey(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
@@ -622,6 +623,7 @@ function buildRows(lines,tags){
       div:(rec.divDollar!==null&&isFinite(rec.divDollar))?rec.divDollar:null,
       sigma:a.sigma,
       sector:kind==='stocks'?(SECTOR_OF[tkKey(a.ticker)]||null):null,
+      cat:kind==='stocks'&&window.YS_SECTORS?(YS_SECTORS.funds[tkKey(a.ticker)]||null):null,
       trend:parseDirection(rec.direction),
       yld:rec.yield,avg:rec.avg10y,sd:rec.oneSD,ma:rec.ma200diff,
       g10:rec.divGrowth10y,payout:rec.payoutRatio,
@@ -757,7 +759,7 @@ function render(){
       :'<span class="lock" title="Full card for members">'+LOCK_SVG+'</span>';
     var lk=function(txt){return r.free?'<a class="rowLk" href="'+esc(CARD_URL+encodeURIComponent(r.ticker))+'" target="_blank" rel="noopener">'+txt+'</a>':txt;};
     h+='<tr class="'+(r.free?'free':'')+'">'+(BELLV?'<td class="bellCol">'+bellBtn(r.ticker)+'</td>':'')+'<td class="nm nmCol">'+lk(esc(r.name))+'</td><td class="tk">'+lk(esc(r.ticker))+'<span class="nmSub">'+esc(r.name)+'</span></td>'+
-      (isS?'<td class="sec">'+(r.sector?esc(SEC_SHORT[r.sector]||r.sector):'–')+'</td>':'')+
+      (isS?'<td class="sec">'+(r.sector||r.cat?esc(SEC_SHORT[r.sector||r.cat]||r.sector||r.cat):'–')+'</td>':'')+
       cols.map(function(k){var o=C[k][1](r);if(typeof o==='string')o={v:o};return '<td class="num '+(o.cls||'')+'"'+(o.st?' style="'+o.st+'"':'')+'>'+(o.html!==undefined?o.html:esc(o.v))+'</td>';}).join('')+
       '<td class="cardCol">'+card+(window.YS_WATCH?YS_WATCH.star(r.ticker):'')+bellBtn(r.ticker)+'</td></tr>';
   });

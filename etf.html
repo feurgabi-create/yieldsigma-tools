@@ -7,6 +7,7 @@
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/auth.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/sectors.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tips.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -158,7 +159,7 @@ var HOUSE=[
   {sym:'YBELL',name:'Textbook and Defined bell curves'},
   {sym:'YSCTO',name:'Yield Sigma Sectors'}
 ];
-var HM_GROUPS=[["Health Care","XLV","ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"],["Technology","XLK","ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"],["Consumer Staples","XLP","ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"],["Consumer Discretionary","XLY","BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"],["Financials","XLF","AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"],["Industrials","XLI","BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"],["Materials","XLB","AMCR APD EMN NTR SCL SHW SON WLK"],["Energy","XLE","CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"],["Utilities","XLU","AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"],["Communication Services","XLC","CMCSA VZ WLY"]];
+var HM_GROUPS=(window.YS_SECTORS&&YS_SECTORS.groups)||[["Health Care","XLV","ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"],["Technology","XLK","ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"],["Consumer Staples","XLP","ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"],["Consumer Discretionary","XLY","BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"],["Financials","XLF","AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"],["Industrials","XLI","BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"],["Materials","XLB","AMCR APD EMN NTR SCL SHW SON WLK"],["Energy","XLE","CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"],["Utilities","XLU","AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"],["Communication Services","XLC","CMCSA VZ WLY"]];
 
 /* ---------- small helpers ---------- */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -201,7 +202,7 @@ function addRows(txt,kind){
     U[k]={k:k,t:t,name:(m?m[1]:raw).trim(),kind:isFund?'fund':kind,price:price,div:div,
       yld:div!=null?div/price*100:num(o.yield),avg10y:num(o.avg10y),sigma:num(o.sigma),pe:pe,
       payout:num(o.payoutRatio),g10:num(o.cagr10y),g3:num(o.divGrowth3y),yrs:num(o.divGrowthYears),
-      sector:kind==='reit'?'Real Estate':isFund?'Funds and ETFs':(SECT[k]||'Other')};
+      sector:kind==='reit'?'Real Estate':isFund?((window.YS_SECTORS&&YS_SECTORS.funds[k])||'Funds and ETFs'):(SECT[k]||'Other')};
   });
 }
 function parseHist(txt){
