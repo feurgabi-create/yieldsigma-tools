@@ -95,8 +95,7 @@ a{color:var(--jade)}
 .sec h3 .fold:hover{color:var(--jade)}
 .sec h3{cursor:pointer;user-select:none}.sec h3:hover,.sec h3:hover .fold{color:var(--jade)}
 .sheet.tiles .sec h3{cursor:default}
-/* long descriptions: first sentence shown, the rest behind a dotted 'How to read it' tip (tips.js) */
-.desc .more{margin-left:4px;color:var(--jade)}
+/* long descriptions: the first sentence shows; the rest is its dotted-underline tip (tips.js) */
 .sec.folded>*:not(h3){display:none!important}
 .sec.folded{padding:16px 0 0;margin-top:16px}
 @media (min-width:1100px){
@@ -777,7 +776,7 @@ function breadthHtml(){
   if(!BR||!BR.length)return '';
   var last=BR[BR.length-1];
   return '<section class="sec"><h3>Undervalued and overvalued, month by month</h3>'+
-    '<p class="desc">Share of names in each zone at the end of every month since '+Math.floor(BR[0].m/12)+'. Last completed month, '+mLabel(last.m)+': '+Math.round(last.u)+'% undervalued, '+Math.round(last.o)+'% overvalued.<span class="more" data-tip="'+esc('The peaks show when cheap or rich readings came all at once, across the market, rather than one name at a time.')+'">How to read it</span></p>'+
+    '<p class="desc"><span data-tip="'+esc('The peaks show when cheap or rich readings came all at once, across the market, rather than one name at a time.')+'">Share of names in each zone at the end of every month since '+Math.floor(BR[0].m/12)+'. Last completed month, '+mLabel(last.m)+': '+Math.round(last.u)+'% undervalued, '+Math.round(last.o)+'% overvalued.</span></p>'+
     '<div class="chart" id="brBox"><canvas id="cvBr"></canvas><div class="tip"></div></div>'+
     '<div class="key"><span><i style="background:var(--jade)"></i>Undervalued (+1σ or higher)</span><span><i style="background:var(--rust)"></i>Overvalued (−1σ or lower)</span></div></section>';
 }
@@ -790,7 +789,7 @@ function spreadHtml(U){
   var top=sorted.slice(0,5),bot=sorted.slice(-5).reverse();
   var li=function(arr){return arr.map(function(x){return '<li>'+tkLink(x)+'<span class="nm">'+nm(x)+'</span><span class="val">'+sg(x.a.sigma)+'</span></li>';}).join('');};
   return '<section class="sec"><h3>Where the universe stands today</h3>'+
-    '<p class="desc">Every name’s sigma today, in ½σ steps.<span class="more" data-tip="'+esc('The dashed line is the bell curve the same number of names would make if spread normally around 0σ; bars that rise above it show where the universe is crowded.')+'">How to read it</span></p>'+
+    '<p class="desc"><span data-tip="'+esc('The dashed line is the bell curve the same number of names would make if spread normally around 0σ; bars that rise above it show where the universe is crowded.')+'">Every name’s sigma today, in ½σ steps.</span></p>'+
     '<div class="two"><div><div class="chart short" id="hiBox"><canvas id="cvHi"></canvas><div class="tip"></div></div></div>'+
     '<div class="lead3" style="grid-template-columns:1fr;margin-top:0;gap:16px"><div><h4 class="u">Most undervalued</h4><ol>'+li(top)+'</ol></div><div><h4 class="o">Most overvalued</h4><ol>'+li(bot)+'</ol></div></div></div>'+
     (tot?'<div class="bar shapes" style="margin-top:24px"><h4>How reliably sigma comes back: bell-curve shape of each name’s history</h4><div class="seg">'+seg+'</div><div class="segL">'+leg+'</div></div>':'')+
@@ -809,7 +808,7 @@ function normHtml(U,LT){
   var mo=function(e){return Math.round(e.med)+' mo<span class="m" style="font-weight:500"> · '+e.n+'×</span>';};
   var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(v===cur?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
   return '<section class="sec" id="norm"><h3>Reversion history: how fast sigma reverted to 0σ</h3>'+
-    '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ, its 10-year average yield.<span class="more" data-tip="'+esc('Read down the table to see at which level normalizing has been fastest. “Not yet reverted” counts moves not back yet; the median counts them too, as trips still running.')+'">How to read it</span></p>'+
+    '<p class="desc"><span data-tip="'+esc('Read down the table to see at which level normalizing has been fastest. “Not yet reverted” counts moves not back yet; the median counts them too, as trips still running.')+'">Every time a name’s yield first reached a level, how long until it was back at 0σ, its 10-year average yield.</span></p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span></div>'+
     lead+
     '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet reverted</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
