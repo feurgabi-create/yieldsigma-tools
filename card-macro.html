@@ -182,11 +182,12 @@ table.tb td.spc,table.tb th.spc{text-align:center;padding-top:4px;padding-bottom
 .segL{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);margin-top:6px}
 .segL i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .segL b{color:var(--ink);font-weight:600}
-.pct{display:grid;grid-template-columns:minmax(0,1fr) 120px max-content;gap:6px 12px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.pct{display:grid;grid-template-columns:minmax(0,1fr) 3.2em 120px 6.5em;gap:6px 12px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
 .pct .pb{height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
 .pct .pb span{display:block;height:100%}
-.pct .pv{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
-@media(max-width:600px){.pct{grid-template-columns:minmax(0,1fr) 70px 80px}}
+.pct .pp{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.pct .pv{text-align:right;white-space:nowrap;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:600px){.pct{grid-template-columns:minmax(0,1fr) 3em 70px 6em}}
 .shapes .seg{height:12px}
 
 table.matrix{width:100%;border-collapse:collapse;font-size:13px}
@@ -1073,7 +1074,7 @@ function healthHtml(U){
         ['Negative shareholders’ equity (usually from buybacks)',F.filter(function(f){return f.debtEq==='Negative equity';}).length,F.length,C5]
       ];
       h+='<div style="margin-top:26px"><h4 style="font:500 15px/1.2 var(--serif);margin:0 0 4px">From the annual 10-K filings</h4><p class="desc" style="margin-bottom:6px">'+F.length+' U.S. filers'+(foreign?'; '+foreign+' foreign filers not covered':'')+'.</p>'+
-        rows.filter(function(r){return r[2];}).map(function(r){var p=pctOf(r[1],r[2]);return '<div class="pct"><span>'+r[0]+'</span><span class="pb"><span style="width:'+p+'%;background:'+r[3]+'"></span></span><span class="pv">'+r[1]+' of '+r[2]+' · '+p+'%</span></div>';}).join('')+'</div>';
+        rows.filter(function(r){return r[2];}).map(function(r){var p=pctOf(r[1],r[2]);return '<div class="pct"><span>'+r[0]+'</span><span class="pp">'+p+'%</span><span class="pb"><span style="width:'+p+'%;background:'+r[3]+'"></span></span><span class="pv">'+r[1]+' of '+r[2]+'</span></div>';}).join('')+'</div>';
     }
   }
   return h+'</section>';
