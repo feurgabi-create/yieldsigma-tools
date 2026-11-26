@@ -808,7 +808,7 @@ function normHtml(U,LT){
     '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. Read down the table to see at which level normalizing has been fastest. “Still away” counts moves not back yet; the median counts them too, as trips still running.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span></div>'+
     lead+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet returned</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet reverted</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<p class="pickHint">Names for <b>'+lvl(THR,SIDE)+(SIDE>0?' or higher':' or lower')+'</b> · click a row in the table to change</p>'+
     '<div class="lead3" style="margin-top:8px">'+
       '<div><h4>Fastest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
