@@ -2058,7 +2058,23 @@ function ysFindHtml(){
     '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
 }
 window.ysGo=function(k,t){return ysGo(k,t);};
-function ysGo(k,t){
+/* the address follows the screen: a tool opened over the card shows that tool's own address,
+   so a reload or a copied link opens the same tool; Back (browser or button) returns to the card */
+var YS_OV_PATH={dir:'directory.html',calc:'compound-calculator.html',hmS:'heat-map-stocks.html',hmR:'heat-map-reits.html',macro:'card-macro.html'};
+var ysOvHome=null,ysOvPushed=false,ysOvTop=(function(){try{return window.top===window.self;}catch(e){return false;}})();
+function ysOvAddr(k,t){
+  if(!ysOvTop)return;
+  var p=k==='hist'?'yield-sigma-history.html?t='+encodeURIComponent(t||''):YS_OV_PATH[k];if(!p)return;
+  try{if(!ysOvPushed){ysOvHome=location.href;history.pushState({ysOv:k,t:t||''},'',p);ysOvPushed=true;}
+    else history.replaceState({ysOv:k,t:t||''},'',p);}catch(e){}
+}
+window.addEventListener('popstate',function(e){
+  var st=e.state;
+  if(st&&st.ysOv){ysOvPushed=true;if(!ysOvHome)ysOvHome=null;ysGo(st.ysOv,st.t,true);return;}
+  ysOvPushed=false;if(ysOvEl)ysClosePage('pop');
+});
+function ysGo(k,t,fromPop){
+  if(!fromPop)ysOvAddr(k,t);
   if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
   else if(k==='macro')ysPage(YS_BASE+'card-macro.html?embed=1','Macro · universe stats');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
@@ -2067,7 +2083,7 @@ function ysGo(k,t){
   else if(k==='hmR')ysPage(YS_BASE+'heat-map-reits.html?embed=1','Heat map · REITs');
 }
 function ysPage(url,title){
-  ysClosePage();
+  ysClosePage('switch');
   var ov=document.createElement('div');
   ov.className='ysOv';ov.setAttribute('role','dialog');ov.setAttribute('aria-label',title);
   var c=$('#card');if(c&&c.getAttribute('style'))ov.setAttribute('style',c.getAttribute('style'));
@@ -2075,11 +2091,11 @@ function ysPage(url,title){
   var mm=$('#ysMenu'),mh=mm?mm.innerHTML:'',hs=mm&&mm.querySelector('[data-go="hist"] small'),tk=hs?hs.textContent:'';
   ov.innerHTML='<div class="ysOvBar"><button type="button" class="subpill" id="ysOvBack">← Back to the card</button>'+
     (mh?'<div class="ysToolsWrap"><button type="button" class="ysToolsBtn" id="ysOvTools" aria-haspopup="true" aria-expanded="false">All tools<i aria-hidden="true"></i></button><div class="ysMenu" id="ysOvMenu" role="menu">'+mh+'</div></div>':'')+
-    '<span class="ysOvTitle">'+esc(title)+'</span></div>'+
+    '<span class="ysOvTitle">'+esc(title)+'</span><span class="ysAuthSlot"></span></div>'+
     '<iframe src="'+esc(url)+'" title="'+esc(title)+'"></iframe>';
   document.body.appendChild(ov);ysOvEl=ov;
   document.documentElement.classList.add('ysOvOpen');
-  var b=ov.querySelector('#ysOvBack');b.addEventListener('click',ysClosePage);b.focus();
+  var b=ov.querySelector('#ysOvBack');b.addEventListener('click',function(){ysClosePage();});b.focus();
   var ob=ov.querySelector('#ysOvTools'),om=ov.querySelector('#ysOvMenu');
   if(ob&&om){
     ob.addEventListener('click',function(e){e.stopPropagation();var on=!om.classList.contains('on');om.classList.toggle('on',on);ob.setAttribute('aria-expanded',on?'true':'false');});
@@ -2087,8 +2103,11 @@ function ysPage(url,title){
     ov.addEventListener('click',function(e){if(!(e.target.closest&&e.target.closest('.ysToolsWrap'))){om.classList.remove('on');ob.setAttribute('aria-expanded','false');}});
   }
 }
-function ysClosePage(){
+function ysClosePage(how){
   if(!ysOvEl)return;
+  /* back to the card's own address: Back for the button and Esc; a stock picked in the tool replaces it */
+  if(how!=='switch'&&how!=='pop'&&ysOvPushed){ysOvPushed=false;
+    if(how==='pick'&&ysOvHome){try{history.replaceState(null,'',ysOvHome);}catch(e){}}else{try{history.back();}catch(e){}}}
   ysOvEl.parentNode.removeChild(ysOvEl);ysOvEl=null;
   document.documentElement.classList.remove('ysOvOpen');
 }
@@ -2218,7 +2237,7 @@ window.addEventListener('message',function(e){
   if(!ysOvEl)return;
   var fr=ysOvEl.querySelector('iframe');if(!fr||e.source!==fr.contentWindow)return;
   var d=e.data;if(!d||typeof d.ysPick!=='string')return;
-  ysClosePage();
+  ysClosePage('pick');
   if(ysOpenTicker(d.ysPick,true)){var c=$('#card');if(c&&c.scrollIntoView)c.scrollIntoView({block:'start'});}
 });
 function wirePubFooter(){

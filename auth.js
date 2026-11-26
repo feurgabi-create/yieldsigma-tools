@@ -110,7 +110,7 @@
     '.ysAuthMenu label{display:flex;gap:8px;align-items:flex-start;font-size:12px;cursor:pointer;padding:9px 0;border-top:1px solid var(--rule,#D2DBD1);border-bottom:1px solid var(--rule,#D2DBD1)}'+
     '.ysAuthMenu input{accent-color:var(--jade,#1F7A52);margin-top:2px}'+
     '.ysAuthMenu button.out{margin-top:10px;border:0;background:none;color:var(--jade,#1F7A52);font:600 12px/1 "JetBrains Mono",ui-monospace,monospace;cursor:pointer;padding:0}'+
-    '.ysThemeAnchor>.ysAuth{position:absolute;top:12px;right:52px}';
+    '.ysThemeAnchor>.ysAuth{position:absolute;top:12px;right:52px}.ysAuthSlot{flex:none;display:inline-flex}';
   var styled=false;
   function html(){
     var u=A.user;
@@ -134,7 +134,11 @@
       var wasOpen=openEl===box,h=html();if(box.getAttribute('data-h')===h)return;
       box.setAttribute('data-h',h);box.innerHTML=h;if(wasOpen)menu(true);
     });
-    if(!styled&&th.length){var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);styled=true;}
+    /* pages can also mark a spot for it (the bar of a tool opened over a card) */
+    document.querySelectorAll('.ysAuthSlot').forEach(function(sl){
+      var box=sl.querySelector('.ysAuth');if(!box){box=document.createElement('span');box.className='ysAuth';sl.appendChild(box);}
+      var wasOpen=openEl===box,h=html();if(box.getAttribute('data-h')===h)return;box.setAttribute('data-h',h);box.innerHTML=h;if(wasOpen)menu(true);});
+    if(!styled&&(th.length||document.querySelector('.ysAuthSlot'))){var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);styled=true;}
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.ysAuthBtn');
@@ -146,7 +150,7 @@
   document.addEventListener('change',function(e){if(e.target.classList&&e.target.classList.contains('nl')&&e.target.closest('.ysAuthMenu'))A.setNewsletter(e.target.checked);});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&openEl)menu(false);});
   /* cards draw their bar after the data arrives: keep the button next to every light / dark switch */
-  function watch(){draw();try{new MutationObserver(function(){if(document.querySelector('.ysThemeBtn')&&![].every.call(document.querySelectorAll('.ysThemeBtn'),function(t){return t.previousElementSibling&&t.previousElementSibling.classList.contains('ysAuth');}))draw();}).observe(document.body,{childList:true,subtree:true});}catch(e){}}
+  function watch(){draw();try{new MutationObserver(function(){var need=[].some.call(document.querySelectorAll('.ysThemeBtn'),function(t){return !(t.previousElementSibling&&t.previousElementSibling.classList.contains('ysAuth'));})||[].some.call(document.querySelectorAll('.ysAuthSlot'),function(sl){return !sl.querySelector('.ysAuth');});if(need)draw();}).observe(document.body,{childList:true,subtree:true});}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);else watch();
   /* a change made just before leaving the page still gets saved */
   window.addEventListener('pagehide',function(){if(Object.keys(dirty).length){clearTimeout(timer);push();}});
