@@ -136,6 +136,7 @@ table.dir tr:hover .ysStar,table.dir .ysStar.on,table.dir .ysStar:focus-visible{
 @media (hover:none){table.dir .ysStar{visibility:visible;opacity:.45}table.dir .ysStar.on{opacity:1}}
 table.dir td.cardCol{white-space:nowrap}
 .ysStar:hover{color:var(--gold)}.ysStar.on{color:var(--gold)}
+.wchip.bld{text-decoration:none;color:var(--jade);border-color:var(--jade)}.wchip.bld:hover{background:var(--jade);color:var(--paper)}
 .wchip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted)}
 .wchip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
 .bellCol{width:30px;text-align:center;padding-left:4px!important;padding-right:0!important}th.bellCol{color:var(--muted)}
@@ -653,6 +654,12 @@ function cmp(a,b,key){
   if(xn&&yn)return 0;if(xn)return 1;if(yn)return -1;   // blanks always last
   return x-y;
 }
+/* a filtered list (watchlist, zone, sector, 25+ years, search) can become a Paper ETF in one click */
+function buildBtn(){
+  var filtered=STATE.watch||STATE.zone!=='all'||STATE.sector||STATE.long25||STATE.q.trim();if(!filtered)return '';
+  var rows=visibleRows();if(rows.length<2||rows.length>50)return '';
+  return '<a class="wchip bld" href="https://tools.yieldsigma.com/etf.html?build='+rows.map(function(r){return encodeURIComponent(r.ticker);}).join(',')+'" target="_top" title="Open the Paper ETF builder with these '+rows.length+' names">+ Build an ETF from these '+rows.length+'</a>';
+}
 function visibleRows(){
   var q=STATE.q.trim().toLowerCase();
   var rows=DATA[STATE.kind].filter(function(r){
@@ -710,7 +717,8 @@ function render(){
     (isS?'<select id="secSel" aria-label="Sector"><option value="">All sectors</option>'+secs.map(function(n){return '<option value="'+esc(n)+'"'+(STATE.sector===n?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>':'')+
     '<span class="zchips">'+[['all','All zones',''],['under','Undervalued','u'],['normal','Normal',''],['over','Overvalued','o']].map(function(z){return '<button type="button" data-zone="'+z[0]+'" class="'+z[2]+(STATE.zone===z[0]?' on':'')+'">'+z[1]+'</button>';}).join('')+'</span>'+
     (window.YS_WATCH?'<button type="button" class="wchip'+(STATE.watch?' on':'')+'" data-watch="1" aria-pressed="'+STATE.watch+'">★ My watchlist ('+YS_WATCH.list().length+')'+(bellRinging()?' <span class="bellCt ring" title="Alerts that rang">· '+BELL_SVG+bellRinging()+'</span>':bellSet()?' <span class="bellCt" title="Alerts set">· '+BELL_SVG+bellSet()+'</span>':'')+'</button>'+
-      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button>'+(STATE.pre?'<button type="button" class="preI" id="preI" aria-label="About My presets" aria-expanded="false">i</button>':''):''):'')+'</div>'+
+      (STATE.watch&&YS_WATCH.list().length?'<button type="button" class="wchip'+(STATE.pre?' on':'')+'" data-pre="1" aria-pressed="'+STATE.pre+'">My presets</button>'+(STATE.pre?'<button type="button" class="preI" id="preI" aria-label="About My presets" aria-expanded="false">i</button>':''):''):'')+
+    buildBtn()+'</div>'+
     (STATE.watch&&STATE.pre&&window.YS_WATCH&&YS_WATCH.list().length?'<p class="preNote" id="preNote" hidden>Saved in this browser, and to your account when you\u2019re signed in. Yield on cost = today\u2019s dividend amount \u00f7 your purchase stock price. Total return = stock price change + dividends since purchase (not reinvested).</p>':'');
   var C={
     sigma:['Yield Sigma',function(r){if(r.sigma===null||!isFinite(r.sigma))return '–';var a=Math.min(1,Math.abs(r.sigma)/3),c=r.sigma>=0?'var(--jade)':'var(--rust)';

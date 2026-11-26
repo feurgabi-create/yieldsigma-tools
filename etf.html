@@ -8,6 +8,8 @@
 <script src="https://tools.yieldsigma.com/auth.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/sectors.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/bells.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tips.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -127,6 +129,8 @@ tr.click{cursor:pointer}
 .sug h4{margin:0 0 6px;font-size:12px;font-weight:700}
 .sug ul{margin:0;padding-left:18px;font-size:12.5px}
 .sug li{margin:3px 0}
+.ysStar{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 6px 0 0;vertical-align:-1px}.ysStar:hover,.ysStar.on{color:var(--gold)}
+td.wb{white-space:nowrap;text-align:right}td.wb .ysBell{vertical-align:-3px}
 .back{font-size:12px;text-decoration:none;font-weight:600}
 .empty{padding:26px 10px;text-align:center;color:var(--muted);font:15px/1.6 var(--serif);border:1px dashed var(--rule);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:20px;font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
@@ -475,7 +479,7 @@ function builderView(){
       '<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tot" style="color:var(--'+(okW?'jade':'rust')+')">'+B.list.length+' names'+(B.wt==='cu'?' · total '+tot.toFixed(2)+'%':'')+'</span>'+
       (B.wt==='cu'&&!okW&&tot>0?'<button class="btn sm" data-act="scale">Scale to 100%</button>':'')+'</div>';
   }
-  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="cancel">Cancel</button><button class="btn pri" data-act="create" '+(can?'':'disabled')+'>'+(VIEW.busy?'Creating…':'Create '+(chk.ok?esc(chk.sym):'ETF'))+'</button></div>'+
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="cancel">Cancel</button>'+(ME?'<button class="btn pri" data-act="create" '+(can?'':'disabled')+'>'+(VIEW.busy?'Creating…':'Create '+(chk.ok?esc(chk.sym):'ETF'))+'</button>':'<button class="btn pri" data-act="create">Sign in to create</button>')+'</div>'+
     (B.list.length<2?'<div class="note" style="text-align:right">At least 2 names.</div>':'')+'</div>';
   return h;
 }
@@ -503,11 +507,11 @@ function etfView(){
   h+='<div class="two"><section><h3>Price since start</h3><div class="desc">'+(etf.div==='re'?'Dividends reinvested.':'Price plus dividends paid out.')+' Month-end points and today.</div><div class="chart">'+chartSvg(series(etf),S)+'</div></section>'+
     '<section><h3>Sectors</h3><div class="desc">Share of the ETF’s value today.</div><div class="bars">'+sectorBars(w)+'</div></section></div>';
   var sug=suggest(etf,v);
-  h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'</tr></thead><tbody>'+
+  h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'<th></th></tr></thead><tbody>'+
     Object.keys(w).sort(function(a,b){return w[b]-w[a];}).map(function(k){var s=U[k]||{t:k,name:'(not on the list today)'},p0=v.ev.p[k],pn=pxNow(k,v.ev);
       var fl=sug.trim.indexOf(k)>=0?'<span class="chip r">Trim</span>':sug.drift.some(function(d){return d.k===k;})?'<span class="chip">Drifted</span>':'';
       var url=(s.kind==='reit'?LINKS.cardReit:LINKS.card)+encodeURIComponent(s.t);
-      return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'</tr>';}).join('')+
+      return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'<td class="wb">'+watchBell(s)+'</td></tr>';}).join('')+
     '</tbody></table></div></section>';
   var foot='<p class="note" style="margin-top:26px;padding-top:12px;border-top:1px solid var(--rule)">Paper ETFs are simulated portfolios with hypothetical prices. They are not investment funds and can’t be bought or sold.</p>';
   if(!own){h+='<div class="row" style="justify-content:flex-end"><button class="btn" data-act="share">Copy link</button></div>'+foot;return h;}
@@ -549,6 +553,9 @@ function chartSvg(pts,base){base=base||100;
     '<text x="'+pl+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)">'+fmtDate(pts[0].d)+'</text><text x="'+(W-pr)+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)" text-anchor="end">'+fmtDate(last.d)+'</text></svg>'+
     (pts.length<3?'<div class="note">More points appear at each month-end.</div>':'');
 }
+function watchBell(s){if(!s||!s.t||!window.YS_WATCH)return '';
+  if(window.YS_BELLS)YS_BELLS.check(s.t,{sigma:s.sigma,yld:s.yld,price:s.price});
+  return YS_WATCH.star(s.t)+(window.YS_BELLS?YS_BELLS.btn(s.t):'');}
 function sectorBars(w){
   var s={};Object.keys(w).forEach(function(k){var n=U[k]?U[k].sector:'Other';s[n]=(s[n]||0)+w[k];});
   return Object.keys(s).sort(function(a,b){return s[b]-s[a];}).map(function(n){return '<div class="b"><span>'+esc(n)+'</span><div class="tr"><div class="fi" style="width:'+s[n].toFixed(1)+'%"></div></div><span class="pc">'+s[n].toFixed(1)+'%</span></div>';}).join('');
@@ -600,16 +607,17 @@ function wire(){
     sheet.querySelectorAll('[data-rrm]').forEach(function(b){b.onclick=function(){R.list.splice(+b.getAttribute('data-rrm'),1);render();};});
   }
   sheet.querySelectorAll('[data-act]').forEach(function(b){b.onclick=function(e){e.preventDefault();act(b.getAttribute('data-act'));};});
+  sheet.querySelectorAll('[data-star]').forEach(function(b){b.onclick=function(e){e.preventDefault();YS_WATCH.toggle(b.getAttribute('data-star'));};});
 }
 function scale(list){var t=list.reduce(function(s,x){return s+(+x.w||0);},0);if(!t)return;var acc=0;list.forEach(function(x,i){x.w=i<list.length-1?+((+x.w||0)/t*100).toFixed(2):0;acc+=x.w;});list[list.length-1].w=+(100-acc).toFixed(2);}
-function openBuilder(){VIEW.build={letters:'',name:'',div:'re',wt:'eq',start:100,list:[],house:false,note:''};render();focusAfter('bTk');}
+function openBuilder(keys){VIEW.build={letters:'',name:'',div:'re',wt:'eq',start:100,list:(keys||[]).map(function(k){return {k:k,w:0};}),house:false,note:''};render();focusAfter('bTk');}
 function fail(e,what){oops(e);VIEW.busy=false;render();toast(e&&e.code==='taken'?'That ticker was just taken.':what+' didn’t go through. Please try again.');}
 function act(a){
   var etf=VIEW.mode==='etf'?CUR:null;
   if(a==='new'){if(!ME){VIEW.pendingNew=true;if(window.YS_AUTH)YS_AUTH.signIn();return;}openBuilder();}
   else if(a==='cancel'){VIEW.build=null;render();}
   else if(a==='scale'){scale(VIEW.build.list);render();}
-  else if(a==='create'){var B=VIEW.build,c=symCheck(B.letters,B.house);if(!c.ok||!ME)return;var tw={};
+  else if(a==='create'){if(!ME){if(window.YS_AUTH)YS_AUTH.signIn();return;}var B=VIEW.build,c=symCheck(B.letters,B.house);if(!c.ok)return;var tw={};
     B.list.forEach(function(x){tw[x.k]=B.wt==='eq'?100/B.list.length:+x.w;});VIEW.busy=true;render();
     createEtf({sym:c.sym,start:B.start||100,name:B.name.trim(),div:B.div,wt:B.wt,tw:tw,house:B.house,note:(B.note||'').trim(),rules:B.rules||null}).then(function(){
       VIEW.busy=false;VIEW.build=null;REMOTE[c.sym]='taken';go({mode:'etf',sym:c.sym});toast(c.sym+' created at '+money(B.start||100));},function(e){if(e&&e.code==='taken')REMOTE[c.sym]='taken';fail(e,'Creating the ETF');});}
@@ -632,11 +640,14 @@ function go(v){VIEW.mode=v.mode;VIEW.sym=v.sym||null;VIEW.reb=null;
   var q=v.mode==='etf'?'?e='+encodeURIComponent(v.sym):'';try{history.pushState(null,'',location.pathname+q);}catch(e){}
   if(v.mode==='etf'&&READY)openSym(v.sym);render();window.scrollTo(0,0);}
 window.addEventListener('popstate',route);
-function route(){var e=new URLSearchParams(location.search).get('e');
+function route(){var sp=new URLSearchParams(location.search),e=sp.get('e'),bl=sp.get('build');
+  if(bl&&!e){var ks=[];bl.split(',').forEach(function(t){var k=key(t);if(U[k]&&ks.indexOf(k)<0&&ks.length<50)ks.push(k);});
+    try{history.replaceState(null,'',location.pathname);}catch(x){}VIEW.mode='home';VIEW.sym=null;VIEW.reb=null;openBuilder(ks);return;}
   if(e){VIEW.mode='etf';VIEW.sym=e.toUpperCase();if(READY)openSym(VIEW.sym);}else{VIEW.mode='home';VIEW.sym=null;}
   VIEW.reb=null;render();}
 load().then(connect);
 if(window.YS_THEME)YS_THEME.on(function(){render();});
+if(window.YS_WATCH)YS_WATCH.on(function(){render();});
 </script>
 </body>
 </html>
