@@ -200,7 +200,7 @@ function addRows(txt,kind){
     var div=num(o.divDollar);
     U[k]={k:k,t:t,name:(m?m[1]:raw).trim(),kind:isFund?'fund':kind,price:price,div:div,
       yld:div!=null?div/price*100:num(o.yield),avg10y:num(o.avg10y),sigma:num(o.sigma),pe:pe,
-      payout:num(o.payoutRatio),g10:num(o.cagr10y),
+      payout:num(o.payoutRatio),g10:num(o.cagr10y),g3:num(o.divGrowth3y),yrs:num(o.divGrowthYears),
       sector:kind==='reit'?'Real Estate':isFund?'Funds and ETFs':(SECT[k]||'Other')};
   });
 }
@@ -315,8 +315,30 @@ function suggest(etf,v){
    - Every change resets the holdings to equal weight.
    The 30 days are counted from the first time the condition is seen; a condition that already held at the last
    month-end (history.csv) counts from that month-end. Changes apply when the owner's account has the page open. */
-var RULES={YSGMA:{n:20,minS:1,minY:3,gap:0.2,days:30,note:'Top 20 above +1σ with a dividend yield over 3%; names change after 30 days in or out of the zone'}};
-function inZone(k,ru){var s=U[k];return !!s&&s.kind==='stock'&&s.sigma!=null&&s.sigma>ru.minS&&s.yld!=null&&s.yld>ru.minY;}
+var RULES={
+  YSGMA:{n:20,minS:1,minY:3,gap:0.2,days:30,wt:'eq',note:'Top 20 above +1σ with a dividend yield over 3%; names change after 30 days in or out of the zone'},
+  /* YKING: Dividend Kings (50+ years of growth), top 15 by σ, out below 0σ; weighted by 3-year dividend growth
+     (10-year when the 3-year figure is blank), each between 2% and 10% */
+  YKING:{n:15,minS:0,minY:null,minYrs:50,gap:0.2,days:30,wt:'g3',lo:2,hi:10,note:'Top 15 Dividend Kings by σ, weighted by 3-year dividend growth (2% to 10% each); names change after 30 days in or out of the zone'}
+};
+function ruleWeights(ru,keys){
+  var w={};if(!keys.length)return w;
+  if(ru.wt!=='g3'){keys.forEach(function(k){w[k]=100/keys.length;});return w;}
+  var raw={},lo=Math.min(ru.lo,100/keys.length),hi=Math.max(ru.hi,100/keys.length);
+  keys.forEach(function(k){var s=U[k]||{},g=s.g3!=null?s.g3:s.g10;raw[k]=Math.max(g||0,0.0001);});
+  var tot=0;keys.forEach(function(k){tot+=raw[k];});keys.forEach(function(k){w[k]=raw[k]/tot*100;});
+  for(var i=0;i<60;i++){var lock={},fix=0,fr=0,ch=false;
+    keys.forEach(function(k){if(w[k]>=hi-1e-9){w[k]=hi;lock[k]=1;}else if(w[k]<=lo+1e-9){w[k]=lo;lock[k]=1;}});
+    keys.forEach(function(k){if(lock[k])fix+=w[k];else fr+=raw[k];});
+    keys.forEach(function(k){if(!lock[k]){var v=fr?raw[k]/fr*(100-fix):0;if(Math.abs(v-w[k])>1e-9)ch=true;w[k]=v;}});
+    if(!ch)break;}
+  /* everything pinned at a bound and the total is off 100: spread the rest over the names that still have room */
+  for(var j=0;j<20;j++){var sum=0;keys.forEach(function(k){sum+=w[k];});var diff=100-sum;if(Math.abs(diff)<1e-6)break;
+    var room=keys.filter(function(k){return diff>0?w[k]<hi-1e-9:w[k]>lo+1e-9;});if(!room.length)break;
+    var each=diff/room.length;room.forEach(function(k){w[k]=Math.min(hi,Math.max(lo,w[k]+each));});}
+  return w;
+}
+function inZone(k,ru){var s=U[k];return !!s&&s.kind==='stock'&&s.sigma!=null&&s.sigma>ru.minS&&(ru.minY==null||(s.yld!=null&&s.yld>ru.minY))&&(!ru.minYrs||(s.yrs!=null&&s.yrs>=ru.minYrs));}
 function ruleTop(ru){return Object.keys(U).filter(function(k){return inZone(k,ru);}).sort(function(a,b){return U[b].sigma-U[a].sigma;}).slice(0,ru.n);}
 function lastME(){var d=new Date(),m=d.getFullYear()*12+d.getMonth()-1;return {m:m,iso:isoOf(Date.UTC(Math.floor(m/12),m%12+1,0)/864e5)};}
 function zME(k,m){var h=H[k];if(!h||!h.z)return null;var v=h.z[m-h.st];return v==null||!isFinite(v)?null:v;}
@@ -347,7 +369,7 @@ function runRules(etf){
     }
     var save=wref.set({out:nout,better:nb,inz:nin,checked:t});
     if(!why.length)return save;
-    var tw={};keep.forEach(function(k){tw[k]=100/keep.length;});
+    var tw=ruleWeights(ru,keep);
     return save.then(function(){return rebalanceEtf(etf,tw,why.join('; '));}).then(function(){toast(etf.sym+': '+why.length+' change'+(why.length>1?'s':'')+' applied');});
   }).catch(function(e){ruleRan[etf.sym]=0;oops(e);});
 }
@@ -459,7 +481,7 @@ function etfView(){
   if(etf===undefined||!READY)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">Loading…</div>';
   if(!etf)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">No ETF with that ticker.</div>';
   var own=!!ME&&etf.owner===ME.uid,v=now(etf),w=weightsNow(etf,v),price=v.nav,tr=total(etf,v);
-  var meta='Created '+fmtDate(etf.created)+' at $100 · '+(etf.house?'Equal weight':etf.wt==='eq'?'Equal weight':'Custom weights')+' · Dividends '+(etf.div==='re'?'reinvested':'paid out');
+  var meta='Created '+fmtDate(etf.created)+' at $100 · '+(etf.wt==='eq'?'Equal weight':etf.house?'Growth weighted':'Custom weights')+' · Dividends '+(etf.div==='re'?'reinvested':'paid out');
   if(etf.house)meta+=(etf.note?' · '+esc(etf.note):'')+(etf.n?' · '+turnLine(etf):'');
   else if(etf.n)meta+=' · Rebalanced '+etf.n+'×';
   var h='<a href="#" class="back" data-act="home">← All ETFs</a>';
@@ -501,7 +523,7 @@ function etfView(){
 function rebView(etf,v,w){
   var R=VIEW.reb,tot=R.list.reduce(function(s,x){return s+(+x.w||0);},0),ok=R.list.length>=2&&Math.abs(tot-100)<0.05&&!VIEW.busy;
   var h='<div class="builder"><h3 style="margin-bottom:10px">'+(R.suggested?'Suggested rebalance':'Rebalance')+'</h3>'+
-    (R.suggested?'<div class="desc">Trim candidates removed; the rest set back to '+(etf.wt==='eq'||etf.house?'equal weight':'their targets, scaled to 100%')+'. Edit anything before you confirm.</div>':'')+
+    (R.suggested?'<div class="desc">Trim candidates removed; the rest set back to '+(etf.wt==='eq'?'equal weight':'their targets, scaled to 100%')+'. Edit anything before you confirm.</div>':'')+
     '<div class="srch"><input class="txt" id="rSrch" autocomplete="off" placeholder="Add a name: type a ticker or company"><div class="sugg" id="rSugg"></div></div>'+
     '<div class="tw" style="margin-top:10px"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>Weight now</th><th>New weight</th><th></th></tr></thead><tbody>'+
     R.list.map(function(x,i){var s=U[x.k];return '<tr><td><b>'+esc(s?s.t:x.k)+'</b></td><td class="l">'+esc(s?s.name:'')+'</td><td>'+pct(w[x.k]||0,1)+'</td><td><input class="wIn" data-ri="'+i+'" type="number" min="0" max="100" step="0.5" value="'+(+(+x.w).toFixed(2))+'">%</td><td><button class="x" data-rrm="'+i+'" aria-label="Remove">×</button></td></tr>';}).join('')+
@@ -552,8 +574,9 @@ function wire(){
   sheet.querySelectorAll('[data-info]').forEach(function(b){b.onclick=function(e){e.stopPropagation();var p=document.getElementById('ip_'+b.getAttribute('data-info'));if(p)p.classList.toggle('on');};});
   sheet.querySelectorAll('[data-open]').forEach(function(r){r.onclick=function(){go({mode:'etf',sym:r.getAttribute('data-open')});};});
   sheet.querySelectorAll('[data-launch]').forEach(function(b){b.onclick=function(){var s=b.getAttribute('data-launch'),hh=HOUSE.filter(function(x){return x.sym===s;})[0];
-    var ru=RULES[s]||null,list=ru?ruleTop(ru).map(function(k){return {k:k,w:0};}):[];
-    VIEW.build={letters:s.slice(1),name:hh.name,div:'re',wt:'eq',list:list,house:true,note:ru?ru.note:'',rules:ru};REMOTE[s]=undefined;render();};});
+    var ru=RULES[s]||null,top=ru?ruleTop(ru):[],rw=ru?ruleWeights(ru,top):{},list=top.map(function(k){return {k:k,w:+rw[k].toFixed(2)};});
+    if(ru&&ru.wt!=='eq')scale(list);
+    VIEW.build={letters:s.slice(1),name:hh.name,div:'re',wt:ru&&ru.wt!=='eq'?'cu':'eq',list:list,house:true,note:ru?ru.note:'',rules:ru};REMOTE[s]=undefined;render();};});
   var B=VIEW.build;
   if(B){
     var tk=document.getElementById('bTk');
@@ -584,7 +607,7 @@ function act(a){
   else if(a==='scale'){scale(VIEW.build.list);render();}
   else if(a==='create'){var B=VIEW.build,c=symCheck(B.letters,B.house);if(!c.ok||!ME)return;var tw={};
     B.list.forEach(function(x){tw[x.k]=B.wt==='eq'?100/B.list.length:+x.w;});VIEW.busy=true;render();
-    createEtf({sym:c.sym,name:B.name.trim(),div:B.div,wt:B.house?'eq':B.wt,tw:tw,house:B.house,note:(B.note||'').trim(),rules:B.rules||null}).then(function(){
+    createEtf({sym:c.sym,name:B.name.trim(),div:B.div,wt:B.wt,tw:tw,house:B.house,note:(B.note||'').trim(),rules:B.rules||null}).then(function(){
       VIEW.busy=false;VIEW.build=null;REMOTE[c.sym]='taken';go({mode:'etf',sym:c.sym});toast(c.sym+' created at $100');},function(e){if(e&&e.code==='taken')REMOTE[c.sym]='taken';fail(e,'Creating the ETF');});}
   else if(a==='home'){go({mode:'home'});}
   else if(a==='share'){var link='https://tools.yieldsigma.com/etf.html?e='+encodeURIComponent(etf.sym);
@@ -592,7 +615,7 @@ function act(a){
   else if(a==='delete'){if(confirm('Delete '+etf.sym+'? This can’t be undone, and the ticker becomes free for anyone.')){deleteEtf(etf).then(function(){go({mode:'home'});toast(etf.sym+' deleted');},function(e){fail(e,'Deleting');});}}
   else if(a==='rebal'||a==='suggest'){var v=now(etf),w=weightsNow(etf,v),list;
     if(a==='suggest'){var s=suggest(etf,v),keep=Object.keys(w).filter(function(k){return s.trim.indexOf(k)<0;});
-      list=keep.map(function(k){return {k:k,w:etf.wt==='eq'||etf.house?100/keep.length:(v.ev.tw[k]||0)};});}
+      list=keep.map(function(k){return {k:k,w:etf.wt==='eq'?100/keep.length:(v.ev.tw[k]||0)};});}
     else list=Object.keys(w).map(function(k){return {k:k,w:+w[k].toFixed(2)};});
     scale(list);VIEW.reb={list:list,suggested:a==='suggest'};render();}
   else if(a==='rcancel'){VIEW.reb=null;render();}
