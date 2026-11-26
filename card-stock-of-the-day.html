@@ -2037,6 +2037,7 @@ function ysNavHtml(a){
       '<button type="button" role="menuitem" data-go="hmR">Heat map<small>REITs</small></button>'+
       '<button type="button" role="menuitem" data-go="macro">Macro<small>Universe stats</small></button>'+
       '<button type="button" role="menuitem" data-go="dir">Directory<small>All names</small></button>'+
+      '<button type="button" role="menuitem" data-go="etf">Paper ETFs<small>Build your own</small></button>'+
       (window.parent===window?'<a role="menuitem" href="https://tools.yieldsigma.com/workspace.html?t='+t+'" target="_blank" rel="noopener">Workspace<small>All tools, one screen \u2197</small></a>':'')+
       '<div class="ysMenuSep"></div>'+
       '<button type="button" class="soon" disabled>Commentary<small>Soon</small></button>'+
@@ -2060,7 +2061,7 @@ function ysFindHtml(){
 window.ysGo=function(k,t){return ysGo(k,t);};
 /* the address follows the screen: a tool opened over the card shows that tool's own address,
    so a reload or a copied link opens the same tool; Back (browser or button) returns to the card */
-var YS_OV_PATH={dir:'directory.html',calc:'compound-calculator.html',hmS:'heat-map-stocks.html',hmR:'heat-map-reits.html',macro:'card-macro.html'};
+var YS_OV_PATH={dir:'directory.html',etf:'etf.html',calc:'compound-calculator.html',hmS:'heat-map-stocks.html',hmR:'heat-map-reits.html',macro:'card-macro.html'};
 var ysOvHome=null,ysOvPushed=false,ysOvTop=(function(){try{return window.top===window.self;}catch(e){return false;}})();
 function ysOvAddr(k,t){
   if(!ysOvTop)return;
@@ -2077,6 +2078,7 @@ function ysGo(k,t,fromPop){
   if(!fromPop)ysOvAddr(k,t);
   if(k==='dir')ysPage(YS_BASE+'directory.html?embed=1','Directory');
   else if(k==='macro')ysPage(YS_BASE+'card-macro.html?embed=1','Macro · universe stats');
+  else if(k==='etf')ysPage(YS_BASE+'etf.html?embed=1','Paper ETFs');
   else if(k==='hist')ysPage(YS_BASE+'yield-sigma-history.html?embed=1&t='+encodeURIComponent(t),'Full history · '+t);
   else if(k==='calc')ysPage(YS_BASE+'compound-calculator.html?embed=1','Compound calculator');
   else if(k==='hmS')ysPage(YS_BASE+'heat-map-stocks.html?embed=1','Heat map · Stocks');

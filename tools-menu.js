@@ -16,6 +16,7 @@
     ['heat-map-reits.html','Heat map','REITs'],
     ['card-macro.html','Macro','Universe stats'],
     ['directory.html','Directory','All names'],
+    ['etf.html','Paper ETFs','Build your own'],
     ['workspace.html'+(t?'?t='+encodeURIComponent(t):''),'Workspace','All tools, one screen']
   ];
   var css='.ysTM{position:relative;display:inline-block;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}'+
