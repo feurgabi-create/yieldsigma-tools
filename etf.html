@@ -444,9 +444,9 @@ function homeView(){
     (VIEW.build?'':'<button class="btn pri" data-act="new">+ Create an ETF</button>')+'</div>';
   if(VIEW.build)h+=builderView();
   if(!READY&&!OFF)h+='<div class="empty">Loading…</div>';
-  else if(!ME&&!VIEW.build)h+='<div class="empty">Sign in to create your own ETF: pick a Y ticker, choose your names, and it starts at $100 today.</div>';
+  else if(!ME&&!VIEW.build)h+='<div class="empty">Sign in to create your own ETF, free: pick a Y ticker and your names, and your ETF’s price starts at $100 today.</div>';
   else if(mine.length)h+='<div class="tw"><table>'+THEAD+'<tbody>'+mine.map(rowFor).join('')+'</tbody></table></div>';
-  else if(!VIEW.build)h+='<div class="empty">No ETFs yet. Create one: pick a Y ticker, choose your names, and it starts at $100 today.</div>';
+  else if(!VIEW.build)h+='<div class="empty">No ETFs yet. It’s free: pick a Y ticker and your names, and your ETF’s price starts at $100 today.</div>';
   h+='</section>';
   return h;
 }
@@ -472,7 +472,7 @@ function builderView(){
       '<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tot" style="color:var(--'+(okW?'jade':'rust')+')">'+B.list.length+' names'+(B.wt==='cu'?' · total '+tot.toFixed(2)+'%':'')+'</span>'+
       (B.wt==='cu'&&!okW&&tot>0?'<button class="btn sm" data-act="scale">Scale to 100%</button>':'')+'</div>';
   }
-  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="cancel">Cancel</button><button class="btn pri" data-act="create" '+(can?'':'disabled')+'>'+(VIEW.busy?'Creating…':'Create '+(chk.ok?esc(chk.sym):'ETF')+' at $100')+'</button></div>'+
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="cancel">Cancel</button><button class="btn pri" data-act="create" '+(can?'':'disabled')+'>'+(VIEW.busy?'Creating…':'Create '+(chk.ok?esc(chk.sym):'ETF'))+'</button></div>'+
     (B.list.length<2?'<div class="note" style="text-align:right">At least 2 names.</div>':'')+'</div>';
   return h;
 }
