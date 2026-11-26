@@ -10,7 +10,7 @@
 <script src="https://tools.yieldsigma.com/tips.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Yield Sigma ETFs</title>
+<title>Yield Sigma Paper ETFs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -345,9 +345,10 @@ function checkRemote(s){if(REMOTE[s]||!DB)return;REMOTE[s]='checking';
 var VIEW={mode:'home',sym:null,build:null,reb:null,pendingNew:false,busy:false};
 var sheet=document.getElementById('sheet');
 function head(){
-  return '<div class="pageHead"><div><h2><a href="'+LINKS.home+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">™</sup></a> ETFs</h2>'+
+  return '<div class="pageHead"><div><h2><a href="'+LINKS.home+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">™</sup></a> Paper ETFs</h2>'+
     '<div class="labsBy">from <a href="'+LINKS.labs+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof">'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</div></div>';
+    '<div class="asof">'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</div></div>'+
+    '<div class="desc" style="margin-top:-12px;margin-bottom:22px">Simulated portfolios built from the Yield Sigma list. Not real funds; nothing is bought or sold.</div>';
 }
 function render(){
   var h=head();
@@ -364,7 +365,7 @@ var THEAD='<thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Price','E
 function homeView(){
   var h='';
   h+='<section><h3>House ETFs'+infoI('house')+'</h3>'+infoPop('house','Built and run by Stardust Capital Labs from the Yield Sigma list. Equal weight, rebalanced at our discretion; each page shows how often and the turnover.')+
-    '<div class="desc">Model ETFs from Stardust Capital Labs.</div><div class="house">'+
+    '<div class="desc">Paper ETFs run by Stardust Capital Labs.</div><div class="house">'+
     HOUSE.map(function(x){var e=HOUSED[x.sym];
       if(e){var v=now(e),p=total(e,v);return '<div class="hCard click" data-open="'+x.sym+'" style="cursor:pointer">'+sym(x.sym)+'<div class="nm">'+esc(e.name||x.name)+'</div><div style="font-weight:700">'+money(v.nav)+' <span style="font-size:12px">'+chg(p-100)+'</span></div></div>';}
       return '<div class="hCard">'+sym(x.sym)+'<div class="nm">'+esc(x.name)+'</div>'+(isAdmin()?'<button class="btn sm pri" data-launch="'+x.sym+'">Launch</button>':'<span class="chip">Launching soon</span>')+'</div>';}).join('')+'</div></section>';
@@ -437,7 +438,8 @@ function etfView(){
       var url=(s.kind==='reit'?LINKS.cardReit:LINKS.card)+encodeURIComponent(s.t);
       return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'</tr>';}).join('')+
     '</tbody></table></div></section>';
-  if(!own){h+='<div class="row" style="justify-content:flex-end"><button class="btn" data-act="share">Copy link</button></div>';return h;}
+  var foot='<p class="note" style="margin-top:26px;padding-top:12px;border-top:1px solid var(--rule)">Paper ETFs are simulated portfolios with hypothetical prices. They are not investment funds and can’t be bought or sold.</p>';
+  if(!own){h+='<div class="row" style="justify-content:flex-end"><button class="btn" data-act="share">Copy link</button></div>'+foot;return h;}
   h+='<section><h3>Suggestions'+infoI('sug')+'</h3>'+infoPop('sug','From the Yield Sigma rules. Trim: a holding below −1σ (REITs below 0σ). Add: names on the list above +1σ (REITs above +1.5σ) that the ETF doesn’t hold. Drifted: a holding whose weight is 2 points or a quarter of its target away from the target. Nothing changes until you rebalance.')+
     '<div class="desc">Based on today’s readings; nothing changes until you rebalance.</div>';
   h+='<div class="sug"><h4>Trim candidates</h4>'+(sug.trim.length?'<ul>'+sug.trim.map(function(k){return '<li><b>'+esc(U[k].t)+'</b> at '+sg(U[k].sigma)+'</li>';}).join('')+'</ul>':'<div class="note">None.</div>')+'</div>';
@@ -447,7 +449,7 @@ function etfView(){
   h+='<div class="row" style="justify-content:space-between;margin-top:14px"><div class="row"><button class="btn" data-act="share">Copy link</button><button class="btn warn" data-act="delete">Delete</button></div>'+
     '<div class="row"><button class="btn" data-act="rebal">Rebalance…</button><button class="btn pri" data-act="suggest">Suggest rebalance</button></div></div>';
   if(VIEW.reb)h+=rebView(etf,v,w);
-  h+='</section>';
+  h+='</section>'+foot;
   return h;
 }
 function rebView(etf,v,w){
