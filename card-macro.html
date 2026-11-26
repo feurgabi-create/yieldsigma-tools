@@ -1143,7 +1143,7 @@ function render(){
   if(tiles&&bigK){var nb=sheet.querySelector('section.sec[data-k="'+bigK+'"]');if(nb)toggleBig(nb);}
   /* uppercase headers would turn sigma into a capital sigma (the sum sign): keep it lowercase */
   /* lowercase sigma in the uppercase headers: wrap only the text, never attributes (the header tips carry sigma too) */
-  sheet.querySelectorAll('thead th').forEach(function(th){
+  sheet.querySelectorAll('thead th, h3, h4, .lbl').forEach(function(th){
     var w=document.createTreeWalker(th,NodeFilter.SHOW_TEXT),ns=[],n;while((n=w.nextNode()))if(n.nodeValue.indexOf('\u03c3')>=0)ns.push(n);
     ns.forEach(function(t){var parts=t.nodeValue.split('\u03c3'),fr=document.createDocumentFragment();
       parts.forEach(function(p,i){if(i){var sp=document.createElement('span');sp.style.textTransform='none';sp.textContent='\u03c3';fr.appendChild(sp);}if(p)fr.appendChild(document.createTextNode(p));});
