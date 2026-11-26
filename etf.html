@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Google Analytics (same property as yieldsigma.com); only on a page opened on its own -->
+<script>(function(){try{if(window.top!==window.self)return;}catch(e){return;}var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-1RSYCK579K';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config','G-1RSYCK579K');})();</script>
+<script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/auth.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/funds.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/tips.js?v=1"></script>
+<script src="https://tools.yieldsigma.com/tools-menu.js?v=1"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yield Sigma ETFs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --shell:#E4E9E4; --panel:#EEF2ED; --field:#FFFFFF; --ink:#132419; --muted:#5E6F63; --rule:#D2DBD1;
+  --jade:#1F7A52; --jade-soft:#E4F1E9; --rust:#B54A2C; --rust-soft:#F6E8E2; --gold:#A5791F; --gold-soft:#F3ECD9;
+  --paper:#FFFFFF;
+  --serif:'Newsreader',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+:root[data-theme="dark"]{
+  --shell:#1C1F22; --panel:#25292D; --field:#2C3136; --ink:#DDE1E4; --muted:#9AA2A8; --rule:#363C42;
+  --jade:#62BE95; --jade-soft:#29362F; --rust:#DA8A6E; --rust-soft:#3A2C27; --gold:#D1B06C; --gold-soft:#38332A;
+  --paper:#25292D;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--shell);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+a{color:var(--jade)}
+.stage{padding:32px;min-width:0}
+.sheet{width:100%;max-width:1100px;margin:0 auto;background:var(--paper);padding:40px 40px 28px;
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -18px rgba(10,25,20,.28)}
+.ysThemeAnchor{position:relative;height:0;margin:0 auto;max-width:1100px;z-index:5}
+.ysThemeAnchor .ysThemeBtn{position:absolute;top:12px;right:12px}
+.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;border:1px solid var(--rule);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysThemeBtn .sun{display:none}.ysThemeBtn[aria-pressed="true"] .sun{display:block}.ysThemeBtn[aria-pressed="true"] .moon{display:none}
+.infoI{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid currentColor;border-radius:50%;background:none;color:var(--muted);font:italic 600 10px/1 Georgia,serif;cursor:pointer;padding:0;vertical-align:2px;margin-left:6px}
+.infoI:hover{color:var(--jade)}
+.infoPop{display:none;font-size:12px;line-height:1.6;color:var(--ink);background:var(--jade-soft);border:1px solid color-mix(in srgb,var(--jade) 35%,transparent);border-radius:8px;padding:9px 12px;margin:6px 0 12px;max-width:80ch;font-weight:400;text-transform:none;letter-spacing:0}
+.infoPop.on{display:block}
+table tbody tr:hover>td{box-shadow:inset 0 0 0 999px rgba(98,190,149,.11)}
+
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 20px;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:22px}
+.pageHead h2{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);letter-spacing:-.01em;margin:0}
+.pageHead h2 a{color:inherit;text-decoration:none}
+.labsBy{font-size:12px;color:var(--muted);margin-top:3px}
+.labsBy a{text-decoration:none;font-weight:600}
+.asof{font-size:11.5px;color:var(--muted);text-align:right}
+.desc{font-size:12.5px;color:var(--muted);margin:2px 0 14px}
+section{margin:0 0 30px}
+h3{font:600 12px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px;color:var(--ink)}
+.ySym{font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.ySym .yY{color:var(--jade)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--field);border-radius:20px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+.btn:hover{border-color:var(--jade);color:var(--jade)}
+.btn.pri{background:var(--jade);border-color:var(--jade);color:#fff}
+.btn.pri:hover{filter:brightness(1.08);color:#fff}
+:root[data-theme="dark"] .btn.pri{color:#16201b}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sm{padding:3px 10px;font-size:11.5px}
+.btn.warn:hover{border-color:var(--rust);color:var(--rust)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font:600 11px/1.2 var(--mono);color:var(--muted);text-align:center;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap;letter-spacing:.03em}
+td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:center;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tr.click{cursor:pointer}
+.pos{color:var(--jade)}.neg{color:var(--rust)}.mut{color:var(--muted)}
+/* house ETFs */
+.house{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.hCard{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.hCard .ySym{font-size:17px}
+.hCard .nm{font-size:12px;color:var(--muted);margin:3px 0 8px;min-height:2.6em}
+.chip{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:var(--gold-soft);color:var(--gold)}
+.chip.j{background:var(--jade-soft);color:var(--jade)}
+.chip.r{background:var(--rust-soft);color:var(--rust)}
+/* builder */
+.builder{border:1px solid var(--rule);border-radius:12px;padding:18px 20px;background:var(--panel);margin-top:12px}
+.bGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 24px}
+.fld label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}
+.tkBox{display:inline-flex;align-items:center;border:1px solid var(--rule);border-radius:8px;background:var(--field);padding:0 10px;height:40px}
+.tkBox .yY{font-weight:700;font-size:18px;color:var(--jade)}
+.tkBox input{border:0;background:transparent;width:5.2ch;font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase;outline:0;padding:0 0 0 1px}
+.txt{border:1px solid var(--rule);border-radius:8px;background:var(--field);padding:0 10px;height:40px;width:100%}
+.msg{font-size:11.5px;margin-top:5px;min-height:1.3em}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:20px;overflow:hidden;background:var(--field)}
+.seg button{border:0;background:none;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--jade);color:#fff}
+:root[data-theme="dark"] .seg button.on{color:#16201b}
+.note{font-size:11.5px;color:var(--muted);margin-top:5px}
+.srch{position:relative}
+.sugg{position:absolute;left:0;right:0;top:42px;z-index:20;background:var(--paper);border:1px solid var(--rule);border-radius:8px;box-shadow:0 10px 30px -10px rgba(0,0,0,.3);max-height:300px;overflow:auto;display:none}
+.sugg.on{display:block}
+.sugg div{padding:7px 12px;font-size:12.5px;cursor:pointer;display:flex;gap:10px;justify-content:space-between}
+.sugg div:hover,.sugg div.hi{background:var(--jade-soft)}
+.wIn{width:5.5em;border:1px solid var(--rule);border-radius:6px;background:var(--field);padding:3px 6px;text-align:right}
+.tot{font-size:12px;font-weight:600}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 4px}
+.x:hover{color:var(--rust)}
+/* ETF view */
+.eHead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px 24px;margin-bottom:16px}
+.eHead .ySym{font-size:34px;line-height:1}
+.eHead .nm{font:500 18px/1.2 var(--serif);margin-top:6px}
+.eHead .meta{font-size:11.5px;color:var(--muted);margin-top:6px}
+.px{text-align:right}
+.px .p{font-size:30px;font-weight:700;line-height:1}
+.px .c{font-size:13px;font-weight:600;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:22px}
+.stat{padding:11px 14px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:0 -1px -1px 0}
+.stat .k{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+.stat .v{font-size:17px;font-weight:700;margin-top:3px}
+.two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:26px}
+.chart svg{width:100%;height:auto;display:block}
+.bars div.b{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 4.2em;gap:10px;align-items:center;font-size:12px;margin:5px 0}
+.bars .tr{height:8px;background:var(--jade-soft);border-radius:4px;overflow:hidden}
+.bars .fi{height:100%;background:var(--jade);border-radius:4px}
+.bars .pc{text-align:right;font-weight:600}
+.sug{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.sug h4{margin:0 0 6px;font-size:12px;font-weight:700}
+.sug ul{margin:0;padding-left:18px;font-size:12.5px}
+.sug li{margin:3px 0}
+.back{font-size:12px;text-decoration:none;font-weight:600}
+.empty{padding:26px 10px;text-align:center;color:var(--muted);font:15px/1.6 var(--serif);border:1px dashed var(--rule);border-radius:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:20px;font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast.on{opacity:1}
+@media (max-width:760px){
+  .stage{padding:0}.sheet{padding:22px 16px}
+  .bGrid,.two{grid-template-columns:minmax(0,1fr)}
+  .px{text-align:left}
+  .eHead .ySym{font-size:28px}
+}
+</style>
+</head>
+<body>
+<main class="stage"><div class="ysThemeAnchor"><div id="ysToolsSlot" class="ysTSlot"></div><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="sheet"><div class="empty">Loading the Yield Sigma list…</div></article></main>
+<div class="toast" id="toast"></div>
+<script>
+/* Yield Sigma(TM) ETFs (Stardust Capital Labs, Nov 2026)
+   A user builds a mock ETF from the Yield Sigma list. It starts at $100 on the day it is created.
+   Saved to the visitor's account (Firestore, through auth.js); a link (?e=YABCD) shows any ETF live to anyone.
+   Prices, dividends and sigma come from the same gist as every other page; month-end prices
+   (history.csv) give the chart its points between visits. */
+var GIST="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/";
+var LINKS={home:"https://www.yieldsigma.com",labs:"https://www.stardustcapital.net/stardust-capital-labs",
+  card:"https://tools.yieldsigma.com/card-undervalued.html?ticker=",cardReit:"https://tools.yieldsigma.com/card-reits.html?ticker="};
+/* house ETFs: reserved symbols, launched by Stardust Capital Labs */
+var HOUSE=[
+  {sym:'YSGMA',name:'Yield Sigma Strategy'},
+  {sym:'YKING',name:'Dividend Kings'},
+  {sym:'YREIT',name:'Yield Sigma REITs'},
+  {sym:'YBELL',name:'Textbook and Defined bell curves'},
+  {sym:'YSCTO',name:'Yield Sigma Sectors'}
+];
+var HM_GROUPS=[["Health Care","XLV","ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"],["Technology","XLK","ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"],["Consumer Staples","XLP","ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"],["Consumer Discretionary","XLY","BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"],["Financials","XLF","AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"],["Industrials","XLI","BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"],["Materials","XLB","AMCR APD EMN NTR SCL SHW SON WLK"],["Energy","XLE","CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"],["Utilities","XLU","AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"],["Communication Services","XLC","CMCSA VZ WLY"]];
+
+/* ---------- small helpers ---------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function key(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function num(s){if(s==null)return null;var t=String(s).trim();if(!t||/^#/.test(t))return null;var neg=/^\(.*\)$/.test(t);t=t.replace(/[^0-9.\-]/g,'');if(t===''||t==='-')return null;var v=parseFloat(t);return isFinite(v)?(neg?-v:v):null;}
+function f2(v){return v==null||!isFinite(v)?'–':v.toFixed(2);}
+function money(v){return v==null||!isFinite(v)?'–':'$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pct(v,d){return v==null||!isFinite(v)?'–':v.toFixed(d==null?2:d)+'%';}
+function chg(v){if(v==null||!isFinite(v))return '<span class="mut">–</span>';return '<span class="'+(v>0.004?'pos':v<-0.004?'neg':'mut')+'">'+(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'%</span>';}
+function sg(v){if(v==null||!isFinite(v))return '–';return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'σ';}
+function sym(s){s=String(s||'');return '<span class="ySym"><span class="yY">'+esc(s.charAt(0))+'</span>'+esc(s.slice(1))+'</span>';}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function dnum(iso){var p=iso.split('-');return Date.UTC(+p[0],+p[1]-1,+p[2])/864e5;}
+function isoOf(n){var d=new Date(n*864e5);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(iso){var p=iso.split('-');return MON[+p[1]-1]+' '+(+p[2])+', '+p[0];}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove('on');},1800);}
+function tip(label,t){return '<span data-tip="'+esc(t)+'">'+label+'</span>';}
+function infoI(id){return '<button type="button" class="infoI" aria-label="More" data-info="'+id+'">i</button>';}
+function infoPop(id,html){return '<div class="infoPop" id="ip_'+id+'">'+html+'</div>';}
+
+/* ---------- data ---------- */
+var COLS=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD','divGrowth10y','sigma','ticker','direction','ddm','par','volatility','notes','cagr5y','cagr10y','pe','ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent','volMY','parMY','price1sig','price2sig','yieldPremium','divIn10y','divChecks10y','pv','tnxSpread','divGrowthYears','payoutRatio','divGrowth3y'];
+var COLS_R=['nameRaw','price','low52w','divDollar','yield','avg10y','oneSD','divGrowth10y','sigma','ticker','yieldDiffK','par','volatility','notes','fv5yr','cagr5y','cagr10y','pffr','ma200','ma200diff','maxSigma','avMaxY','max1std','maxDiffCurrent','volMY','parMY','price1sig','price2sig','tnxSpread','divGrowthYears','affo','pAffo','payoutRatio','divGrowth3y','direction'];
+function parseCSV(text){var rows=[],row=[],f='',q=false;for(var i=0;i<text.length;i++){var c=text[i];if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}else{if(c==='"')q=true;else if(c===','){row.push(f);f='';}else if(c==='\r'){}else if(c==='\n'){row.push(f);rows.push(row);row=[];f='';}else f+=c;}}row.push(f);if(row.length>1||row[0]!=='')rows.push(row);return rows;}
+var SECT={};HM_GROUPS.forEach(function(g){g[2].split(' ').forEach(function(t){SECT[key(t)]=g[0];});});
+var U={};          /* key -> security */
+var H={};          /* key -> {st (month index), p:[month-end prices]} */
+var LIVE_AT=null;
+function get(url){return fetch(url+'?h='+Math.floor(Date.now()/600000),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.text();}).catch(function(){return '';});}
+function addRows(txt,kind){
+  parseCSV(txt||'').forEach(function(r){
+    var cols=kind==='reit'?COLS_R:COLS,o={};cols.forEach(function(c,i){o[c]=r[i];});
+    var price=num(o.price);if(!price||price<=0)return;
+    var raw=String(o.nameRaw||''),m=raw.match(/^(.*?)\s*\(([^:()]+):([^:()]+)\)\s*$/);
+    var t=String(o.ticker||'').trim()||(m?m[3].trim():'');var k=key(t);if(!k||k==='TNX')return;
+    var isFund=window.YS_FUNDS&&YS_FUNDS.isFund(k);
+    var pe=num(o.pe);if(pe!=null&&(pe<=0||pe>60))pe=null;
+    var div=num(o.divDollar);
+    U[k]={k:k,t:t,name:(m?m[1]:raw).trim(),kind:isFund?'fund':kind,price:price,div:div,
+      yld:div!=null?div/price*100:num(o.yield),avg10y:num(o.avg10y),sigma:num(o.sigma),pe:pe,
+      payout:num(o.payoutRatio),g10:num(o.cagr10y),
+      sector:kind==='reit'?'Real Estate':isFund?'Funds and ETFs':(SECT[k]||'Other')};
+  });
+}
+function parseHist(txt){
+  var L=String(txt||'').split(/\r?\n/);if(!L.length)return;
+  var hd=L[0].split('\t'),ix=function(n){return hd.indexOf(n);};
+  var iT=ix('ticker'),iF=ix('first'),iP=ix('p');if(iT<0||iF<0||iP<0)return;
+  for(var i=1;i<L.length;i++){var f=L[i].split('\t');if(!f[iT]||!f[iP])continue;
+    var st=+f[iF].slice(0,4)*12+(+f[iF].slice(5,7)-1);if(!isFinite(st))continue;
+    H[key(f[iT])]={st:st,p:f[iP].split(',').map(function(v){v=v.trim();return v===''?null:+v;})};}
+}
+function load(){
+  return Promise.all([get(GIST+'stocks.csv'),get(GIST+'reits.csv'),get(GIST+'history.csv')]).then(function(r){
+    addRows(r[0],'stock');addRows(r[1],'reit');parseHist(r[2]);LIVE_AT=new Date();
+  });
+}
+/* month-end price of a name (month index m = year*12 + month0) */
+function monthPrice(k,m){var h=H[k];if(!h)return null;var v=h.p[m-h.st];return v==null||!isFinite(v)?null:v;}
+
+/* ---------- accounts (Firebase through auth.js) ----------
+   etfs/{SYM} (anyone can view; one owner per ticker, enforced by the database rules):
+     {owner, name, div:'re'|'cash', wt:'eq'|'cu', created, house, note, ev:[events], pts:[{d,v}], turn, n}
+   pts = the chart's points up to the last rebalance (kept so the chart never needs the whole log);
+   house ETFs keep only the latest event in public and the full log in etfs/{SYM}/private/log (owner only). */
+var ADMIN='QULEPj9TBqTugCa6OtZC5GSUyqA2';
+var FB=null,DB=null,ME=null,OFF=false,READY=false;
+var MINE=[],HOUSED={},CUR,PRIV=null,privSym=null,un={};
+function isAdmin(){return !!ME&&ME.uid===ADMIN;}
+function etfsCol(){return DB.collection('etfs');}
+function fromDoc(d){var o=d.data();o.sym=d.id;return o;}
+function oops(e){console.warn('[ETF]',e&&e.code||e);}
+function connect(){
+  if(!window.YS_AUTH){OFF=true;route();return;}
+  YS_AUTH.ready().then(function(x){FB=x.fb;DB=x.db;READY=true;
+    un.house=etfsCol().where(FB.firestore.FieldPath.documentId(),'in',HOUSE.map(function(h){return h.sym;})).onSnapshot(function(s){HOUSED={};s.forEach(function(d){HOUSED[d.id]=fromDoc(d);});render();},oops);
+    YS_AUTH.on(onUser);if(YS_AUTH.known)onUser(YS_AUTH.user);
+    route();
+  }).catch(function(e){oops(e);OFF=true;route();});
+}
+function onUser(u){
+  var was=ME&&ME.uid;ME=u;
+  if((u&&u.uid)!==was){if(un.mine){un.mine();un.mine=null;}MINE=[];
+    if(u)un.mine=etfsCol().where('owner','==',u.uid).onSnapshot(function(s){MINE=[];s.forEach(function(d){MINE.push(fromDoc(d));});MINE.sort(function(a,b){return a.created<b.created?-1:1;});render();},oops);}
+  watchPriv();
+  if(u&&VIEW.pendingNew){VIEW.pendingNew=false;openBuilder();return;}
+  render();
+}
+function openSym(sym){if(un.cur)un.cur();CUR=undefined;
+  un.cur=etfsCol().doc(sym).onSnapshot(function(d){CUR=d.exists?fromDoc(d):false;watchPriv();render();},function(e){oops(e);CUR=false;render();});}
+function watchPriv(){
+  var want=CUR&&ME&&CUR.owner===ME.uid&&CUR.house?CUR.sym:null;if(want===privSym)return;
+  if(un.priv){un.priv();un.priv=null;}PRIV=null;privSym=want;
+  if(want)un.priv=etfsCol().doc(want).collection('private').doc('log').onSnapshot(function(d){PRIV=d.exists?d.data():null;render();},oops);
+}
+
+/* ---------- ETF engine ----------
+   event = {d: ISO date, u:{KEY:units}, p:{KEY:price that day}, tw:{KEY:target %}, cash: dividends paid out so far}
+   Units are set so the ETF's price is $100 on the first day; a rebalance resets the units at that
+   day's prices, so the price carries on without a jump. Dividends accrue daily from each name's
+   current dividend amount: reinvested (the units grow) or paid out (cash builds up beside the price). */
+function pxNow(k,ev){var s=U[k];return s?s.price:(ev&&ev.p[k])||null;}
+function evAt(etf,iso){var n=dnum(iso),e=etf.ev[0];etf.ev.forEach(function(x){if(dnum(x.d)<=n)e=x;});return e;}
+function valueAt(etf,iso,priceFn){
+  var e=evAt(etf,iso),days=Math.max(0,dnum(iso)-dnum(e.d)),nav=0,cash=e.cash||0,units={},ok=true;
+  Object.keys(e.u).forEach(function(k){
+    var p=priceFn(k,e);if(p==null){ok=false;p=e.p[k];}
+    var s=U[k],div=s&&s.div!=null?s.div:0,u=e.u[k];
+    if(etf.div==='re'){if(p>0)u=u*Math.exp(div/p*days/365);}
+    else cash+=u*div*days/365;
+    units[k]=u;nav+=u*p;
+  });
+  return {nav:nav,cash:cash,units:units,ok:ok,ev:e};
+}
+function now(etf){return valueAt(etf,todayISO(),function(k,e){return pxNow(k,e);});}
+function weightsNow(etf,v){var w={};Object.keys(v.units).forEach(function(k){w[k]=v.nav?v.units[k]*(pxNow(k,v.ev)||0)/v.nav*100:0;});return w;}
+function makeEvent(nav,cash,tw,iso){
+  var u={},p={},t={};Object.keys(tw).forEach(function(k){var px=pxNow(k);if(!px)return;p[k]=px;u[k]=nav*tw[k]/100/px;t[k]=tw[k];});
+  return {d:iso,u:u,p:p,tw:t,cash:cash};
+}
+function total(etf,v){return v.nav+(etf.div==='cash'?v.cash:0);}
+/* chart points: saved points up to the last rebalance, then each completed month-end, then today */
+function series(etf){
+  var pts=(etf.pts&&etf.pts.length?etf.pts:[{d:etf.created,v:100}]).slice(),from=pts[pts.length-1].d,c=from.split('-'),m=+c[0]*12+(+c[1]-1),t=todayISO();
+  for(;;){var y=Math.floor(m/12),mo=m%12,last=isoOf(Date.UTC(y,mo+1,0)/864e5);if(dnum(last)>=dnum(t))break;
+    if(dnum(last)>dnum(from)){var mm=m,v=valueAt(etf,last,function(k){return monthPrice(k,mm);});if(v.ok)pts.push({d:last,v:total(etf,v)});}
+    m++;}
+  if(dnum(pts[pts.length-1].d)<dnum(t))pts.push({d:t,v:total(etf,now(etf))});return pts;
+}
+function wavg(w,get){var s=0,ws=0;Object.keys(w).forEach(function(k){var v=U[k]?get(U[k]):null;if(v==null||!isFinite(v))return;s+=w[k]*v;ws+=w[k];});return ws?s/ws:null;}
+function wharm(w,get){var s=0,ws=0;Object.keys(w).forEach(function(k){var v=U[k]?get(U[k]):null;if(v==null||!isFinite(v)||v<=0)return;s+=w[k]/v;ws+=w[k];});return s?ws/s:null;}
+function turnLine(etf){ /* one-way turnover, per year once the ETF is a year old */
+  var yrs=(dnum(todayISO())-dnum(etf.created))/365,t=etf.turn||0;
+  return yrs>=1?'Annual turnover '+(t/yrs).toFixed(0)+'%':'Turnover since launch '+t.toFixed(0)+'%';
+}
+function isReit(k){return U[k]&&U[k].kind==='reit';}
+function suggest(etf,v){
+  var w=weightsNow(etf,v),tw=v.ev.tw,trim=[],drift=[],add=[];
+  Object.keys(w).forEach(function(k){var s=U[k];if(!s||s.sigma==null)return;
+    if(s.kind!=='fund'&&s.sigma<(isReit(k)?0:-1))trim.push(k);
+    var d=w[k]-(tw[k]||0);if(Math.abs(d)>=Math.max(2,(tw[k]||0)*0.25))drift.push({k:k,now:w[k],tgt:tw[k]});});
+  Object.keys(U).forEach(function(k){var s=U[k];if(w[k]!=null||s.kind==='fund'||s.sigma==null)return;if(s.sigma>(s.kind==='reit'?1.5:1))add.push(k);});
+  add.sort(function(a,b){return U[b].sigma-U[a].sigma;});
+  return {trim:trim,drift:drift,add:add.slice(0,6),w:w};
+}
+
+/* ---------- saving ---------- */
+function createEtf(o){
+  var d=todayISO(),e0=makeEvent(100,0,o.tw,d),ref=etfsCol().doc(o.sym);
+  var doc={owner:ME.uid,name:o.name,div:o.div,wt:o.wt,created:d,house:!!o.house,note:o.note||'',ev:[e0],pts:[{d:d,v:100}],turn:0,n:0};
+  return DB.runTransaction(function(t){return t.get(ref).then(function(s){if(s.exists)throw {code:'taken'};t.set(ref,doc);});})
+    .then(function(){if(o.house)return ref.collection('private').doc('log').set({ev:[e0]});});
+}
+function rebalanceEtf(etf,tw){
+  var v=now(etf),d=todayISO(),w0=weightsNow(etf,v),ne=makeEvent(v.nav,v.cash,tw,d),one=0,all={};
+  Object.keys(w0).concat(Object.keys(ne.tw)).forEach(function(k){all[k]=1;});
+  Object.keys(all).forEach(function(k){one+=Math.abs((ne.tw[k]||0)-(w0[k]||0));});one/=2;
+  var pts=series(etf).filter(function(p){return dnum(p.d)<dnum(d);});pts.push({d:d,v:total(etf,v)});
+  var ref=etfsCol().doc(etf.sym),up={pts:pts,turn:(etf.turn||0)+one,n:(etf.n||0)+1,ev:etf.house?[ne]:etf.ev.concat([ne])};
+  return ref.update(up).then(function(){if(etf.house)return ref.collection('private').doc('log').set({ev:FB.firestore.FieldValue.arrayUnion(ne)},{merge:true});});
+}
+function deleteEtf(etf){var ref=etfsCol().doc(etf.sym);
+  return (etf.house?ref.collection('private').doc('log').delete():Promise.resolve()).then(function(){return ref.delete();});}
+
+/* ---------- symbol rules ---------- */
+var REMOTE={};   /* SYM -> 'checking' | 'free' | 'taken' */
+function symCheck(letters,house){
+  var L=String(letters||'').toUpperCase();
+  if(!/^[A-Z]{4}$/.test(L))return {ok:false,msg:L.length?'Four letters, A to Z.':''};
+  var s='Y'+L;
+  if(U[key(s)])return {ok:false,msg:s+' is a ticker on the Yield Sigma list.'};
+  var res=HOUSE.some(function(h){return h.sym===s;});
+  if(res&&!(house&&isAdmin()))return {ok:false,msg:s+' is reserved for a house ETF.'};
+  var r=REMOTE[s];
+  if(r==='taken')return {ok:false,msg:s+' is taken.'};
+  if(r!=='free')return {ok:false,wait:true,sym:s,msg:'Checking '+s+'…'};
+  return {ok:true,msg:s+' is available.',sym:s};
+}
+function checkRemote(s){if(REMOTE[s]||!DB)return;REMOTE[s]='checking';
+  etfsCol().doc(s).get().then(function(d){REMOTE[s]=d.exists?'taken':'free';render();},function(){delete REMOTE[s];});}
+
+/* ---------- views ---------- */
+var VIEW={mode:'home',sym:null,build:null,reb:null,pendingNew:false,busy:false};
+var sheet=document.getElementById('sheet');
+function head(){
+  return '<div class="pageHead"><div><h2><a href="'+LINKS.home+'" target="_blank" rel="noopener">Yield Sigma<sup style="font-size:.5em;margin-left:1px">™</sup></a> ETFs</h2>'+
+    '<div class="labsBy">from <a href="'+LINKS.labs+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
+    '<div class="asof">'+(LIVE_AT?'Live · updated '+LIVE_AT.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'')+'</div></div>';
+}
+function render(){
+  var h=head();
+  if(OFF)h+='<div class="empty">The ETF service can’t be reached right now. Please try again in a moment.</div>';
+  else if(VIEW.mode==='etf')h+=etfView();
+  else h+=homeView();
+  var ae=document.activeElement,id=ae&&ae.id,pos=null;try{pos=ae&&ae.selectionStart;}catch(e){}
+  sheet.innerHTML=h;wire();
+  if(id&&(id==='bTk'||id==='bNm'||id==='bNote'))focusAfter(id,pos);
+}
+function rowFor(e){var v=now(e),w=weightsNow(e,v),p=total(e,v);
+  return '<tr class="click" data-open="'+esc(e.sym)+'"><td>'+sym(e.sym)+'</td><td class="l">'+esc(e.name||'')+'</td><td>'+money(v.nav)+'</td><td>'+chg(p-100)+'</td><td>'+pct(wavg(w,function(s){return s.yld;}))+'</td><td>'+sg(wavg(w,function(s){return s.sigma;}))+'</td><td>'+Object.keys(w).length+'</td><td class="mut">'+fmtDate(e.created)+'</td></tr>';}
+var THEAD='<thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Price','ETF price; $100 on the day it was created.')+'</th><th>'+tip('Since start','Change since the day it was created, dividends included.')+'</th><th>'+tip('Dividend yield','Weighted average dividend yield of the holdings.')+'</th><th>'+tip('Average σ','Weighted average σ of the holdings.')+'</th><th>Holdings</th><th>Created</th></tr></thead>';
+function homeView(){
+  var h='';
+  h+='<section><h3>House ETFs'+infoI('house')+'</h3>'+infoPop('house','Built and run by Stardust Capital Labs from the Yield Sigma list. Equal weight, rebalanced at our discretion; each page shows how often and the turnover.')+
+    '<div class="desc">Model ETFs from Stardust Capital Labs.</div><div class="house">'+
+    HOUSE.map(function(x){var e=HOUSED[x.sym];
+      if(e){var v=now(e),p=total(e,v);return '<div class="hCard click" data-open="'+x.sym+'" style="cursor:pointer">'+sym(x.sym)+'<div class="nm">'+esc(e.name||x.name)+'</div><div style="font-weight:700">'+money(v.nav)+' <span style="font-size:12px">'+chg(p-100)+'</span></div></div>';}
+      return '<div class="hCard">'+sym(x.sym)+'<div class="nm">'+esc(x.name)+'</div>'+(isAdmin()?'<button class="btn sm pri" data-launch="'+x.sym+'">Launch</button>':'<span class="chip">Launching soon</span>')+'</div>';}).join('')+'</div></section>';
+  var mine=MINE.filter(function(e){return !e.house;});
+  h+='<section><div class="row" style="justify-content:space-between"><div><h3>My ETFs'+infoI('mine')+'</h3>'+
+    infoPop('mine','Each ETF starts at $100 on the day you create it and is priced from the Yield Sigma list every day after. Saved to your account, so it’s on every device you sign in on; its link shows it live to anyone.')+
+    '<div class="desc">Your own ETFs, built from the Yield Sigma list.</div></div>'+
+    (VIEW.build?'':'<button class="btn pri" data-act="new">+ Create an ETF</button>')+'</div>';
+  if(VIEW.build)h+=builderView();
+  if(!READY&&!OFF)h+='<div class="empty">Loading…</div>';
+  else if(!ME&&!VIEW.build)h+='<div class="empty">Sign in to create your own ETF: pick a Y ticker, choose your names, and it starts at $100 today.</div>';
+  else if(mine.length)h+='<div class="tw"><table>'+THEAD+'<tbody>'+mine.map(rowFor).join('')+'</tbody></table></div>';
+  else if(!VIEW.build)h+='<div class="empty">No ETFs yet. Create one: pick a Y ticker, choose your names, and it starts at $100 today.</div>';
+  h+='</section>';
+  return h;
+}
+function builderView(){
+  var B=VIEW.build,chk=symCheck(B.letters,B.house),tot=B.list.reduce(function(s,x){return s+(+x.w||0);},0);
+  if(chk.wait&&chk.sym)setTimeout(function(){checkRemote(chk.sym);},0);
+  var okW=B.wt==='eq'||Math.abs(tot-100)<0.05,can=chk.ok&&B.list.length>=2&&okW&&!VIEW.busy;
+  var h='<div class="builder"><div class="bGrid">'+
+    '<div class="fld"><label>TICKER</label><span class="tkBox"><span class="yY">Y</span><input id="bTk" maxlength="4" autocomplete="off" spellcheck="false" value="'+esc(B.letters)+'" placeholder="ABCD" aria-label="Four letters after Y"'+(B.house?' readonly':'')+'></span>'+
+    '<div class="msg" style="color:var(--'+(chk.ok?'jade':chk.wait?'muted':'rust')+')">'+esc(chk.msg)+'</div></div>'+
+    '<div class="fld"><label>NAME</label><input class="txt" id="bNm" maxlength="48" value="'+esc(B.name)+'" placeholder="e.g. My Dividend Kings"></div>'+
+    '<div class="fld"><label>DIVIDENDS</label><div class="seg" id="bDiv"><button data-v="re" class="'+(B.div==='re'?'on':'')+'">Reinvested</button><button data-v="cash" class="'+(B.div==='cash'?'on':'')+'">Paid out</button></div><div class="note">Set once; it can’t be changed after the ETF is created.</div></div>'+
+    (B.house?'<div class="fld"><label>REBALANCE NOTE (PUBLIC)</label><input class="txt" id="bNote" maxlength="60" value="'+esc(B.note)+'" placeholder="e.g. Rebalanced quarterly"><div class="note">Shown on the page with the turnover; the rebalance log stays private.</div></div>'
+      :'<div class="fld"><label>WEIGHTING</label><div class="seg" id="bWt"><button data-v="eq" class="'+(B.wt==='eq'?'on':'')+'">Equal weight</button><button data-v="cu" class="'+(B.wt==='cu'?'on':'')+'">Custom</button></div></div>')+
+    '</div>'+
+    '<div class="fld" style="margin-top:16px"><label>HOLDINGS</label><div class="srch"><input class="txt" id="bSrch" autocomplete="off" placeholder="Add a name: type a ticker or company"><div class="sugg" id="bSugg"></div></div></div>';
+  if(B.list.length){
+    h+='<div class="tw" style="margin-top:10px"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>Price</th><th>Dividend yield</th><th>σ</th><th>Weight</th><th></th></tr></thead><tbody>'+
+      B.list.map(function(x,i){var s=U[x.k];var w=B.wt==='eq'?(100/B.list.length):x.w;
+        return '<tr><td><b>'+esc(s.t)+'</b></td><td class="l">'+esc(s.name)+'</td><td>'+money(s.price)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td><td>'+
+          (B.wt==='eq'?pct(w):'<input class="wIn" data-wi="'+i+'" type="number" min="0" max="100" step="0.5" value="'+(x.w===''?'':+(+x.w).toFixed(2))+'">%')+'</td><td><button class="x" data-rm="'+i+'" aria-label="Remove">×</button></td></tr>';}).join('')+
+      '</tbody></table></div>'+
+      '<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tot" style="color:var(--'+(okW?'jade':'rust')+')">'+B.list.length+' names'+(B.wt==='cu'?' · total '+tot.toFixed(2)+'%':'')+'</span>'+
+      (B.wt==='cu'&&!okW&&tot>0?'<button class="btn sm" data-act="scale">Scale to 100%</button>':'')+'</div>';
+  }
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="cancel">Cancel</button><button class="btn pri" data-act="create" '+(can?'':'disabled')+'>'+(VIEW.busy?'Creating…':'Create '+(chk.ok?esc(chk.sym):'ETF')+' at $100')+'</button></div>'+
+    (B.list.length<2?'<div class="note" style="text-align:right">At least 2 names.</div>':'')+'</div>';
+  return h;
+}
+function etfView(){
+  var etf=CUR;
+  if(etf===undefined||!READY)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">Loading…</div>';
+  if(!etf)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">No ETF with that ticker.</div>';
+  var own=!!ME&&etf.owner===ME.uid,v=now(etf),w=weightsNow(etf,v),price=v.nav,tr=total(etf,v);
+  var meta='Created '+fmtDate(etf.created)+' at $100 · '+(etf.house?'Equal weight':etf.wt==='eq'?'Equal weight':'Custom weights')+' · Dividends '+(etf.div==='re'?'reinvested':'paid out');
+  if(etf.house)meta+=(etf.note?' · '+esc(etf.note):'')+(etf.n?' · '+turnLine(etf):'');
+  else if(etf.n)meta+=' · Rebalanced '+etf.n+'×';
+  var h='<a href="#" class="back" data-act="home">← All ETFs</a>';
+  h+='<div class="eHead" style="margin-top:12px"><div>'+sym(etf.sym)+(etf.house?' <span class="chip j" style="vertical-align:8px">House ETF</span>':'')+'<div class="nm">'+esc(etf.name||'')+'</div><div class="meta">'+meta+'</div></div>'+
+    '<div class="px"><div class="p">'+money(price)+'</div><div class="c">'+chg(tr-100)+' since start'+(etf.div==='cash'?' · price '+chg(price-100):'')+'</div></div></div>';
+  var st=[
+    ['Dividend yield',pct(wavg(w,function(s){return s.yld;})),'Weighted average dividend yield of the holdings.'],
+    ['10y average yield',pct(wavg(w,function(s){return s.avg10y;})),'Weighted average of each holding’s 10-year average dividend yield.'],
+    ['Average σ',sg(wavg(w,function(s){return s.sigma;})),'Weighted average σ of the holdings.'],
+    ['P/E',f2(wharm(w,function(s){return s.pe;})),'Weighted harmonic average P/E of the holdings with a P/E of 60 or less.'],
+    ['Payout ratio',pct(wavg(w,function(s){return s.payout;}),1),'Weighted average payout ratio of the holdings.'],
+    ['10y dividend growth',pct(wavg(w,function(s){return s.g10;}),1),'Weighted average 10-year dividend growth rate (CAGR) of the holdings.']
+  ];
+  if(etf.div==='cash')st.push(['Dividends paid',money(v.cash),'Dividends paid out per ETF share since the day it was created.']);
+  h+='<div class="stats">'+st.map(function(x){return '<div class="stat"><div class="k">'+tip(x[0],x[2])+'</div><div class="v">'+x[1]+'</div></div>';}).join('')+'</div>';
+  h+='<div class="two"><section><h3>Price since start</h3><div class="desc">'+(etf.div==='re'?'Dividends reinvested.':'Price plus dividends paid out.')+' Month-end points and today.</div><div class="chart">'+chartSvg(series(etf))+'</div></section>'+
+    '<section><h3>Sectors</h3><div class="desc">Share of the ETF’s value today.</div><div class="bars">'+sectorBars(w)+'</div></section></div>';
+  var sug=suggest(etf,v);
+  h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'</tr></thead><tbody>'+
+    Object.keys(w).sort(function(a,b){return w[b]-w[a];}).map(function(k){var s=U[k]||{t:k,name:'(not on the list today)'},p0=v.ev.p[k],pn=pxNow(k,v.ev);
+      var fl=sug.trim.indexOf(k)>=0?'<span class="chip r">Trim</span>':sug.drift.some(function(d){return d.k===k;})?'<span class="chip">Drifted</span>':'';
+      var url=(s.kind==='reit'?LINKS.cardReit:LINKS.card)+encodeURIComponent(s.t);
+      return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'</tr>';}).join('')+
+    '</tbody></table></div></section>';
+  if(!own){h+='<div class="row" style="justify-content:flex-end"><button class="btn" data-act="share">Copy link</button></div>';return h;}
+  h+='<section><h3>Suggestions'+infoI('sug')+'</h3>'+infoPop('sug','From the Yield Sigma rules. Trim: a holding below −1σ (REITs below 0σ). Add: names on the list above +1σ (REITs above +1.5σ) that the ETF doesn’t hold. Drifted: a holding whose weight is 2 points or a quarter of its target away from the target. Nothing changes until you rebalance.')+
+    '<div class="desc">Based on today’s readings; nothing changes until you rebalance.</div>';
+  h+='<div class="sug"><h4>Trim candidates</h4>'+(sug.trim.length?'<ul>'+sug.trim.map(function(k){return '<li><b>'+esc(U[k].t)+'</b> at '+sg(U[k].sigma)+'</li>';}).join('')+'</ul>':'<div class="note">None.</div>')+'</div>';
+  h+='<div class="sug"><h4>Drifted from target</h4>'+(sug.drift.length?'<ul>'+sug.drift.map(function(d){return '<li><b>'+esc(U[d.k]?U[d.k].t:d.k)+'</b> '+pct(d.now,1)+' against a '+pct(d.tgt,1)+' target</li>';}).join('')+'</ul>':'<div class="note">None.</div>')+'</div>';
+  h+='<div class="sug"><h4>Add ideas</h4>'+(sug.add.length?'<ul>'+sug.add.map(function(k){return '<li><b>'+esc(U[k].t)+'</b> '+esc(U[k].name)+' at '+sg(U[k].sigma)+'</li>';}).join('')+'</ul>':'<div class="note">None.</div>')+'</div>';
+  if(etf.house&&PRIV&&PRIV.ev)h+='<div class="sug"><h4>Rebalance log (only you see this)</h4><ul>'+PRIV.ev.slice().reverse().map(function(e,i,a){return '<li>'+fmtDate(e.d)+' · '+Object.keys(e.tw).length+' names'+(i===a.length-1?' · launch':'')+'</li>';}).join('')+'</ul></div>';
+  h+='<div class="row" style="justify-content:space-between;margin-top:14px"><div class="row"><button class="btn" data-act="share">Copy link</button><button class="btn warn" data-act="delete">Delete</button></div>'+
+    '<div class="row"><button class="btn" data-act="rebal">Rebalance…</button><button class="btn pri" data-act="suggest">Suggest rebalance</button></div></div>';
+  if(VIEW.reb)h+=rebView(etf,v,w);
+  h+='</section>';
+  return h;
+}
+function rebView(etf,v,w){
+  var R=VIEW.reb,tot=R.list.reduce(function(s,x){return s+(+x.w||0);},0),ok=R.list.length>=2&&Math.abs(tot-100)<0.05&&!VIEW.busy;
+  var h='<div class="builder"><h3 style="margin-bottom:10px">'+(R.suggested?'Suggested rebalance':'Rebalance')+'</h3>'+
+    (R.suggested?'<div class="desc">Trim candidates removed; the rest set back to '+(etf.wt==='eq'||etf.house?'equal weight':'their targets, scaled to 100%')+'. Edit anything before you confirm.</div>':'')+
+    '<div class="srch"><input class="txt" id="rSrch" autocomplete="off" placeholder="Add a name: type a ticker or company"><div class="sugg" id="rSugg"></div></div>'+
+    '<div class="tw" style="margin-top:10px"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>Weight now</th><th>New weight</th><th></th></tr></thead><tbody>'+
+    R.list.map(function(x,i){var s=U[x.k];return '<tr><td><b>'+esc(s?s.t:x.k)+'</b></td><td class="l">'+esc(s?s.name:'')+'</td><td>'+pct(w[x.k]||0,1)+'</td><td><input class="wIn" data-ri="'+i+'" type="number" min="0" max="100" step="0.5" value="'+(+(+x.w).toFixed(2))+'">%</td><td><button class="x" data-rrm="'+i+'" aria-label="Remove">×</button></td></tr>';}).join('')+
+    '</tbody></table></div><div class="row" style="justify-content:space-between;margin-top:8px"><span class="tot" style="color:var(--'+(Math.abs(tot-100)<0.05?'jade':'rust')+')">'+R.list.length+' names · total '+tot.toFixed(2)+'%</span><span class="row">'+
+    (Math.abs(tot-100)>=0.05&&tot>0?'<button class="btn sm" data-act="rscale">Scale to 100%</button>':'')+'<button class="btn sm" data-act="req">Equal weight</button></span></div>'+
+    '<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" data-act="rcancel">Cancel</button><button class="btn pri" data-act="rconfirm" '+(ok?'':'disabled')+'>'+(VIEW.busy?'Saving…':'Confirm rebalance')+'</button></div>'+
+    '<div class="note" style="text-align:right">The price doesn’t change on a rebalance; the holdings are reset at today’s prices.</div></div>';
+  return h;
+}
+function chartSvg(pts){
+  var W=560,Hh=220,pl=46,pr=12,pt=12,pb=26,x0=dnum(pts[0].d),x1=Math.max(dnum(pts[pts.length-1].d),x0+1);
+  var vs=pts.map(function(p){return p.v;}).concat([100]),lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs),pad=Math.max((hi-lo)*0.15,1);lo-=pad;hi+=pad;
+  var X=function(d){return pl+(dnum(d)-x0)/(x1-x0)*(W-pl-pr);},Y=function(v){return pt+(hi-v)/(hi-lo)*(Hh-pt-pb);};
+  var line=pts.map(function(p,i){return (i?'L':'M')+X(p.d).toFixed(1)+' '+Y(p.v).toFixed(1);}).join(' ');
+  var last=pts[pts.length-1],up=last.v>=100,col=up?'var(--jade)':'var(--rust)';
+  var g='';[lo+pad,100,hi-pad].filter(function(v,i){return i===1||Math.abs(v-100)>(hi-lo)*0.08;}).forEach(function(v){g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--rule)" '+(v===100?'stroke-dasharray="4 4"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end" font-size="12" fill="var(--muted)">$'+v.toFixed(0)+'</text>';});
+  return '<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="ETF price since start">'+g+
+    '<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
+    pts.map(function(p){return '<circle cx="'+X(p.d).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="3" fill="'+col+'"><title>'+fmtDate(p.d)+': '+money(p.v)+'</title></circle>';}).join('')+
+    '<text x="'+pl+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)">'+fmtDate(pts[0].d)+'</text><text x="'+(W-pr)+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)" text-anchor="end">'+fmtDate(last.d)+'</text></svg>'+
+    (pts.length<3?'<div class="note">More points appear at each month-end.</div>':'');
+}
+function sectorBars(w){
+  var s={};Object.keys(w).forEach(function(k){var n=U[k]?U[k].sector:'Other';s[n]=(s[n]||0)+w[k];});
+  return Object.keys(s).sort(function(a,b){return s[b]-s[a];}).map(function(n){return '<div class="b"><span>'+esc(n)+'</span><div class="tr"><div class="fi" style="width:'+s[n].toFixed(1)+'%"></div></div><span class="pc">'+s[n].toFixed(1)+'%</span></div>';}).join('');
+}
+
+/* ---------- search box ---------- */
+function searchBox(inp,box,onPick,exclude){
+  var hi=0,res=[];
+  function draw(){var q=key(inp.value),qn=inp.value.trim().toLowerCase();if(!qn){box.classList.remove('on');return;}
+    res=Object.keys(U).filter(function(k){return exclude().indexOf(k)<0&&(k.indexOf(q)===0||U[k].name.toLowerCase().indexOf(qn)>=0);})
+      .sort(function(a,b){return (b.indexOf(q)===0)-(a.indexOf(q)===0)||(a===q?-1:b===q?1:0)||a.localeCompare(b);}).slice(0,8);
+    hi=0;box.innerHTML=res.length?res.map(function(k,i){var s=U[k];return '<div data-k="'+k+'" class="'+(i===hi?'hi':'')+'"><span><b>'+esc(s.t)+'</b> '+esc(s.name)+'</span><span class="mut">'+sg(s.sigma)+'</span></div>';}).join(''):'<div class="mut">No other match on the list.</div>';
+    box.classList.add('on');}
+  inp.addEventListener('input',draw);
+  inp.addEventListener('keydown',function(e){if(!box.classList.contains('on'))return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();hi=(hi+(e.key==='ArrowDown'?1:-1)+res.length)%Math.max(res.length,1);Array.prototype.forEach.call(box.children,function(c,i){c.classList.toggle('hi',i===hi);});}
+    else if(e.key==='Enter'&&res[hi]){e.preventDefault();onPick(res[hi]);}
+    else if(e.key==='Escape')box.classList.remove('on');});
+  box.addEventListener('mousedown',function(e){var d=e.target.closest('[data-k]');if(d){e.preventDefault();onPick(d.getAttribute('data-k'));}});
+  inp.addEventListener('blur',function(){setTimeout(function(){box.classList.remove('on');},120);});
+}
+
+/* ---------- wiring ---------- */
+function focusAfter(id,pos){var el=document.getElementById(id);if(el){el.focus();if(pos!=null)try{el.setSelectionRange(pos,pos);}catch(e){}}}
+function wire(){
+  sheet.querySelectorAll('[data-info]').forEach(function(b){b.onclick=function(e){e.stopPropagation();var p=document.getElementById('ip_'+b.getAttribute('data-info'));if(p)p.classList.toggle('on');};});
+  sheet.querySelectorAll('[data-open]').forEach(function(r){r.onclick=function(){go({mode:'etf',sym:r.getAttribute('data-open')});};});
+  sheet.querySelectorAll('[data-launch]').forEach(function(b){b.onclick=function(){var s=b.getAttribute('data-launch'),hh=HOUSE.filter(function(x){return x.sym===s;})[0];
+    VIEW.build={letters:s.slice(1),name:hh.name,div:'re',wt:'eq',list:[],house:true,note:''};REMOTE[s]=undefined;render();};});
+  var B=VIEW.build;
+  if(B){
+    var tk=document.getElementById('bTk');
+    tk.oninput=function(){B.letters=tk.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);render();};
+    document.getElementById('bNm').oninput=function(e){B.name=e.target.value;};
+    var nt=document.getElementById('bNote');if(nt)nt.oninput=function(e){B.note=e.target.value;};
+    document.querySelectorAll('#bDiv button').forEach(function(b){b.onclick=function(){B.div=b.getAttribute('data-v');render();};});
+    document.querySelectorAll('#bWt button').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-v');if(v==='cu'&&B.wt==='eq')B.list.forEach(function(x){x.w=+(100/B.list.length).toFixed(2);});B.wt=v;render();};});
+    searchBox(document.getElementById('bSrch'),document.getElementById('bSugg'),function(k){B.list.push({k:k,w:B.wt==='cu'?'':0});render();focusAfter('bSrch');},function(){return B.list.map(function(x){return x.k;});});
+    sheet.querySelectorAll('[data-wi]').forEach(function(i){i.onchange=function(){B.list[+i.getAttribute('data-wi')].w=i.value===''?'':+i.value;render();};});
+    sheet.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){B.list.splice(+b.getAttribute('data-rm'),1);render();};});
+  }
+  var R=VIEW.reb;
+  if(R){
+    searchBox(document.getElementById('rSrch'),document.getElementById('rSugg'),function(k){R.list.push({k:k,w:0});render();focusAfter('rSrch');},function(){return R.list.map(function(x){return x.k;});});
+    sheet.querySelectorAll('[data-ri]').forEach(function(i){i.onchange=function(){R.list[+i.getAttribute('data-ri')].w=i.value===''?0:+i.value;render();};});
+    sheet.querySelectorAll('[data-rrm]').forEach(function(b){b.onclick=function(){R.list.splice(+b.getAttribute('data-rrm'),1);render();};});
+  }
+  sheet.querySelectorAll('[data-act]').forEach(function(b){b.onclick=function(e){e.preventDefault();act(b.getAttribute('data-act'));};});
+}
+function scale(list){var t=list.reduce(function(s,x){return s+(+x.w||0);},0);if(!t)return;var acc=0;list.forEach(function(x,i){x.w=i<list.length-1?+((+x.w||0)/t*100).toFixed(2):0;acc+=x.w;});list[list.length-1].w=+(100-acc).toFixed(2);}
+function openBuilder(){VIEW.build={letters:'',name:'',div:'re',wt:'eq',list:[],house:false,note:''};render();focusAfter('bTk');}
+function fail(e,what){oops(e);VIEW.busy=false;render();toast(e&&e.code==='taken'?'That ticker was just taken.':what+' didn’t go through. Please try again.');}
+function act(a){
+  var etf=VIEW.mode==='etf'?CUR:null;
+  if(a==='new'){if(!ME){VIEW.pendingNew=true;if(window.YS_AUTH)YS_AUTH.signIn();return;}openBuilder();}
+  else if(a==='cancel'){VIEW.build=null;render();}
+  else if(a==='scale'){scale(VIEW.build.list);render();}
+  else if(a==='create'){var B=VIEW.build,c=symCheck(B.letters,B.house);if(!c.ok||!ME)return;var tw={};
+    B.list.forEach(function(x){tw[x.k]=B.wt==='eq'?100/B.list.length:+x.w;});VIEW.busy=true;render();
+    createEtf({sym:c.sym,name:B.name.trim(),div:B.div,wt:B.house?'eq':B.wt,tw:tw,house:B.house,note:(B.note||'').trim()}).then(function(){
+      VIEW.busy=false;VIEW.build=null;REMOTE[c.sym]='taken';go({mode:'etf',sym:c.sym});toast(c.sym+' created at $100');},function(e){if(e&&e.code==='taken')REMOTE[c.sym]='taken';fail(e,'Creating the ETF');});}
+  else if(a==='home'){go({mode:'home'});}
+  else if(a==='share'){var link='https://tools.yieldsigma.com/etf.html?e='+encodeURIComponent(etf.sym);
+    (navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(function(){toast('Link copied');},function(){prompt('Copy this link',link);});}
+  else if(a==='delete'){if(confirm('Delete '+etf.sym+'? This can’t be undone, and the ticker becomes free for anyone.')){deleteEtf(etf).then(function(){go({mode:'home'});toast(etf.sym+' deleted');},function(e){fail(e,'Deleting');});}}
+  else if(a==='rebal'||a==='suggest'){var v=now(etf),w=weightsNow(etf,v),list;
+    if(a==='suggest'){var s=suggest(etf,v),keep=Object.keys(w).filter(function(k){return s.trim.indexOf(k)<0;});
+      list=keep.map(function(k){return {k:k,w:etf.wt==='eq'||etf.house?100/keep.length:(v.ev.tw[k]||0)};});}
+    else list=Object.keys(w).map(function(k){return {k:k,w:+w[k].toFixed(2)};});
+    scale(list);VIEW.reb={list:list,suggested:a==='suggest'};render();}
+  else if(a==='rcancel'){VIEW.reb=null;render();}
+  else if(a==='rscale'){scale(VIEW.reb.list);render();}
+  else if(a==='req'){var L=VIEW.reb.list;L.forEach(function(x){x.w=100/L.length;});scale(L);render();}
+  else if(a==='rconfirm'){var tw={};VIEW.reb.list.forEach(function(x){if(+x.w>0)tw[x.k]=+x.w;});VIEW.busy=true;render();
+    rebalanceEtf(etf,tw).then(function(){VIEW.busy=false;VIEW.reb=null;render();toast(etf.sym+' rebalanced');},function(e){fail(e,'The rebalance');});}
+}
+function go(v){VIEW.mode=v.mode;VIEW.sym=v.sym||null;VIEW.reb=null;
+  var q=v.mode==='etf'?'?e='+encodeURIComponent(v.sym):'';try{history.pushState(null,'',location.pathname+q);}catch(e){}
+  if(v.mode==='etf'&&READY)openSym(v.sym);render();window.scrollTo(0,0);}
+window.addEventListener('popstate',route);
+function route(){var e=new URLSearchParams(location.search).get('e');
+  if(e){VIEW.mode='etf';VIEW.sym=e.toUpperCase();if(READY)openSym(VIEW.sym);}else{VIEW.mode='home';VIEW.sym=null;}
+  VIEW.reb=null;render();}
+load().then(connect);
+if(window.YS_THEME)YS_THEME.on(function(){render();});
+</script>
+</body>
+</html>

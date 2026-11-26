@@ -13,7 +13,7 @@
   var V='10.12.2',SDK='https://www.gstatic.com/firebasejs/'+V+'/';
   var CFG={apiKey:"AIzaSyBMoVUKGQfvFMtDfo8Vexw8th3tADBBeR8",authDomain:"yield-sigma.firebaseapp.com",projectId:"yield-sigma",
     storageBucket:"yield-sigma.firebasestorage.app",messagingSenderId:"281792973419",appId:"1:281792973419:web:dc8a668218eb1d9bfabf2e"};
-  var SYNC=['ysWatch','ysBells','ysPresets','ysETF'];   /* lists that follow the account */
+  var SYNC=['ysWatch','ysBells','ysPresets'];   /* lists that follow the account (ETFs live in their own collection) */
   var FLAG='ysAuthed',MERGED='ysAuthMerged',fns=[],A={user:null,profile:{},on:function(f){fns.push(f);}};
   window.YS_AUTH=A;
   var q;try{q=new URLSearchParams(location.search);}catch(e){q=null;}
@@ -37,7 +37,7 @@
     if(loading)return loading;
     loading=script(SDK+'firebase-app-compat.js').then(function(){return Promise.all([script(SDK+'firebase-auth-compat.js'),script(SDK+'firebase-firestore-compat.js')]);})
       .then(function(){fb=window.firebase;if(!fb.apps.length)fb.initializeApp(CFG);db=fb.firestore();
-        fb.auth().onAuthStateChanged(function(u){u?signedIn(u):signedOut();});});
+        fb.auth().onAuthStateChanged(function(u){A.known=true;u?signedIn(u):signedOut();});});
     return loading;
   }
   function userDoc(){return db.collection('users').doc(A.user.uid);}
@@ -93,6 +93,8 @@
       console.warn('[YS_AUTH] sign-in',c||e);alert('Sign-in didn’t go through. Please allow pop-ups for tools.yieldsigma.com and try again.');
     });
   };
+  /* pages that read or write their own collections (the ETF page) wait for Firebase here */
+  A.ready=function(){return load().then(function(){return {fb:fb,db:db};});};
   A.signOut=function(){if(fb)fb.auth().signOut();menu(false);};
   A.setNewsletter=function(on){if(!A.user||!db)return;A.profile.newsletter=!!on;
     userDoc().update({newsletter:!!on,newsletterAt:fb.firestore.FieldValue.serverTimestamp(),email:A.user.email}).catch(function(e){console.warn('[YS_AUTH] newsletter',e&&e.code||e);});};
