@@ -143,6 +143,7 @@ table.tb td:first-child{font-weight:600}
 table.tb td .n{display:block;font-size:10px;font-weight:500;color:var(--muted)}
 table.tbS th{white-space:nowrap}
 table.tbS td:first-child,table.tbS td.m{white-space:nowrap}
+table.tbS .etfT{margin-left:8px;font-size:11px;color:var(--muted);letter-spacing:.02em}
 table.tb tr.sel td{background:color-mix(in srgb,var(--jade-soft) 60%,transparent)}
 /* normalizing table: each row picks the level for the lists below it */
 table.tb tr[data-thr]{cursor:pointer}
@@ -1022,13 +1023,13 @@ function sectorHtml(U){
   rows.sort(function(p,q){return q.avg-p.avg;});
   /* Broad: the sector ETF's own reading (weighted by company size), next to List (our names, each counted once) */
   var etfS={};(D.stocks||[]).forEach(function(x){var t=String(x.a.ticker||'').trim().toUpperCase();if(x.a.sigma!==null&&isFinite(x.a.sigma))etfS[t]=x.a.sigma;});
-  var tr=rows.map(function(r){var N=r.items.length,b=etfS[r.etf];return '<tr><td>'+esc(r.name)+'</td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="m">'+(b===undefined?'–':esc(r.etf)+' '+sg(b))+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
+  var tr=rows.map(function(r){var N=r.items.length,b=etfS[r.etf];return '<tr><td>'+esc(r.name)+(r.etf?'<span class="etfT">'+esc(r.etf)+'</span>':'')+'</td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="m">'+(b===undefined?'–':sg(b))+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   var lv=(SIDE>0?'+':'−')+THR+'σ'+(SIDE>0?' or higher':' or lower');
   var T=function(label,tip,cls){return '<th'+(cls?' class="'+cls+'"':'')+'><span data-tip="'+esc(tip)+'">'+label+'</span></th>';};
   return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average Yield Sigma. Hover or tap a column name for what it shows.</p>'+
     '<div class="tbWrap"><table class="tb tbS"><thead><tr><th>Sector</th><th>Names</th>'+
-    T('Average','The average Yield Sigma of the stocks on our list in this sector, each stock counted the same (equal weight).')+
-    T('ETF','The sector ETF’s own Yield Sigma. The ETF is weighted by company size, so a few giants decide its reading, and its yield moves so little that small moves show as large sigma readings.')+
+    T('List average','The average Yield Sigma of the stocks on our list in this sector, each stock counted the same: equal weight (EW).')+
+    T('Broad ETF','The Yield Sigma of the sector ETF shown next to the sector name. The ETF is weighted by company size, so a few giants decide its reading, and its yield moves so little that small moves show as large sigma readings.')+
     T('Undervalued','Stocks in the sector at +1σ or higher today, and their share of the sector.')+
     T('Overvalued','Stocks in the sector at −1σ or lower today, and their share of the sector.')+
     T('12-month change','The sector’s average Yield Sigma at the end of each of the last 12 months. The figure is the change over that time: + toward undervalued, − toward overvalued.','spc')+
