@@ -182,10 +182,10 @@ table.tb td.spc,table.tb th.spc{text-align:center;padding-top:4px;padding-bottom
 .segL{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);margin-top:6px}
 .segL i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .segL b{color:var(--ink);font-weight:600}
-.pct{display:grid;grid-template-columns:minmax(0,1fr) 120px 92px;gap:6px 12px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.pct{display:grid;grid-template-columns:minmax(0,1fr) 120px max-content;gap:6px 12px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
 .pct .pb{height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
 .pct .pb span{display:block;height:100%}
-.pct .pv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.pct .pv{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
 @media(max-width:600px){.pct{grid-template-columns:minmax(0,1fr) 70px 80px}}
 .shapes .seg{height:12px}
 
@@ -1055,8 +1055,8 @@ function healthHtml(U){
   var P=U.filter(function(x){return ok(x.rec.payoutRatio);}),pp=function(f){return P.filter(function(x){return f(x.rec.payoutRatio);}).length;};
   var S=U.filter(function(x){return ok(x.rec.divGrowthYears);}),ss=function(a,b){return S.filter(function(x){var y=Math.floor(x.rec.divGrowthYears);return y>=a&&y<b;}).length;};
   var G=U.filter(function(x){return div3InBand(x.rec)&&ok(x.rec.divGrowth10y);}),gg=function(f){return G.filter(function(x){return f(x.rec.divGrowth3y-x.rec.divGrowth10y);}).length;};
-  var h='<section class="sec"><h3>Dividend health of the universe</h3><p class="desc">The same checks as each card’s About panel, counted across every name.</p><div class="bars">';
-  if(P.length)h+=segBar('Payout ratio (dividend as a % of earnings)',[{l:'Under 40%',n:pp(function(p){return p>0&&p<40;}),c:C1},{l:'40–60%',n:pp(function(p){return p>=40&&p<60;}),c:C2},{l:'60–80%',n:pp(function(p){return p>=60&&p<80;}),c:C3},{l:'80–100%',n:pp(function(p){return p>=80&&p<=100;}),c:'color-mix(in srgb,var(--rust) 60%,var(--paper))'},{l:'Above 100% or negative earnings',n:pp(function(p){return p>100||p<=0;}),c:C4}],P.length);
+  var h='<section class="sec"><h3>Dividend health of the universe</h3><div class="bars">';
+  if(P.length)h+=segBar('Payout ratio',[{l:'Under 40%',n:pp(function(p){return p>0&&p<40;}),c:C1},{l:'40–60%',n:pp(function(p){return p>=40&&p<60;}),c:C2},{l:'60–80%',n:pp(function(p){return p>=60&&p<80;}),c:C3},{l:'80–100%',n:pp(function(p){return p>=80&&p<=100;}),c:'color-mix(in srgb,var(--rust) 60%,var(--paper))'},{l:'Above 100% or negative earnings',n:pp(function(p){return p>100||p<=0;}),c:C4}],P.length);
   if(S.length)h+=segBar('Years of dividend growth in a row',[{l:'King, 50+',n:ss(50,999),c:C1},{l:'Aristocrat, 25–49',n:ss(25,50),c:C2},{l:'Achiever, 10–24',n:ss(10,25),c:C3},{l:'Challenger, 5–9',n:ss(5,10),c:'color-mix(in srgb,var(--gold) 45%,var(--paper))'},{l:'Under 5',n:ss(0,5),c:C5}],S.length);
   if(G.length)h+=segBar('Dividend growth, last 3 years vs past 10',[{l:'Picking up',n:gg(function(d){return d>1;}),c:C1},{l:'Steady',n:gg(function(d){return d>=-1&&d<=1;}),c:C5},{l:'Slowing',n:gg(function(d){return d<-1;}),c:C3}],G.length);
   h+='</div>';
