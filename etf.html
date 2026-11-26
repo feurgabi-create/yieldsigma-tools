@@ -143,7 +143,7 @@ tr.click{cursor:pointer}
 <div class="toast" id="toast"></div>
 <script>
 /* Yield Sigma(TM) ETFs (Stardust Capital Labs, Nov 2026)
-   A user builds a mock ETF from the Yield Sigma list. It starts at $100 on the day it is created.
+   A user builds a mock ETF from the Yield Sigma list. It starts at a price its creator picks (default $100) on the day it is created.
    Saved to the visitor's account (Firestore, through auth.js); a link (?e=YABCD) shows any ETF live to anyone.
    Prices, dividends and sigma come from the same gist as every other page; month-end prices
    (history.csv) give the chart its points between visits. */
@@ -259,7 +259,7 @@ function watchPriv(){
 
 /* ---------- ETF engine ----------
    event = {d: ISO date, u:{KEY:units}, p:{KEY:price that day}, tw:{KEY:target %}, cash: dividends paid out so far}
-   Units are set so the ETF's price is $100 on the first day; a rebalance resets the units at that
+   Units are set so the ETF's price is its starting price (etf.start, default $100) on the first day; a rebalance resets the units at that
    day's prices, so the price carries on without a jump. Dividends accrue daily from each name's
    current dividend amount: reinvested (the units grow) or paid out (cash builds up beside the price). */
 function pxNow(k,ev){var s=U[k];return s?s.price:(ev&&ev.p[k])||null;}
@@ -281,10 +281,11 @@ function makeEvent(nav,cash,tw,iso){
   var u={},p={},t={};Object.keys(tw).forEach(function(k){var px=pxNow(k);if(!px)return;p[k]=px;u[k]=nav*tw[k]/100/px;t[k]=tw[k];});
   return {d:iso,u:u,p:p,tw:t,cash:cash};
 }
+function startOf(etf){return etf&&etf.start>0?etf.start:100;}
 function total(etf,v){return v.nav+(etf.div==='cash'?v.cash:0);}
 /* chart points: saved points up to the last rebalance, then each completed month-end, then today */
 function series(etf){
-  var pts=(etf.pts&&etf.pts.length?etf.pts:[{d:etf.created,v:100}]).slice(),from=pts[pts.length-1].d,c=from.split('-'),m=+c[0]*12+(+c[1]-1),t=todayISO();
+  var pts=(etf.pts&&etf.pts.length?etf.pts:[{d:etf.created,v:startOf(etf)}]).slice(),from=pts[pts.length-1].d,c=from.split('-'),m=+c[0]*12+(+c[1]-1),t=todayISO();
   for(;;){var y=Math.floor(m/12),mo=m%12,last=isoOf(Date.UTC(y,mo+1,0)/864e5);if(dnum(last)>=dnum(t))break;
     if(dnum(last)>dnum(from)){var mm=m,v=valueAt(etf,last,function(k){return monthPrice(k,mm);});if(v.ok)pts.push({d:last,v:total(etf,v)});}
     m++;}
@@ -376,8 +377,8 @@ function runRules(etf){
 
 /* ---------- saving ---------- */
 function createEtf(o){
-  var d=todayISO(),e0=makeEvent(100,0,o.tw,d),ref=etfsCol().doc(o.sym);
-  var doc={owner:ME.uid,name:o.name,div:o.div,wt:o.wt,created:d,house:!!o.house,note:o.note||'',ev:[e0],pts:[{d:d,v:100}],turn:0,n:0,rules:o.rules||null};
+  var st=o.start>0?o.start:100,d=todayISO(),e0=makeEvent(st,0,o.tw,d),ref=etfsCol().doc(o.sym);
+  var doc={owner:ME.uid,name:o.name,div:o.div,wt:o.wt,created:d,house:!!o.house,note:o.note||'',ev:[e0],pts:[{d:d,v:st}],start:st,turn:0,n:0,rules:o.rules||null};
   return DB.runTransaction(function(t){return t.get(ref).then(function(s){if(s.exists)throw {code:'taken'};t.set(ref,doc);});})
     .then(function(){if(o.house)return ref.collection('private').doc('log').set({ev:[e0]});});
 }
@@ -428,25 +429,25 @@ function render(){
   if(id&&(id==='bTk'||id==='bNm'||id==='bNote'))focusAfter(id,pos);
 }
 function rowFor(e){var v=now(e),w=weightsNow(e,v),p=total(e,v);
-  return '<tr class="click" data-open="'+esc(e.sym)+'"><td>'+sym(e.sym)+'</td><td class="l">'+esc(e.name||'')+'</td><td>'+money(v.nav)+'</td><td>'+chg(p-100)+'</td><td>'+pct(wavg(w,function(s){return s.yld;}))+'</td><td>'+sg(wavg(w,function(s){return s.sigma;}))+'</td><td>'+Object.keys(w).length+'</td><td class="mut">'+fmtDate(e.created)+'</td></tr>';}
-var THEAD='<thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Price','ETF price; $100 on the day it was created.')+'</th><th>'+tip('Since start','Change since the day it was created, dividends included.')+'</th><th>'+tip('Dividend yield','Weighted average dividend yield of the holdings.')+'</th><th>'+tip('Average σ','Weighted average σ of the holdings.')+'</th><th>Holdings</th><th>Created</th></tr></thead>';
+  return '<tr class="click" data-open="'+esc(e.sym)+'"><td>'+sym(e.sym)+'</td><td class="l">'+esc(e.name||'')+'</td><td>'+money(v.nav)+'</td><td>'+chg((p/startOf(e)-1)*100)+'</td><td>'+pct(wavg(w,function(s){return s.yld;}))+'</td><td>'+sg(wavg(w,function(s){return s.sigma;}))+'</td><td>'+Object.keys(w).length+'</td><td class="mut">'+fmtDate(e.created)+'</td></tr>';}
+var THEAD='<thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Price','ETF price; its creator picks the starting price on the day it is created.')+'</th><th>'+tip('Since start','Change since the day it was created, dividends included.')+'</th><th>'+tip('Dividend yield','Weighted average dividend yield of the holdings.')+'</th><th>'+tip('Average σ','Weighted average σ of the holdings.')+'</th><th>Holdings</th><th>Created</th></tr></thead>';
 function homeView(){
   var h='';
   h+='<section><h3>House ETFs'+infoI('house')+'</h3>'+infoPop('house','Built and run by Stardust Capital Labs from the Yield Sigma list. Equal weight, rebalanced at our discretion; each page shows how often and the turnover.')+
     '<div class="desc">Paper ETFs run by Stardust Capital Labs.</div><div class="house">'+
     HOUSE.map(function(x){var e=HOUSED[x.sym];
-      if(e){var v=now(e),p=total(e,v);return '<div class="hCard click" data-open="'+x.sym+'" style="cursor:pointer">'+sym(x.sym)+'<div class="nm">'+esc(e.name||x.name)+'</div><div style="font-weight:700">'+money(v.nav)+' <span style="font-size:12px">'+chg(p-100)+'</span></div></div>';}
+      if(e){var v=now(e),p=total(e,v);return '<div class="hCard click" data-open="'+x.sym+'" style="cursor:pointer">'+sym(x.sym)+'<div class="nm">'+esc(e.name||x.name)+'</div><div style="font-weight:700">'+money(v.nav)+' <span style="font-size:12px">'+chg((p/startOf(e)-1)*100)+'</span></div></div>';}
       return '<div class="hCard">'+sym(x.sym)+'<div class="nm">'+esc(x.name)+'</div>'+(isAdmin()?'<button class="btn sm pri" data-launch="'+x.sym+'">Launch</button>':'<span class="chip">Launching soon</span>')+'</div>';}).join('')+'</div></section>';
   var mine=MINE.filter(function(e){return !e.house;});
   h+='<section><div class="row" style="justify-content:space-between"><div><h3>My ETFs'+infoI('mine')+'</h3>'+
-    infoPop('mine','Each ETF starts at $100 on the day you create it and is priced from the Yield Sigma list every day after. Saved to your account, so it’s on every device you sign in on; its link shows it live to anyone.')+
+    infoPop('mine','Each ETF starts at the price you pick on the day you create it and is priced from the Yield Sigma list every day after. Saved to your account, so it’s on every device you sign in on; its link shows it live to anyone.')+
     '<div class="desc">Your own ETFs, built from the Yield Sigma list.</div></div>'+
     (VIEW.build?'':'<button class="btn pri" data-act="new">+ Create an ETF</button>')+'</div>';
   if(VIEW.build)h+=builderView();
   if(!READY&&!OFF)h+='<div class="empty">Loading…</div>';
-  else if(!ME&&!VIEW.build)h+='<div class="empty">Sign in to create your own ETF, free: pick a Y ticker and your names, and your ETF’s price starts at $100 today.</div>';
+  else if(!ME&&!VIEW.build)h+='<div class="empty">Sign in to create your own ETF, free: pick a Y ticker and your names, and it starts live today.</div>';
   else if(mine.length)h+='<div class="tw"><table>'+THEAD+'<tbody>'+mine.map(rowFor).join('')+'</tbody></table></div>';
-  else if(!VIEW.build)h+='<div class="empty">No ETFs yet. It’s free: pick a Y ticker and your names, and your ETF’s price starts at $100 today.</div>';
+  else if(!VIEW.build)h+='<div class="empty">No ETFs yet. It’s free: pick a Y ticker and your names, and it starts live today.</div>';
   h+='</section>';
   return h;
 }
@@ -458,6 +459,7 @@ function builderView(){
     '<div class="fld"><label>TICKER</label><span class="tkBox"><span class="yY">Y</span><input id="bTk" maxlength="4" autocomplete="off" spellcheck="false" value="'+esc(B.letters)+'" placeholder="ABCD" aria-label="Four letters after Y"'+(B.house?' readonly':'')+'></span>'+
     '<div class="msg" style="color:var(--'+(chk.ok?'jade':chk.wait?'muted':'rust')+')">'+esc(chk.msg)+'</div></div>'+
     '<div class="fld"><label>NAME</label><input class="txt" id="bNm" maxlength="48" value="'+esc(B.name)+'" placeholder="e.g. My Dividend Kings"></div>'+
+    '<div class="fld"><label>STARTING PRICE</label><div class="seg" id="bSt">'+[10,25,50,100].map(function(p){return '<button data-v="'+p+'" class="'+((B.start||100)===p?'on':'')+'">$'+p+'</button>';}).join('')+'</div><div class="note">The ETF’s price on day one, for tracking only. Nothing is paid.</div></div>'+
     '<div class="fld"><label>DIVIDENDS</label><div class="seg" id="bDiv"><button data-v="re" class="'+(B.div==='re'?'on':'')+'">Reinvested</button><button data-v="cash" class="'+(B.div==='cash'?'on':'')+'">Paid out</button></div><div class="note">Set once; it can’t be changed after the ETF is created.</div></div>'+
     (B.house?'<div class="fld"><label>REBALANCE NOTE (PUBLIC)</label><input class="txt" id="bNote" maxlength="60" value="'+esc(B.note)+'" placeholder="e.g. Rebalanced quarterly"><div class="note">Shown on the page with the turnover; the rebalance log stays private.</div></div>'
       :'<div class="fld"><label>WEIGHTING</label><div class="seg" id="bWt"><button data-v="eq" class="'+(B.wt==='eq'?'on':'')+'">Equal weight</button><button data-v="cu" class="'+(B.wt==='cu'?'on':'')+'">Custom</button></div></div>')+
@@ -481,12 +483,12 @@ function etfView(){
   if(etf===undefined||!READY)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">Loading…</div>';
   if(!etf)return '<a href="#" class="back" data-act="home">← All ETFs</a><div class="empty" style="margin-top:12px">No ETF with that ticker.</div>';
   var own=!!ME&&etf.owner===ME.uid,v=now(etf),w=weightsNow(etf,v),price=v.nav,tr=total(etf,v);
-  var meta='Created '+fmtDate(etf.created)+' at $100 · '+(etf.wt==='eq'?'Equal weight':etf.house?'Growth weighted':'Custom weights')+' · Dividends '+(etf.div==='re'?'reinvested':'paid out');
+  var S=startOf(etf),meta='Created '+fmtDate(etf.created)+' at '+money(S)+' · '+(etf.wt==='eq'?'Equal weight':etf.house?'Growth weighted':'Custom weights')+' · Dividends '+(etf.div==='re'?'reinvested':'paid out');
   if(etf.house)meta+=(etf.note?' · '+esc(etf.note):'')+(etf.n?' · '+turnLine(etf):'');
   else if(etf.n)meta+=' · Rebalanced '+etf.n+'×';
   var h='<a href="#" class="back" data-act="home">← All ETFs</a>';
   h+='<div class="eHead" style="margin-top:12px"><div>'+sym(etf.sym)+(etf.house?' <span class="chip j" style="vertical-align:8px">House ETF</span>':'')+'<div class="nm">'+esc(etf.name||'')+'</div><div class="meta">'+meta+'</div></div>'+
-    '<div class="px"><div class="p">'+money(price)+'</div><div class="c">'+chg(tr-100)+' since start'+(etf.div==='cash'?' · price '+chg(price-100):'')+'</div></div></div>';
+    '<div class="px"><div class="p">'+money(price)+'</div><div class="c">'+chg((tr/S-1)*100)+' since start'+(etf.div==='cash'?' · price '+chg((price/S-1)*100):'')+'</div></div></div>';
   var st=[
     ['Dividend yield',pct(wavg(w,function(s){return s.yld;})),'Weighted average dividend yield of the holdings.'],
     ['10y average yield',pct(wavg(w,function(s){return s.avg10y;})),'Weighted average of each holding’s 10-year average dividend yield.'],
@@ -497,7 +499,7 @@ function etfView(){
   ];
   if(etf.div==='cash')st.push(['Dividends paid',money(v.cash),'Dividends paid out per ETF share since the day it was created.']);
   h+='<div class="stats">'+st.map(function(x){return '<div class="stat"><div class="k">'+tip(x[0],x[2])+'</div><div class="v">'+x[1]+'</div></div>';}).join('')+'</div>';
-  h+='<div class="two"><section><h3>Price since start</h3><div class="desc">'+(etf.div==='re'?'Dividends reinvested.':'Price plus dividends paid out.')+' Month-end points and today.</div><div class="chart">'+chartSvg(series(etf))+'</div></section>'+
+  h+='<div class="two"><section><h3>Price since start</h3><div class="desc">'+(etf.div==='re'?'Dividends reinvested.':'Price plus dividends paid out.')+' Month-end points and today.</div><div class="chart">'+chartSvg(series(etf),S)+'</div></section>'+
     '<section><h3>Sectors</h3><div class="desc">Share of the ETF’s value today.</div><div class="bars">'+sectorBars(w)+'</div></section></div>';
   var sug=suggest(etf,v);
   h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'</tr></thead><tbody>'+
@@ -533,13 +535,13 @@ function rebView(etf,v,w){
     '<div class="note" style="text-align:right">The price doesn’t change on a rebalance; the holdings are reset at today’s prices.</div></div>';
   return h;
 }
-function chartSvg(pts){
+function chartSvg(pts,base){base=base||100;
   var W=560,Hh=220,pl=46,pr=12,pt=12,pb=26,x0=dnum(pts[0].d),x1=Math.max(dnum(pts[pts.length-1].d),x0+1);
-  var vs=pts.map(function(p){return p.v;}).concat([100]),lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs),pad=Math.max((hi-lo)*0.15,1);lo-=pad;hi+=pad;
+  var vs=pts.map(function(p){return p.v;}).concat([base]),lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs),pad=Math.max((hi-lo)*0.15,1);lo-=pad;hi+=pad;
   var X=function(d){return pl+(dnum(d)-x0)/(x1-x0)*(W-pl-pr);},Y=function(v){return pt+(hi-v)/(hi-lo)*(Hh-pt-pb);};
   var line=pts.map(function(p,i){return (i?'L':'M')+X(p.d).toFixed(1)+' '+Y(p.v).toFixed(1);}).join(' ');
-  var last=pts[pts.length-1],up=last.v>=100,col=up?'var(--jade)':'var(--rust)';
-  var g='';[lo+pad,100,hi-pad].filter(function(v,i){return i===1||Math.abs(v-100)>(hi-lo)*0.08;}).forEach(function(v){g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--rule)" '+(v===100?'stroke-dasharray="4 4"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end" font-size="12" fill="var(--muted)">$'+v.toFixed(0)+'</text>';});
+  var last=pts[pts.length-1],up=last.v>=base,col=up?'var(--jade)':'var(--rust)';
+  var g='';[lo+pad,base,hi-pad].filter(function(v,i){return i===1||Math.abs(v-base)>(hi-lo)*0.08;}).forEach(function(v){g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--rule)" '+(v===base?'stroke-dasharray="4 4"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end" font-size="12" fill="var(--muted)">$'+v.toFixed(0)+'</text>';});
   return '<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="ETF price since start">'+g+
     '<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
     pts.map(function(p){return '<circle cx="'+X(p.d).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="3" fill="'+col+'"><title>'+fmtDate(p.d)+': '+money(p.v)+'</title></circle>';}).join('')+
@@ -584,6 +586,7 @@ function wire(){
     document.getElementById('bNm').oninput=function(e){B.name=e.target.value;};
     var nt=document.getElementById('bNote');if(nt)nt.oninput=function(e){B.note=e.target.value;};
     document.querySelectorAll('#bDiv button').forEach(function(b){b.onclick=function(){B.div=b.getAttribute('data-v');render();};});
+    document.querySelectorAll('#bSt button').forEach(function(b){b.onclick=function(){B.start=+b.getAttribute('data-v');render();};});
     document.querySelectorAll('#bWt button').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-v');if(v==='cu'&&B.wt==='eq')B.list.forEach(function(x){x.w=+(100/B.list.length).toFixed(2);});B.wt=v;render();};});
     searchBox(document.getElementById('bSrch'),document.getElementById('bSugg'),function(k){B.list.push({k:k,w:B.wt==='cu'?'':0});render();focusAfter('bSrch');},function(){return B.list.map(function(x){return x.k;});});
     sheet.querySelectorAll('[data-wi]').forEach(function(i){i.onchange=function(){B.list[+i.getAttribute('data-wi')].w=i.value===''?'':+i.value;render();};});
@@ -598,7 +601,7 @@ function wire(){
   sheet.querySelectorAll('[data-act]').forEach(function(b){b.onclick=function(e){e.preventDefault();act(b.getAttribute('data-act'));};});
 }
 function scale(list){var t=list.reduce(function(s,x){return s+(+x.w||0);},0);if(!t)return;var acc=0;list.forEach(function(x,i){x.w=i<list.length-1?+((+x.w||0)/t*100).toFixed(2):0;acc+=x.w;});list[list.length-1].w=+(100-acc).toFixed(2);}
-function openBuilder(){VIEW.build={letters:'',name:'',div:'re',wt:'eq',list:[],house:false,note:''};render();focusAfter('bTk');}
+function openBuilder(){VIEW.build={letters:'',name:'',div:'re',wt:'eq',start:100,list:[],house:false,note:''};render();focusAfter('bTk');}
 function fail(e,what){oops(e);VIEW.busy=false;render();toast(e&&e.code==='taken'?'That ticker was just taken.':what+' didn’t go through. Please try again.');}
 function act(a){
   var etf=VIEW.mode==='etf'?CUR:null;
@@ -607,8 +610,8 @@ function act(a){
   else if(a==='scale'){scale(VIEW.build.list);render();}
   else if(a==='create'){var B=VIEW.build,c=symCheck(B.letters,B.house);if(!c.ok||!ME)return;var tw={};
     B.list.forEach(function(x){tw[x.k]=B.wt==='eq'?100/B.list.length:+x.w;});VIEW.busy=true;render();
-    createEtf({sym:c.sym,name:B.name.trim(),div:B.div,wt:B.wt,tw:tw,house:B.house,note:(B.note||'').trim(),rules:B.rules||null}).then(function(){
-      VIEW.busy=false;VIEW.build=null;REMOTE[c.sym]='taken';go({mode:'etf',sym:c.sym});toast(c.sym+' created at $100');},function(e){if(e&&e.code==='taken')REMOTE[c.sym]='taken';fail(e,'Creating the ETF');});}
+    createEtf({sym:c.sym,start:B.start||100,name:B.name.trim(),div:B.div,wt:B.wt,tw:tw,house:B.house,note:(B.note||'').trim(),rules:B.rules||null}).then(function(){
+      VIEW.busy=false;VIEW.build=null;REMOTE[c.sym]='taken';go({mode:'etf',sym:c.sym});toast(c.sym+' created at '+money(B.start||100));},function(e){if(e&&e.code==='taken')REMOTE[c.sym]='taken';fail(e,'Creating the ETF');});}
   else if(a==='home'){go({mode:'home'});}
   else if(a==='share'){var link='https://tools.yieldsigma.com/etf.html?e='+encodeURIComponent(etf.sym);
     (navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(function(){toast('Link copied');},function(){prompt('Copy this link',link);});}
