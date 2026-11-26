@@ -146,6 +146,8 @@ table.tb td{font-variant-numeric:tabular-nums;font-weight:600}
 table.tb td:first-child{font-weight:600}
 table.tb td .n{display:block;font-size:10px;font-weight:500;color:var(--muted)}
 table.tbS th{white-space:nowrap}
+table.tbS th,table.tbS td{text-align:center}
+table.tbS th:first-child,table.tbS td:first-child{text-align:left}
 table.tbS td{white-space:nowrap}
 table.tbS .etfT{margin-left:8px;font-size:11px;color:var(--muted);letter-spacing:.02em}
 table.tb tr.sel td{background:color-mix(in srgb,var(--jade-soft) 60%,transparent)}
@@ -1140,6 +1142,8 @@ function render(){
   /* explanations: a section's description sits behind an ⓘ next to its title (column headers keep their dotted tips) */
   sheet.querySelectorAll('section.sec').forEach(function(sec){
     var h=sec.querySelector('h3'),p=sec.querySelector(':scope > p.desc');if(!h||!p)return;
+    /* protocol: one short sentence stays under the title; anything longer goes behind the ⓘ */
+    var sent=(p.textContent.trim().match(/[.!?](\s|$)/g)||[]).length;if(sent<=1&&p.textContent.length<=140)return;
     var k='d-'+sec.getAttribute('data-k');
     h.insertAdjacentHTML('beforeend','<button type="button" class="infoI" data-info="'+k+'" aria-label="About this section" aria-expanded="false">i</button>');
     p.className='infoPop';p.id='info-'+k;p.hidden=true;h.insertAdjacentElement('afterend',p);
