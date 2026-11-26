@@ -808,12 +808,12 @@ function normHtml(U,LT){
     '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ — its 10-year average yield. Read down the table to see at which level normalizing has been fastest. “Still away” counts moves not back yet; the median counts them too, as trips still running.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span></div>'+
     lead+
-    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet reverted</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet returned</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<p class="pickHint">Names for <b>'+lvl(THR,SIDE)+(SIDE>0?' or higher':' or lower')+'</b> · click a row in the table to change</p>'+
     '<div class="lead3" style="margin-top:8px">'+
-      '<div><h4>Fastest to revert from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
-      '<div><h4>Slowest to revert from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.slow,mo)+'</div>'+
-      '<div><h4>Not yet reverted</h4><p class="hint">'+Ld.openN+' name'+(Ld.openN===1?'':'s')+' past '+lvl(THR,SIDE)+' and not back yet · months so far</p>'+li(Ld.open,function(e){return e.so+' mo<span class="m" style="font-weight:500"> · since '+mLabel(e.since)+'</span>';})+'</div>'+
+      '<div><h4>Fastest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.fast,mo)+'</div>'+
+      '<div><h4>Slowest back from '+lvl(THR,SIDE)+'</h4><p class="hint">median months to 0σ · occurrences, at least 2</p>'+li(Ld.slow,mo)+'</div>'+
+      '<div><h4>Still away from 0σ</h4><p class="hint">'+Ld.openN+' name'+(Ld.openN===1?'':'s')+' past '+lvl(THR,SIDE)+' and not back yet · months so far</p>'+li(Ld.open,function(e){return e.so+' mo<span class="m" style="font-weight:500"> · since '+mLabel(e.since)+'</span>';})+'</div>'+
     '</div></section>';
 }
 /* mini chart: the sector's average sigma at the end of each of the last 12 completed months,
@@ -1033,7 +1033,7 @@ function sectorHtml(U){
     T('Undervalued','Stocks in the sector at +1σ or higher today, and their share of the sector.')+
     T('Overvalued','Stocks in the sector at −1σ or lower today, and their share of the sector.')+
     T('12-month change','The sector’s average Yield Sigma at the end of each of the last 12 months. The figure is the change over that time: + toward undervalued, − toward overvalued.','spc')+
-    T('Months to revert','Median months for a reading at '+lv+' to get back to 0σ (the 10-year average yield), across the sector’s past occurrences. The level follows the one picked under Reversion history.')+
+    T('Months to 0σ','Median months for a reading at '+lv+' to get back to 0σ (the 10-year average yield), across the sector’s past occurrences. The level follows the one picked under Reversion history.')+
     T('Bell shape','Share of the sector’s stocks whose bell curve shape is graded Textbook or Defined: the ones whose dividend yield has reliably come back to its average.')+
     '</tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
