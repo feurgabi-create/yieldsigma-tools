@@ -93,9 +93,10 @@ a{color:var(--jade)}
 .foldAll button{border:0;background:none;color:var(--jade);font:inherit;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
 .sec h3 .fold{border:0;background:none;color:var(--muted);font:inherit;cursor:pointer;padding:0 6px 0 0;width:1.3em;text-align:left}
 .sec h3 .fold:hover{color:var(--jade)}
-.sec h3{cursor:pointer;user-select:none}.sec h3:hover,.sec h3:hover .fold{color:var(--jade)}
+.sec h3{cursor:pointer;user-select:none}
+.sec h3 .infoI{margin-left:8px;vertical-align:2px;text-transform:none}
+.descData{font-size:12.5px;color:var(--muted);margin:0 0 10px}.sec h3:hover,.sec h3:hover .fold{color:var(--jade)}
 .sheet.tiles .sec h3{cursor:default}
-/* long descriptions: the first sentence shows; the rest is its dotted-underline tip (tips.js) */
 .sec.folded>*:not(h3){display:none!important}
 .sec.folded{padding:16px 0 0;margin-top:16px}
 @media (min-width:1100px){
@@ -776,7 +777,8 @@ function breadthHtml(){
   if(!BR||!BR.length)return '';
   var last=BR[BR.length-1];
   return '<section class="sec"><h3>Undervalued and overvalued, month by month</h3>'+
-    '<p class="desc"><span data-tip="'+esc('The peaks show when cheap or rich readings came all at once, across the market, rather than one name at a time.')+'">Share of names in each zone at the end of every month since '+Math.floor(BR[0].m/12)+'. Last completed month, '+mLabel(last.m)+': '+Math.round(last.u)+'% undervalued, '+Math.round(last.o)+'% overvalued.</span></p>'+
+    '<p class="desc">Share of names in each zone at the end of every month since '+Math.floor(BR[0].m/12)+'. The peaks show when cheap or rich readings came all at once, across the market, rather than one name at a time.</p>'+
+    '<p class="descData">Last completed month, '+mLabel(last.m)+': '+Math.round(last.u)+'% undervalued, '+Math.round(last.o)+'% overvalued.</p>'+
     '<div class="chart" id="brBox"><canvas id="cvBr"></canvas><div class="tip"></div></div>'+
     '<div class="key"><span><i style="background:var(--jade)"></i>Undervalued (+1σ or higher)</span><span><i style="background:var(--rust)"></i>Overvalued (−1σ or lower)</span></div></section>';
 }
@@ -789,7 +791,7 @@ function spreadHtml(U){
   var top=sorted.slice(0,5),bot=sorted.slice(-5).reverse();
   var li=function(arr){return arr.map(function(x){return '<li>'+tkLink(x)+'<span class="nm">'+nm(x)+'</span><span class="val">'+sg(x.a.sigma)+'</span></li>';}).join('');};
   return '<section class="sec"><h3>Where the universe stands today</h3>'+
-    '<p class="desc"><span data-tip="'+esc('The dashed line is the bell curve the same number of names would make if spread normally around 0σ; bars that rise above it show where the universe is crowded.')+'">Every name’s sigma today, in ½σ steps.</span></p>'+
+    '<p class="desc">Every name’s sigma today, in ½σ steps. The dashed line is the bell curve the same number of names would make if spread normally around 0σ; bars that rise above it show where the universe is crowded.</p>'+
     '<div class="two"><div><div class="chart short" id="hiBox"><canvas id="cvHi"></canvas><div class="tip"></div></div></div>'+
     '<div class="lead3" style="grid-template-columns:1fr;margin-top:0;gap:16px"><div><h4 class="u">Most undervalued</h4><ol>'+li(top)+'</ol></div><div><h4 class="o">Most overvalued</h4><ol>'+li(bot)+'</ol></div></div></div>'+
     (tot?'<div class="bar shapes" style="margin-top:24px"><h4>How reliably sigma comes back: bell-curve shape of each name’s history</h4><div class="seg">'+seg+'</div><div class="segL">'+leg+'</div></div>':'')+
@@ -808,7 +810,7 @@ function normHtml(U,LT){
   var mo=function(e){return Math.round(e.med)+' mo<span class="m" style="font-weight:500"> · '+e.n+'×</span>';};
   var btn=function(a,v,cur,lab){return '<button type="button" class="btn'+(v===cur?' on':'')+'" data-'+a+'="'+v+'">'+lab+'</button>';};
   return '<section class="sec" id="norm"><h3>Reversion history: how fast sigma reverted to 0σ</h3>'+
-    '<p class="desc"><span data-tip="'+esc('Read down the table to see at which level normalizing has been fastest. “Not yet reverted” counts moves not back yet; the median counts them too, as trips still running.')+'">Every time a name’s yield first reached a level, how long until it was back at 0σ, its 10-year average yield.</span></p>'+
+    '<p class="desc">Every time a name’s yield first reached a level, how long until it was back at 0σ, its 10-year average yield. Read down the table to see at which level normalizing has been fastest. “Not yet reverted” counts moves not back yet; the median counts them too, as trips still running.</p>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Side</span>'+btn('side','1',String(SIDE),'Undervalued (+σ)')+btn('side','-1',String(SIDE),'Overvalued (−σ)')+'</span></div>'+
     lead+
     '<div class="tbWrap"><table class="tb"><thead><tr><th>Starting level</th><th>Occurrences</th><th>Reverted within 6 months</th><th>Within 12 months</th><th>Within 24 months</th><th>Median months to revert</th><th>Not yet reverted</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
@@ -1029,7 +1031,7 @@ function sectorHtml(U){
   var tr=rows.map(function(r){var N=r.items.length,b=etfS[r.etf];return '<tr><td>'+esc(r.name)+(r.etf?'<span class="etfT">'+esc(r.etf)+'</span>':'')+'</td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="m">'+(b===undefined?'–':sg(b))+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   var lv=(SIDE>0?'+':'−')+THR+'σ'+(SIDE>0?' or higher':' or lower');
   var T=function(label,tip,cls){return '<th'+(cls?' class="'+cls+'"':'')+'><span data-tip="'+esc(tip)+'">'+label+'</span></th>';};
-  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average Yield Sigma. Hover or tap a column name for what it shows.</p>'+
+  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average Yield Sigma.</p>'+
     '<div class="tbWrap"><table class="tb tbS"><thead><tr><th>Sector</th><th>Names</th>'+
     T('List average','The average Yield Sigma of the stocks on our list in this sector, each stock counted the same: equal weight (EW).')+
     T('Broad ETF','The Yield Sigma of the sector ETF shown next to the sector name. The ETF is weighted by company size, so a few giants decide its reading, and its yield moves so little that small moves show as large sigma readings.')+
@@ -1134,6 +1136,13 @@ function render(){
     sec.setAttribute('data-k',k);
     var f=!tiles&&FOLD[k]===1;sec.classList.toggle('folded',f);
     h.insertAdjacentHTML('afterbegin','<button type="button" class="fold" aria-expanded="'+(f?'false':'true')+'" title="'+(f?'Show':'Hide')+' this section">'+(f?'▸':'▾')+'</button>');
+  });
+  /* explanations: a section's description sits behind an ⓘ next to its title (column headers keep their dotted tips) */
+  sheet.querySelectorAll('section.sec').forEach(function(sec){
+    var h=sec.querySelector('h3'),p=sec.querySelector(':scope > p.desc');if(!h||!p)return;
+    var k='d-'+sec.getAttribute('data-k');
+    h.insertAdjacentHTML('beforeend','<button type="button" class="infoI" data-info="'+k+'" aria-label="About this section" aria-expanded="false">i</button>');
+    p.className='infoPop';p.id='info-'+k;p.hidden=true;h.insertAdjacentElement('afterend',p);
   });
   if(tiles)sheet.querySelectorAll('section.sec').forEach(function(sec){
     sec.insertAdjacentHTML('afterbegin','<button type="button" class="xpand" title="Open large" aria-label="Open this section large"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>');
