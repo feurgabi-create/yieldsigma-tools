@@ -808,7 +808,7 @@ function hmControlsHtml(){
     '<span class="hmGrp"><span class="hmLbl">Show</span>'+b('sign','all',HM_SIGN,'All')+b('sign','neg',HM_SIGN,'Negative σ')+b('sign','pos',HM_SIGN,'Positive σ')+'</span></div>';
 }
 /* List / Broad: one explanation, opened by the small i next to them */
-var LB_TXT='<b>List (EW)</b>: average σ of the dividend growers on our list in this sector, equal weight. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large σ readings.';
+var LB_TXT='<b>List (EW)</b>: average σ of the dividend growers on our list in this sector, equal weight. <b>Broad</b>: the sector ETF, market-cap weighted. Its yield range is narrow, so small moves show as large σ readings.';
 function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
 function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);

@@ -1016,7 +1016,7 @@ function btHtml(U){
     '</section>';
 }
 /* List / Broad: one explanation, opened by the small i next to them */
-var LB_TXT='<b>List (EW)</b>: average σ of the dividend growers on our list in this sector, equal weight. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large σ readings.';
+var LB_TXT='<b>List (EW)</b>: average σ of the dividend growers on our list in this sector, equal weight. <b>Broad</b>: the sector ETF, market-cap weighted. Its yield range is narrow, so small moves show as large σ readings.';
 function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
 function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);
@@ -1038,7 +1038,7 @@ function sectorHtml(U){
   return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average σ.</p>'+
     '<div class="tbWrap"><table class="tb tbS"><thead><tr><th>Sector</th><th>Names</th>'+
     T('List average','Average σ of the stocks on our list in this sector, equal weight.')+
-    T('Broad ETF','σ of the sector ETF next to the sector name. Weighted by company size, so a few giants decide its reading; its yield moves so little that small moves show as large σ readings.')+
+    T('Broad ETF','σ of the sector ETF next to the sector name, market-cap weighted. Its yield range is narrow, so small moves show as large σ readings.')+
     T('Undervalued','Stocks in the sector at +1σ or higher today, and their share of the sector.')+
     T('Overvalued','Stocks in the sector at −1σ or lower today, and their share of the sector.')+
     T('12-month change','The sector’s average σ at each of the last 12 month-ends; the figure is the change: + toward undervalued, − toward overvalued.','spc')+
