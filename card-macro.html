@@ -1016,7 +1016,7 @@ function btHtml(U){
     '</section>';
 }
 /* List / Broad: one explanation, opened by the small i next to them */
-var LB_TXT='<b>List (EW)</b>: the average Yield Sigma of the dividend growers on our list in this sector, equal weight (EW): each name counts the same. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large sigma readings.';
+var LB_TXT='<b>List (EW)</b>: average σ of the dividend growers on our list in this sector, equal weight. <b>Broad</b>: the sector ETF, weighted by company size, so a few giants decide its reading. Its yield moves very little, so small moves show as large σ readings.';
 function lbBtn(id){return '<button type="button" class="infoI" data-info="'+id+'" aria-label="What List and Broad mean" aria-expanded="false">i</button>';}
 function lbPop(id){return '<p class="infoPop" id="info-'+id+'" hidden>'+LB_TXT+'</p>';}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.infoI[data-info]');if(!b)return;e.stopPropagation();var p=document.getElementById('info-'+b.getAttribute('data-info'));if(p){p.hidden=!p.hidden;b.setAttribute('aria-expanded',p.hidden?'false':'true');}},true);
@@ -1035,15 +1035,15 @@ function sectorHtml(U){
   var tr=rows.map(function(r){var N=r.items.length,b=etfS[r.etf];return '<tr><td>'+esc(r.name)+(r.etf?'<span class="etfT">'+esc(r.etf)+'</span>':'')+'</td><td>'+N+'</td><td class="'+(r.avg>=0?'u':'o')+'">'+sg(r.avg)+'</td><td class="m">'+(b===undefined?'–':sg(b))+'</td><td class="u">'+r.u+'<span class="n">'+pctOf(r.u,N)+'%</span></td><td class="o">'+r.o+'<span class="n">'+pctOf(r.o,N)+'%</span></td><td class="spc">'+sparkCell(r.items)+'</td><td>'+(r.n?(r.med===null?'over half not back':Math.round(r.med))+'<span class="n">'+r.n+' occurrence'+(r.n===1?'':'s')+'</span>':'–')+'</td><td>'+(r.good===null?'–':r.good+'%')+'</td></tr>';}).join('');
   var lv=(SIDE>0?'+':'−')+THR+'σ'+(SIDE>0?' or higher':' or lower');
   var T=function(label,tip,cls){return '<th'+(cls?' class="'+cls+'"':'')+'><span data-tip="'+esc(tip)+'">'+label+'</span></th>';};
-  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average Yield Sigma.</p>'+
+  return '<section class="sec"><h3>Sectors</h3><p class="desc">Sectors ranked from most undervalued to most overvalued by today’s average σ.</p>'+
     '<div class="tbWrap"><table class="tb tbS"><thead><tr><th>Sector</th><th>Names</th>'+
-    T('List average','The average Yield Sigma of the stocks on our list in this sector, each stock counted the same: equal weight (EW).')+
-    T('Broad ETF','The Yield Sigma of the sector ETF shown next to the sector name. The ETF is weighted by company size, so a few giants decide its reading, and its yield moves so little that small moves show as large sigma readings.')+
+    T('List average','Average σ of the stocks on our list in this sector, equal weight.')+
+    T('Broad ETF','σ of the sector ETF next to the sector name. Weighted by company size, so a few giants decide its reading; its yield moves so little that small moves show as large σ readings.')+
     T('Undervalued','Stocks in the sector at +1σ or higher today, and their share of the sector.')+
     T('Overvalued','Stocks in the sector at −1σ or lower today, and their share of the sector.')+
-    T('12-month change','The sector’s average Yield Sigma at the end of each of the last 12 months. The figure is the change over that time: + toward undervalued, − toward overvalued.','spc')+
+    T('12-month change','The sector’s average σ at each of the last 12 month-ends; the figure is the change: + toward undervalued, − toward overvalued.','spc')+
     T('Months to 0σ','Median months for a reading at '+lv+' to get back to 0σ (the 10-year average yield), across the sector’s past occurrences. The level follows the one picked under Reversion history.')+
-    T('Bell shape','Share of the sector’s stocks whose bell curve shape is graded Textbook or Defined: the ones whose dividend yield has reliably come back to its average.')+
+    T('Bell shape','Share of the sector’s stocks with a Textbook or Defined bell curve shape.')+
     '</tr></thead><tbody>'+tr+'</tbody></table></div></section>';
 }
 function segBar(title,parts,N){
