@@ -23,10 +23,10 @@
 .tkLine{display:flex;align-items:center;gap:8px}
 .pxLine{position:relative;margin-top:8px;font:600 clamp(30px,4vw,42px)/1 var(--serif);font-variant-numeric:tabular-nums;color:var(--c-ink);white-space:nowrap}
 .pxLine .pxSign{position:absolute;right:100%;top:.12em;margin-right:2px;font:600 .55em/1 var(--serif)}
-.tvBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;gap:0;padding:0;border:1px solid var(--c-rule);border-radius:20px;background:transparent;color:var(--c-muted)}
-.tvBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
-.tvBtn svg{flex:none;width:16px;height:16px}
-.tvBtn[aria-pressed="true"]{color:var(--c-jade);border-color:var(--c-jade);background:var(--c-jade-soft)}
+.ysNavR>.tvBtn,.ysNavR>.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-sizing:border-box;padding:0;border:1px solid var(--c-rule);border-radius:50%;background:transparent;color:var(--c-muted);cursor:pointer}
+.ysNavR>.tvBtn svg{flex:none;width:16px;height:16px}
+.ysNavR>.tvBtn:hover,.ysNavR>.ysThemeBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
+.ysNavR>.tvBtn[aria-pressed="true"]{color:var(--c-jade);border-color:var(--c-jade);background:var(--c-jade-soft)}
 </style>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/auth.js?v=7"></script>
@@ -38,12 +38,7 @@
 /* ===== Tile view (Nov 2026): the whole card on one screen, rearranged into tiles (nothing left out).
    Left: the card's main elements, valuation anchors under them. Right: dividend and sigma detail,
    10-year dividend growth path, 10-year Treasury spread. Toggle top right; ?view=tiles opens it. ===== */
-.tvBtn{display:inline-flex;align-items:center;gap:9px;font:600 12px/1 var(--mono);color:var(--c-jade);background:transparent;border:1px solid var(--c-jade);border-radius:20px;padding:6px 8px 6px 13px;cursor:pointer}
-.tvBtn .sw{width:28px;height:16px;border-radius:999px;background:var(--c-rule);position:relative;transition:background .15s}
-.tvBtn .sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
-.tvBtn[aria-pressed="true"] .sw{background:var(--c-jade)}
-.tvBtn[aria-pressed="true"] .sw::after{left:14px}
-@media (max-width:900px){.tvBtn{display:none}}
+@media (max-width:900px){.ysNavR>.tvBtn{display:none}}
 .ysStar{border:0;background:none;color:var(--c-muted);cursor:pointer;line-height:1;padding:0 2px;align-self:center}
 .ysStar:hover,.ysStar.on{color:var(--c-gold)}
 .ysNavR{display:flex;align-items:center;gap:8px}
