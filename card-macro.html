@@ -83,12 +83,15 @@ a{color:var(--jade)}
 .st.u .v{color:var(--jade)} .st.o .v{color:var(--rust)}
 
 /* Tile view (wide screens) and folding sections, Nov 2026 */
-.tvBtn{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--mono);color:var(--jade);background:transparent;border:1px solid var(--jade);border-radius:20px;padding:5px 7px 5px 12px;cursor:pointer;margin:0 0 8px 8px;vertical-align:middle}
-.tvBtn .sw{width:26px;height:15px;border-radius:999px;background:var(--rule);position:relative;transition:background .15s}
-.tvBtn .sw::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
-.tvBtn[aria-pressed="true"] .sw{background:var(--jade)}
-.tvBtn[aria-pressed="true"] .sw::after{left:13px}
-@media (max-width:1099px){.tvBtn{display:none}}
+.ysCornerR{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px}
+.ysThemeAnchor .ysCornerR .ysThemeBtn{position:static}
+.ysCornerR>.tvBtn{order:1}.ysCornerR>.ysThemeBtn{order:2}.ysCornerR>.ysAuth{order:3}
+.ysCornerR>.tvBtn,.ysCornerR>.ysThemeBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-sizing:border-box;padding:0;border:1px solid var(--rule);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer}
+.ysCornerR>.tvBtn svg{flex:none;width:16px;height:16px}
+.ysCornerR>.tvBtn:hover,.ysCornerR>.ysThemeBtn:hover{color:var(--jade);border-color:var(--jade)}
+.ysCornerR>.tvBtn[aria-pressed="true"]{color:var(--jade);border-color:var(--jade);background:var(--jade-soft)}
+@media (max-width:1099px){.ysCornerR>.tvBtn{display:none}}
+html.ws .ysCornerR>.tvBtn,html.ws .ysCornerR>.ysThemeBtn{display:none}
 .detToggle{display:block;margin:28px 0 0;padding:0;background:none;border:0;cursor:pointer;font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
 .detToggle:hover{color:var(--jade)}
 .foldAll{font:600 11px var(--mono);color:var(--muted);margin:14px 0 0}
@@ -236,7 +239,7 @@ table.tb tr.thin td{opacity:.5}
 </style>
 </head>
 <body>
-<div class="stage"><div class="ysThemeAnchor"><div id="ysToolsSlot" class="ysTSlot"></div><script>document.write(window.YS_THEME?YS_THEME.button():"")</script></div><article class="sheet" id="sheet"><div class="empty">Loading the universe…</div></article></div>
+<div class="stage"><div class="ysThemeAnchor"><div id="ysToolsSlot" class="ysTSlot"></div><div class="ysCornerR"><script>(function(){var on=false;try{on=localStorage.getItem('ysMacroTiles')==='1';}catch(e){}document.write('<button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(on?'true':'false')+'" aria-label="Tile view" title="Tile view"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></button>'+(window.YS_THEME?YS_THEME.button():''));})();</script></div></div><article class="sheet" id="sheet"><div class="empty">Loading the universe…</div></article></div>
 <script src="https://tools.yieldsigma.com/pe-check.js?v=3"></script>
 <script>
 var LINKS={
@@ -761,7 +764,7 @@ function nm(x){return esc(shortCompanyName(x.a.name)||'');}
 function headHtml(U){
   var noun=UNI==='reits'?'REITs':'dividend-growth stocks';
   return '<div class="pageHead"><div><h2>Yield Sigma™ Macro</h2><div class="sub">The whole universe at a glance: '+U.length+' '+noun+'.</div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div></div>'+
-    '<div class="asof"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
+    '<div class="asof"><div>As of '+esc(new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}))+'</div></div></div>'+
     '<div class="ctl"><span class="grp"><span class="lbl">Universe</span>'+
       '<button type="button" class="btn'+(UNI==='stocks'?' on':'')+'" data-uni="stocks">Stocks</button><button type="button" class="btn'+(UNI==='reits'?' on':'')+'" data-uni="reits">REITs</button></span></div>'+
     '<p class="zdef"><b class="u">Undervalued</b>: yield at +1σ or more above its own 10-year average — the stock price, conversely, low. '+
@@ -1176,7 +1179,7 @@ document.addEventListener('click',function(e){
   if(xb){toggleBig(xb.closest('section.sec'));return;}
   if(e.target.classList&&e.target.classList.contains('macroShade')){toggleBig(document.querySelector('section.sec.big'));return;}
   var tv=e.target.closest&&e.target.closest('#tvBtn');
-  if(tv){TILES=!TILES;try{localStorage.setItem('ysMacroTiles',TILES?'1':'0');}catch(err){}var y0=window.scrollY;render();window.scrollTo(0,y0);return;}
+  if(tv){TILES=!TILES;try{localStorage.setItem('ysMacroTiles',TILES?'1':'0');}catch(err){}tv.setAttribute('aria-pressed',TILES?'true':'false');var y0=window.scrollY;render();window.scrollTo(0,y0);return;}
   var fh=e.target.closest&&e.target.closest('.sec h3');
   var fb=fh&&!e.target.closest('[data-tip],a,button:not(.fold),.labs,.lab')?fh.querySelector('.fold'):null;
   if(fb){var sec=fb.closest('section.sec'),k=sec.getAttribute('data-k'),f=!sec.classList.contains('folded');
