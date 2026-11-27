@@ -205,7 +205,7 @@
       '<div class="or"><span>or</span></div>'+
       '<input type="email" class="em" placeholder="you@example.com" autocomplete="email" value="'+esc(ls(EMAILKEY)||'')+'">'+
       '<button type="button" class="send">Continue with email</button>'+
-      '<div class="msg" role="status"></div><div class="fine">No password needed.</div></div>';
+      '<div class="msg" role="status"></div></div>';
     document.body.appendChild(m);
   }
   function sendLink(){
