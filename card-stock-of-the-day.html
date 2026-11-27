@@ -1412,11 +1412,11 @@ function staircaseBarsSVG(path,selYear,T,maxDivOverride){
     var x=X(p.year)-barW/2,y=Y(p.div),h=(H-B)-y;
     s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="'+(isSel?T.jade:T.rule)+'" opacity="'+(isSel?'1':'0.7')+'"/>';
     if([0,2,4,6,8,10].indexOf(p.year)>=0){
-      s+='<text x="'+X(p.year).toFixed(1)+'" y="'+(H-B+16)+'" font-family="'+T.mono+'" font-size="10.5" fill="'+T.muted+'" text-anchor="middle">Yr '+p.year+'</text>';
+      s+='<text x="'+X(p.year).toFixed(1)+'" y="'+(H-B+16)+'" font-family="'+T.mono+'" font-size="10.5" data-px="11.5" fill="'+T.muted+'" text-anchor="middle">Yr '+p.year+'</text>';
     }
   });
   var sel=path[selYear];
-  s+='<text x="'+X(selYear).toFixed(1)+'" y="'+(Y(sel.div)-8).toFixed(1)+'" font-family="'+T.mono+'" font-size="13" font-weight="700" fill="'+T.jade+'" text-anchor="middle">'+esc(fmtMoney(sel.div))+'</text>';
+  s+='<text x="'+X(selYear).toFixed(1)+'" y="'+(Y(sel.div)-8).toFixed(1)+'" font-family="'+T.mono+'" font-size="13" data-px="13" font-weight="700" fill="'+T.jade+'" text-anchor="middle">'+esc(fmtMoney(sel.div))+'</text>';
   s+='</svg>';
   return s;
 }
@@ -1497,8 +1497,8 @@ function yearFanSVG(fan,T){
       s2+='<line x1="'+wx.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(lx-4).toFixed(1)+'" y2="'+ly.toFixed(1)+'" stroke="'+color+'" stroke-width="1" stroke-opacity="0.45"/>';
     }
     s2+='<circle cx="'+wx.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="'+color+'"/>';
-    s2+='<text x="'+lx+'" y="'+(ly-5).toFixed(1)+'" font-family="'+T.mono+'" font-size="'+(bold?14:13)+'" font-weight="'+(bold?700:600)+'" fill="'+color+'">'+esc(label)+'</text>';
-    s2+='<text x="'+lx+'" y="'+(ly+13).toFixed(1)+'" font-family="'+T.mono+'" font-size="15" font-weight="700" fill="'+T.ink+'">'+esc(fmtMoney(pt.price))+'</text>';
+    s2+='<text x="'+lx+'" y="'+(ly-5).toFixed(1)+'" font-family="'+T.mono+'" font-size="13" data-px="12" font-weight="'+(bold?700:600)+'" fill="'+color+'">'+esc(label)+'</text>';
+    s2+='<text x="'+lx+'" y="'+(ly+13).toFixed(1)+'" font-family="'+T.mono+'" font-size="15" data-px="13" font-weight="700" fill="'+T.ink+'">'+esc(fmtMoney(pt.price))+'</text>';
     return s2;
   }
   s+=marker(fan.top,T.rust,'Yield \u22121\u03c3 ('+fmtPct(fan.top.yield)+')',false,labelY.top);
@@ -2842,5 +2842,14 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
   if(sm&&!h.open)h.open=true;if(!p)return;var open=p.hasAttribute('hidden');
   if(open)p.removeAttribute('hidden');else p.setAttribute('hidden','');b.setAttribute('aria-expanded',open?'true':'false');});
 </script>
-</body>
+<script>
+/* chart labels keep the page's text size: when a chart stretches wider than drawn, each label
+   marked data-px is set back to that many screen pixels (narrow screens keep the drawn size, so labels fit) */
+(function(){var q=0;function fix(){q=0;document.querySelectorAll('svg').forEach(function(sv){var t=sv.querySelectorAll('text[data-px]');if(!t.length)return;
+  var vb=sv.viewBox&&sv.viewBox.baseVal,w=sv.getBoundingClientRect().width;if(!vb||!vb.width||!w)return;var k=w/vb.width;
+  t.forEach(function(x){if(!x.hasAttribute('data-fs'))x.setAttribute('data-fs',x.getAttribute('font-size'));var v=k>1?(x.getAttribute('data-px')/k).toFixed(2):x.getAttribute('data-fs');if(x.getAttribute('font-size')!==v)x.setAttribute('font-size',v);});});}
+ function soon(){if(!q)q=requestAnimationFrame(fix);}
+ try{new MutationObserver(soon).observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
+ window.addEventListener('resize',soon);document.addEventListener('toggle',soon,true);soon();})();
+</script></body>
 </html>
