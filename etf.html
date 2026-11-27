@@ -469,7 +469,7 @@ function builderView(){
     (B.house?'<div class="fld"><label>REBALANCE NOTE (PUBLIC)</label><input class="txt" id="bNote" maxlength="60" value="'+esc(B.note)+'" placeholder="e.g. Rebalanced quarterly"><div class="note">Shown on the page with the turnover; the rebalance log stays private.</div></div>'
       :'<div class="fld"><label>WEIGHTING</label><div class="seg" id="bWt"><button data-v="eq" class="'+(B.wt==='eq'?'on':'')+'">Equal weight</button><button data-v="cu" class="'+(B.wt==='cu'?'on':'')+'">Custom</button></div></div>')+
     '</div>'+
-    '<div class="fld" style="margin-top:16px"><label>HOLDINGS</label><div class="srch"><input class="txt" id="bSrch" autocomplete="off" placeholder="Add a name: type a ticker or company"><div class="sugg" id="bSugg"></div></div></div>';
+    '<div class="fld" style="margin-top:16px"><label>HOLDINGS</label>'+startFrom(B)+'<div class="srch"><input class="txt" id="bSrch" autocomplete="off" placeholder="Add a name: type a ticker or company"><div class="sugg" id="bSugg"></div></div></div>';
   if(B.list.length){
     h+='<div class="tw" style="margin-top:10px"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>Price</th><th>Dividend yield</th><th>σ</th><th>Weight</th><th></th></tr></thead><tbody>'+
       B.list.map(function(x,i){var s=U[x.k];var w=B.wt==='eq'?(100/B.list.length):x.w;
@@ -596,6 +596,9 @@ function wire(){
     document.querySelectorAll('#bDiv button').forEach(function(b){b.onclick=function(){B.div=b.getAttribute('data-v');render();};});
     document.querySelectorAll('#bSt button').forEach(function(b){b.onclick=function(){B.start=+b.getAttribute('data-v');render();};});
     document.querySelectorAll('#bWt button').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-v');if(v==='cu'&&B.wt==='eq')B.list.forEach(function(x){x.w=+(100/B.list.length).toFixed(2);});B.wt=v;render();};});
+    sheet.querySelectorAll('[data-fill]').forEach(function(b){b.onclick=function(){
+      var src=b.getAttribute('data-fill')==='w'?YS_WATCH.list().map(key):(VIEW.fromDir||[]);
+      src.forEach(function(k){if(U[k]&&B.list.length<50&&!B.list.some(function(x){return x.k===k;}))B.list.push({k:k,w:B.wt==='cu'?'':0});});render();};});
     searchBox(document.getElementById('bSrch'),document.getElementById('bSugg'),function(k){B.list.push({k:k,w:B.wt==='cu'?'':0});render();focusAfter('bSrch');},function(){return B.list.map(function(x){return x.k;});});
     sheet.querySelectorAll('[data-wi]').forEach(function(i){i.onchange=function(){B.list[+i.getAttribute('data-wi')].w=i.value===''?'':+i.value;render();};});
     sheet.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){B.list.splice(+b.getAttribute('data-rm'),1);render();};});
@@ -610,6 +613,13 @@ function wire(){
   sheet.querySelectorAll('[data-star]').forEach(function(b){b.onclick=function(e){e.preventDefault();YS_WATCH.toggle(b.getAttribute('data-star'));};});
 }
 function scale(list){var t=list.reduce(function(s,x){return s+(+x.w||0);},0);if(!t)return;var acc=0;list.forEach(function(x,i){x.w=i<list.length-1?+((+x.w||0)/t*100).toFixed(2):0;acc+=x.w;});list[list.length-1].w=+(100-acc).toFixed(2);}
+function startFrom(B){
+  if(B.house)return '';
+  var wl=window.YS_WATCH?YS_WATCH.list().map(key).filter(function(k){return U[k];}):[],dl=VIEW.fromDir||[],o=[];
+  if(wl.length)o.push('<button class="btn sm" data-fill="w">My watchlist ('+wl.length+')</button>');
+  if(dl.length)o.push('<button class="btn sm" data-fill="d">Directory list ('+dl.length+')</button>');
+  return o.length?'<div class="row" style="margin:0 0 8px"><span class="note" style="margin:0">Start from:</span>'+o.join('')+'</div>':'';
+}
 function openBuilder(keys){VIEW.build={letters:'',name:'',div:'re',wt:'eq',start:100,list:(keys||[]).map(function(k){return {k:k,w:0};}),house:false,note:''};render();focusAfter('bTk');}
 function fail(e,what){oops(e);VIEW.busy=false;render();toast(e&&e.code==='taken'?'That ticker was just taken.':what+' didn’t go through. Please try again.');}
 function act(a){
@@ -641,8 +651,8 @@ function go(v){VIEW.mode=v.mode;VIEW.sym=v.sym||null;VIEW.reb=null;
   if(v.mode==='etf'&&READY)openSym(v.sym);render();window.scrollTo(0,0);}
 window.addEventListener('popstate',route);
 function route(){var sp=new URLSearchParams(location.search),e=sp.get('e'),bl=sp.get('build');
-  if(bl&&!e){var ks=[];bl.split(',').forEach(function(t){var k=key(t);if(U[k]&&ks.indexOf(k)<0&&ks.length<50)ks.push(k);});
-    try{history.replaceState(null,'',location.pathname);}catch(x){}VIEW.mode='home';VIEW.sym=null;VIEW.reb=null;openBuilder(ks);return;}
+  if((bl||sp.get('new'))&&!e){var ks=[];(bl||'').split(',').forEach(function(t){var k=key(t);if(U[k]&&ks.indexOf(k)<0&&ks.length<50)ks.push(k);});
+    try{history.replaceState(null,'',location.pathname);}catch(x){}VIEW.mode='home';VIEW.sym=null;VIEW.reb=null;VIEW.fromDir=ks.length?ks:null;openBuilder();return;}
   if(e){VIEW.mode='etf';VIEW.sym=e.toUpperCase();if(READY)openSym(VIEW.sym);}else{VIEW.mode='home';VIEW.sym=null;}
   VIEW.reb=null;render();}
 load().then(connect);

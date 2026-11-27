@@ -656,9 +656,10 @@ function cmp(a,b,key){
 }
 /* a filtered list (watchlist, zone, sector, 25+ years, search) can become a Paper ETF in one click */
 function buildBtn(){
-  var filtered=STATE.watch||STATE.zone!=='all'||STATE.sector||STATE.long25||STATE.q.trim();if(!filtered)return '';
-  var rows=visibleRows();if(rows.length<2||rows.length>50)return '';
-  return '<a class="wchip bld" href="https://tools.yieldsigma.com/etf.html?build='+rows.map(function(r){return encodeURIComponent(r.ticker);}).join(',')+'" target="_top" title="Open the Paper ETF builder with these '+rows.length+' names">+ Build an ETF from these '+rows.length+'</a>';
+  /* a filtered list rides along, so the builder can offer it as a starting point */
+  var filtered=STATE.watch||STATE.zone!=='all'||STATE.sector||STATE.long25||STATE.q.trim(),rows=filtered?visibleRows():[];
+  var q=rows.length>=2&&rows.length<=50?'?build='+rows.map(function(r){return encodeURIComponent(r.ticker);}).join(','):'?new=1';
+  return '<a class="wchip bld" href="https://tools.yieldsigma.com/etf.html'+q+'" target="_top" title="Open the Paper ETF builder">+ Build an ETF</a>';
 }
 function visibleRows(){
   var q=STATE.q.trim().toLowerCase();
