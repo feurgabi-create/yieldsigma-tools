@@ -160,7 +160,7 @@ var HOUSE=[
   {sym:'YSGMA',name:'Yield Sigma Strategy'},
   {sym:'YKING',name:'Dividend Kings'},
   {sym:'YREIT',name:'Yield Sigma REITs'},
-  {sym:'YBELL',name:'Textbook and Defined bell curves'},
+  {sym:'YBELL',name:'Textbook bell curves'},
   {sym:'YSCTO',name:'Yield Sigma Sectors'}
 ];
 var HM_GROUPS=(window.YS_SECTORS&&YS_SECTORS.groups)||[["Health Care","XLV","ABBV AMGN BMY CAH GILD JNJ LLY MDT MRK PRGO UNH"],["Technology","XLK","ACN ADP AVGO BMI BR CAPMF CSCO CTSH DOX HPQ IBM INTU MSFT OTEX PAYX QCOM SWKS TRI TXN"],["Consumer Staples","XLP","ADM BF_B BTI CL CLX COST GIS HRL HSY INGR KMB KO KR MDLZ MKC MO MZTI PEP PG PM SJM SYY TGT TSN UVV WMT"],["Consumer Discretionary","XLY","BBY GPC HD HRB LOW MCD NKE PAG TJX TSCO UPBD SBUX YUM DRI"],["Financials","XLF","AFG AFL ALL AMP AMSF ARCC ARES BAM BANF BEN BXSL CBU CINF CME CNA CNS CSWC CTBI FCBC FIS FNF FNLC HASI ICE IVZ JPM MAIN ORI OWL PEBO PFG PGR PRU RF RLI SBSI TROW TRV UBSI UNM USB WRB BAC GS"],["Industrials","XLI","BAH CAT EMR ETN FAST GD ITW LMT MATW R RHI RTX SNA SWK TNC TRN WM"],["Materials","XLB","AMCR APD EMN NTR SCL SHW SON WLK"],["Energy","XLE","CVX DKL ENB EOG EPD ET KMI MPLX NOG OKE PSX VLO WES XOM"],["Utilities","XLU","AES ARTNA AVA AWR BEP BIP BKH HZN CWEN CWT DUK ED EIX ES HTO NEE NFG NWE NWN OGE OGS POR SGU SO SR UGI WEC WTRG"],["Communication Services","XLC","CMCSA VZ WLY"]];
@@ -205,18 +205,18 @@ function addRows(txt,kind){
     var div=num(o.divDollar);
     U[k]={k:k,t:t,name:(m?m[1]:raw).trim(),kind:isFund?'fund':kind,price:price,div:div,
       yld:div!=null?div/price*100:num(o.yield),avg10y:num(o.avg10y),sigma:num(o.sigma),pe:pe,
-      payout:num(o.payoutRatio),g10:num(o.cagr10y),g3:num(o.divGrowth3y),yrs:num(o.divGrowthYears),
+      payout:num(o.payoutRatio),g10:num(o.cagr10y),g3:num(o.divGrowth3y),yrs:num(o.divGrowthYears),vol:num(o.volatility),
       sector:kind==='reit'?'Real Estate':isFund?((window.YS_SECTORS&&YS_SECTORS.funds[k])||'Funds and ETFs'):(SECT[k]||'Other')};
   });
 }
 function parseHist(txt){
   var L=String(txt||'').split(/\r?\n/);if(!L.length)return;
   var hd=L[0].split('\t'),ix=function(n){return hd.indexOf(n);};
-  var iT=ix('ticker'),iF=ix('first'),iP=ix('p'),iZ=ix('z');if(iT<0||iF<0||iP<0)return;
+  var iT=ix('ticker'),iF=ix('first'),iP=ix('p'),iZ=ix('z'),iG=ix('grade');if(iT<0||iF<0||iP<0)return;
   for(var i=1;i<L.length;i++){var f=L[i].split('\t');if(!f[iT]||!f[iP])continue;
     var st=+f[iF].slice(0,4)*12+(+f[iF].slice(5,7)-1);if(!isFinite(st))continue;
     var nums=function(x){return String(x||'').split(',').map(function(v){v=v.trim();return v===''?null:+v;});};
-    H[key(f[iT])]={st:st,p:nums(f[iP]),z:iZ>=0?nums(f[iZ]):[]};}
+    H[key(f[iT])]={st:st,p:nums(f[iP]),z:iZ>=0?nums(f[iZ]):[],grade:iG>=0?f[iG]:''};}
 }
 function load(){
   return Promise.all([get(GIST+'stocks.csv'),get(GIST+'reits.csv'),get(GIST+'history.csv')]).then(function(r){
@@ -325,7 +325,11 @@ var RULES={
   YSGMA:{n:20,minS:1,minY:3,gap:0.2,days:30,wt:'eq',note:'Top 20 above +1σ with a dividend yield over 3%; names change after 30 days in or out of the zone'},
   /* YKING: Dividend Kings (50+ years of growth), top 15 by σ, out below 0σ; weighted by 3-year dividend growth
      (10-year when the 3-year figure is blank), each between 2% and 10% */
-  YKING:{n:15,minS:0,minY:null,minYrs:50,gap:0.2,days:30,wt:'g3',lo:2,hi:10,note:'Top 15 Dividend Kings by σ, weighted by 3-year dividend growth (2% to 10% each); names change after 30 days in or out of the zone'}
+  YKING:{n:15,minS:0,minY:null,minYrs:50,gap:0.2,days:30,wt:'g3',lo:2,hi:10,note:'Top 15 Dividend Kings by σ, weighted by 3-year dividend growth (2% to 10% each); names change after 30 days in or out of the zone'},
+  /* YREIT: REITs (PFFR included, as a preferred-income anchor) above +1.5σ, the REIT accumulate line; top 12 by σ, equal weight */
+  YREIT:{kind:'reit',n:12,minS:1.5,minY:null,gap:0.2,days:30,wt:'eq',note:'Top 12 REITs by σ above +1.5σ; names change after 30 days in or out of the zone'},
+  /* YBELL: stocks with a Textbook bell curve and Yield Sigma Volatility under 40%, above +1σ; top 15 by σ, weighted by 3-year dividend growth */
+  YBELL:{n:15,minS:1,minY:null,grade:'Textbook',maxVol:40,gap:0.2,days:30,wt:'g3',lo:2,hi:10,note:'Top 15 by σ above +1σ with a Textbook bell curve and volatility under 40%, weighted by 3-year dividend growth (2% to 10% each); names change after 30 days in or out of the zone'}
 };
 function ruleWeights(ru,keys){
   var w={};if(!keys.length)return w;
@@ -344,7 +348,7 @@ function ruleWeights(ru,keys){
     var each=diff/room.length;room.forEach(function(k){w[k]=Math.min(hi,Math.max(lo,w[k]+each));});}
   return w;
 }
-function inZone(k,ru){var s=U[k];return !!s&&s.kind==='stock'&&s.sigma!=null&&s.sigma>ru.minS&&(ru.minY==null||(s.yld!=null&&s.yld>ru.minY))&&(!ru.minYrs||(s.yrs!=null&&s.yrs>=ru.minYrs));}
+function inZone(k,ru){var s=U[k];return !!s&&s.kind===(ru.kind||'stock')&&(!ru.grade||(H[k]&&H[k].grade===ru.grade))&&(!ru.maxVol||(s.vol!=null&&s.vol<ru.maxVol))&&s.sigma!=null&&s.sigma>ru.minS&&(ru.minY==null||(s.yld!=null&&s.yld>ru.minY))&&(!ru.minYrs||(s.yrs!=null&&s.yrs>=ru.minYrs));}
 function ruleTop(ru){return Object.keys(U).filter(function(k){return inZone(k,ru);}).sort(function(a,b){return U[b].sigma-U[a].sigma;}).slice(0,ru.n);}
 function lastME(){var d=new Date(),m=d.getFullYear()*12+d.getMonth()-1;return {m:m,iso:isoOf(Date.UTC(Math.floor(m/12),m%12+1,0)/864e5)};}
 function zME(k,m){var h=H[k];if(!h||!h.z)return null;var v=h.z[m-h.st];return v==null||!isFinite(v)?null:v;}
