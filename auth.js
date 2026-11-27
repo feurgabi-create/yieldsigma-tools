@@ -1,5 +1,6 @@
 /* Yield Sigma(TM) sign-in and sync (Stardust Capital Labs, Nov 2026)
-   Google sign-in through Firebase (project yield-sigma). Optional: every page works without it.
+   Sign-in through Firebase (project yield-sigma, sign-in pages on auth.yieldsigma.com): Google, or a
+   one-time link sent by email (no password). Optional: every page works without it.
    Signed in, the watchlist, price alerts and presets this browser keeps (localStorage keys in SYNC)
    are saved to the visitor's account (Firestore users/{uid}) and follow them to any device.
    - First sign-in on a browser merges that browser's lists with the saved ones (nothing is lost).
@@ -58,6 +59,7 @@
     try{window.dispatchEvent(new StorageEvent('storage',{key:k,oldValue:old,newValue:v,storageArea:localStorage}));}catch(e){}}
 
   function signedIn(u){
+    chooser(false);
     A.user={uid:u.uid,email:u.email||'',name:u.displayName||'',photo:u.photoURL||''};flag(true);
     var ref=userDoc();
     ref.get().then(function(snap){
@@ -83,7 +85,11 @@
     ks.forEach(function(k){var v=ls(k);up['data.'+k]=v==null?fb.firestore.FieldValue.delete():v;});
     userDoc().update(up).catch(function(e){console.warn('[YS_AUTH] save',e&&e.code||e);ks.forEach(function(k){dirty[k]=1;});});}
 
-  A.signIn=function(){
+  /* the sign-in box: Google, or a sign-in link by email */
+  var EMAILKEY='ysEmailForSignIn';
+  A.signIn=function(){chooser(true);};
+  A.google=function(){
+    chooser(false);
     return load().then(function(){var p=new fb.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
       return fb.auth().signInWithPopup(p);}).catch(function(e){
       var c=e&&e.code||'';if(c==='auth/popup-closed-by-user'||c==='auth/cancelled-popup-request')return;
@@ -94,6 +100,23 @@
     });
   };
   /* pages that read or write their own collections (the ETF page) wait for Firebase here */
+  A.emailLink=function(email){
+    email=String(email||'').trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return Promise.reject({code:'auth/invalid-email'});
+    var url=location.href.split('#')[0].replace(/([?&])(embed|ws)=1&?/,'$1').replace(/[?&]$/,'');
+    return load().then(function(){return fb.auth().sendSignInLinkToEmail(email,{url:url,handleCodeInApp:true});})
+      .then(function(){ls(EMAILKEY,email);});
+  };
+  /* arriving from the emailed link: finish the sign-in, then tidy the address */
+  function finishEmailLink(){
+    var href=location.href;if(!/[?&]oobCode=/.test(href)||!/[?&]mode=signIn/.test(href))return;
+    load().then(function(){
+      if(!fb.auth().isSignInWithEmailLink(href))return;
+      var email=ls(EMAILKEY)||window.prompt('Confirm the email address you used to sign in:');if(!email)return;
+      return fb.auth().signInWithEmailLink(email,href).then(function(){try{localStorage.removeItem(EMAILKEY);}catch(e){}});
+    }).catch(function(e){console.warn('[YS_AUTH] email link',e&&e.code||e);alert('That sign-in link has expired or was already used. Please ask for a new one.');})
+    .then(function(){try{var u=new URL(location.href);['apiKey','oobCode','mode','lang','continueUrl'].forEach(function(p){u.searchParams.delete(p);});history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}});
+  }
   A.ready=function(){return load().then(function(){return {fb:fb,db:db};});};
   A.signOut=function(){if(fb)fb.auth().signOut();menu(false);};
   A.setNewsletter=function(on){if(!A.user||!db)return;A.profile.newsletter=!!on;
@@ -110,11 +133,22 @@
     '.ysAuthMenu label{display:flex;gap:8px;align-items:flex-start;font-size:12px;cursor:pointer;padding:9px 0;border-top:1px solid var(--rule,#D2DBD1);border-bottom:1px solid var(--rule,#D2DBD1)}'+
     '.ysAuthMenu input{accent-color:var(--jade,#1F7A52);margin-top:2px}'+
     '.ysAuthMenu button.out{margin-top:10px;border:0;background:none;color:var(--jade,#1F7A52);font:600 12px/1 "JetBrains Mono",ui-monospace,monospace;cursor:pointer;padding:0}'+
-    '.ysThemeAnchor>.ysAuth{position:absolute;top:12px;right:52px}.ysAuthSlot{flex:none;display:inline-flex}';
+    '.ysThemeAnchor>.ysAuth{position:absolute;top:12px;right:52px}.ysAuthSlot{flex:none;display:inline-flex}'+
+    '.ysAuthModal{position:fixed;inset:0;z-index:999;background:rgba(10,20,15,.45);display:flex;align-items:center;justify-content:center;padding:16px}'+
+    '.ysAuthBox{position:relative;width:100%;max-width:360px;background:var(--paper,#fff);color:var(--ink,#132419);border:1px solid var(--rule,#D2DBD1);border-radius:14px;box-shadow:0 24px 60px -20px rgba(0,0,0,.45);padding:24px 22px 20px;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}'+
+    '.ysAuthBox .x{position:absolute;top:8px;right:10px;border:0;background:none;color:var(--muted,#5E6F63);font-size:20px;cursor:pointer}'+
+    '.ysAuthBox .t{font:500 22px/1.2 Newsreader,Georgia,serif;margin-bottom:6px}.ysAuthBox .s{font-size:12px;color:var(--muted,#5E6F63);margin-bottom:18px;line-height:1.5}'+
+    '.ysAuthBox .g,.ysAuthBox .send{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:42px;border-radius:21px;cursor:pointer;font:600 13px/1 "JetBrains Mono",ui-monospace,monospace}'+
+    '.ysAuthBox .g{border:1px solid var(--rule,#D2DBD1);background:var(--field,#fff);color:var(--ink,#132419)}.ysAuthBox .g:hover{border-color:var(--jade,#1F7A52)}'+
+    '.ysAuthBox .send{border:1px solid var(--jade,#1F7A52);background:var(--jade,#1F7A52);color:#fff;margin-top:8px}.ysAuthBox .send[disabled]{opacity:.5;cursor:default}'+
+    '.ysAuthBox .or{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:11px;color:var(--muted,#5E6F63)}.ysAuthBox .or:before,.ysAuthBox .or:after{content:"";flex:1;height:1px;background:var(--rule,#D2DBD1)}'+
+    '.ysAuthBox .em{width:100%;height:42px;border:1px solid var(--rule,#D2DBD1);border-radius:10px;padding:0 12px;background:var(--field,#fff);color:var(--ink,#132419);font:13px "JetBrains Mono",ui-monospace,monospace;box-sizing:border-box}'+
+    '.ysAuthBox .em:focus{outline:2px solid var(--jade,#1F7A52);outline-offset:1px}'+
+    '.ysAuthBox .msg{font-size:12px;line-height:1.5;margin-top:10px;min-height:1em}.ysAuthBox .msg.ok{color:var(--jade,#1F7A52)}.ysAuthBox .msg.bad{color:var(--rust,#B54A2C)}';
   var styled=false;
   function html(){
     var u=A.user;
-    if(!u)return '<button type="button" class="ysAuthBtn" title="Sign in with Google to keep your watchlist on every device">Sign in</button>';
+    if(!u)return '<button type="button" class="ysAuthBtn" title="Sign in to keep your watchlist on every device">Sign in</button>';
     var ini=(u.name||u.email||'?').trim().charAt(0).toUpperCase();
     return '<button type="button" class="ysAuthBtn in" aria-haspopup="true" aria-expanded="false" title="'+esc(u.email)+'">'+esc(ini)+'</button>'+
       '<div class="ysAuthMenu" role="menu"><div class="who">'+esc(u.name||u.email)+'</div><div class="sub">'+esc(u.email)+' · watchlist, alerts and presets saved to your account</div>'+
@@ -142,13 +176,42 @@
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.ysAuthBtn');
-    if(b){e.preventDefault();e.stopPropagation();if(!A.user){A.signIn();return;}var box=b.parentNode,on=openEl!==box;openEl=on?box:null;menu(on);return;}
+    if(b){e.preventDefault();e.stopPropagation();if(!A.user){chooser(true);return;}var box=b.parentNode,on=openEl!==box;openEl=on?box:null;menu(on);return;}
     if(e.target.closest&&e.target.closest('.ysAuthMenu .out')){A.signOut();return;}
+    if(e.target.closest&&e.target.closest('.ysAuthBox .g')){A.google();return;}
+    if(e.target.closest&&e.target.closest('.ysAuthBox .send')){sendLink();return;}
+    if(e.target.closest&&e.target.closest('.ysAuthBox .x')||e.target.classList&&e.target.classList.contains('ysAuthModal')){chooser(false);return;}
+    if(e.target.closest&&e.target.closest('.ysAuthModal'))return;
     if(e.target.closest&&e.target.closest('.ysAuthMenu'))return;
     if(openEl)menu(false);
   },true);
   document.addEventListener('change',function(e){if(e.target.classList&&e.target.classList.contains('nl')&&e.target.closest('.ysAuthMenu'))A.setNewsletter(e.target.checked);});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&openEl)menu(false);});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){if(openEl)menu(false);chooser(false);}
+    if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('em')&&e.target.closest('.ysAuthBox')){e.preventDefault();sendLink();}});
+  function chooser(on){
+    var m=document.querySelector('.ysAuthModal');
+    if(!on){if(m)m.remove();return;}
+    if(m)return;
+    if(!styled){var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);styled=true;}
+    load();   /* get Firebase ready while the visitor chooses */
+    m=document.createElement('div');m.className='ysAuthModal';
+    m.innerHTML='<div class="ysAuthBox" role="dialog" aria-modal="true" aria-label="Sign in"><button type="button" class="x" aria-label="Close">×</button>'+
+      '<div class="t">Sign in to Yield Sigma</div><div class="s">Keeps your watchlist, alerts and Paper ETFs on every device. Free.</div>'+
+      '<button type="button" class="g">'+GSVG+'Continue with Google</button>'+
+      '<div class="or"><span>or</span></div>'+
+      '<input type="email" class="em" placeholder="you@example.com" autocomplete="email" value="'+esc(ls(EMAILKEY)||'')+'">'+
+      '<button type="button" class="send">Email me a sign-in link</button>'+
+      '<div class="msg" role="status"></div></div>';
+    document.body.appendChild(m);
+  }
+  function sendLink(){
+    var box=document.querySelector('.ysAuthBox');if(!box)return;var inp=box.querySelector('.em'),msg=box.querySelector('.msg'),btn=box.querySelector('.send');
+    btn.disabled=true;msg.className='msg';msg.textContent='Sending…';
+    A.emailLink(inp.value).then(function(){msg.className='msg ok';msg.innerHTML='Check your inbox at <b>'+esc(inp.value.trim())+'</b> and click the link. Open it on this device to finish.';},
+      function(e){btn.disabled=false;msg.className='msg bad';msg.textContent=e&&e.code==='auth/invalid-email'?'Please enter a valid email address.':'The link couldn’t be sent. Please try again in a minute.';console.warn('[YS_AUTH] send link',e&&e.code||e);});
+  }
+  var GSVG='<svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 7-10.3 7-17.7z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>';
   /* cards draw their bar after the data arrives: keep the button next to every light / dark switch */
   function watch(){draw();try{new MutationObserver(function(){var need=[].some.call(document.querySelectorAll('.ysThemeBtn'),function(t){return !(t.previousElementSibling&&t.previousElementSibling.classList.contains('ysAuth'));})||[].some.call(document.querySelectorAll('.ysAuthSlot'),function(sl){return !sl.querySelector('.ysAuth');});if(need)draw();}).observe(document.body,{childList:true,subtree:true});}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);else watch();
@@ -156,4 +219,5 @@
   window.addEventListener('pagehide',function(){if(Object.keys(dirty).length){clearTimeout(timer);push();}});
   /* signed in before on this browser: reconnect quietly */
   try{if(localStorage.getItem(FLAG)==='1')load();}catch(e){}
+  finishEmailLink();
 })();
