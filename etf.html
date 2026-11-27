@@ -130,7 +130,7 @@ tr.click{cursor:pointer}
 .sug ul{margin:0;padding-left:18px;font-size:12.5px}
 .sug li{margin:3px 0}
 .ysStar{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 6px 0 0;vertical-align:-1px}.ysStar:hover,.ysStar.on{color:var(--gold)}
-td.wb{white-space:nowrap;text-align:right}td.wb .ysBell{vertical-align:-3px}
+.eWatch{display:inline-flex;align-items:center;gap:2px;margin-left:10px;vertical-align:6px}.eWatch .ysStar{font-size:20px;padding:0 4px}.eWatch .ysBell svg{width:18px;height:18px}
 .back{font-size:12px;text-decoration:none;font-weight:600}
 .empty{padding:26px 10px;text-align:center;color:var(--muted);font:15px/1.6 var(--serif);border:1px dashed var(--rule);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:20px;font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
@@ -492,7 +492,7 @@ function etfView(){
   if(etf.house)meta+=(etf.note?' · '+esc(etf.note):'')+(etf.n?' · '+turnLine(etf):'');
   else if(etf.n)meta+=' · Rebalanced '+etf.n+'×';
   var h='<a href="#" class="back" data-act="home">← All ETFs</a>';
-  h+='<div class="eHead" style="margin-top:12px"><div>'+sym(etf.sym)+(etf.house?' <span class="chip j" style="vertical-align:8px">House ETF</span>':'')+'<div class="nm">'+esc(etf.name||'')+'</div><div class="meta">'+meta+'</div></div>'+
+  h+='<div class="eHead" style="margin-top:12px"><div>'+sym(etf.sym)+(etf.house?' <span class="chip j" style="vertical-align:8px">House ETF</span>':'')+etfWatch(etf,v,w)+'<div class="nm">'+esc(etf.name||'')+'</div><div class="meta">'+meta+'</div></div>'+
     '<div class="px"><div class="p">'+money(price)+'</div><div class="c">'+chg((tr/S-1)*100)+' since start'+(etf.div==='cash'?' · price '+chg((price/S-1)*100):'')+'</div></div></div>';
   var st=[
     ['Dividend yield',pct(wavg(w,function(s){return s.yld;})),'Weighted average dividend yield of the holdings.'],
@@ -507,11 +507,11 @@ function etfView(){
   h+='<div class="two"><section><h3>Price since start</h3><div class="desc">'+(etf.div==='re'?'Dividends reinvested.':'Price plus dividends paid out.')+' Month-end points and today.</div><div class="chart">'+chartSvg(series(etf),S)+'</div></section>'+
     '<section><h3>Sectors</h3><div class="desc">Share of the ETF’s value today.</div><div class="bars">'+sectorBars(w)+'</div></section></div>';
   var sug=suggest(etf,v);
-  h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'<th></th></tr></thead><tbody>'+
+  h+='<section><h3>Holdings</h3><div class="desc">'+Object.keys(w).length+' names, priced from the Yield Sigma list.</div><div class="tw"><table><thead><tr><th>Ticker</th><th class="l">Name</th><th>'+tip('Target','Weight set at creation or at the last rebalance.')+'</th><th>'+tip('Weight','Share of the ETF’s value today.')+'</th><th>Price</th><th>'+tip('Since added','Change in the stock price since the last rebalance (or creation).')+'</th><th>Dividend yield</th><th>σ</th>'+(own?'<th></th>':'')+'</tr></thead><tbody>'+
     Object.keys(w).sort(function(a,b){return w[b]-w[a];}).map(function(k){var s=U[k]||{t:k,name:'(not on the list today)'},p0=v.ev.p[k],pn=pxNow(k,v.ev);
       var fl=sug.trim.indexOf(k)>=0?'<span class="chip r">Trim</span>':sug.drift.some(function(d){return d.k===k;})?'<span class="chip">Drifted</span>':'';
       var url=(s.kind==='reit'?LINKS.cardReit:LINKS.card)+encodeURIComponent(s.t);
-      return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'<td class="wb">'+watchBell(s)+'</td></tr>';}).join('')+
+      return '<tr><td><a href="'+esc(url)+'" target="_blank" rel="noopener"><b>'+esc(s.t)+'</b></a></td><td class="l">'+esc(s.name)+'</td><td>'+pct(v.ev.tw[k],1)+'</td><td>'+pct(w[k],1)+'</td><td>'+money(pn)+'</td><td>'+chg(p0?(pn/p0-1)*100:null)+'</td><td>'+pct(s.yld)+'</td><td>'+sg(s.sigma)+'</td>'+(own?'<td>'+fl+'</td>':'')+'</tr>';}).join('')+
     '</tbody></table></div></section>';
   var foot='<p class="note" style="margin-top:26px;padding-top:12px;border-top:1px solid var(--rule)">Paper ETFs are simulated portfolios with hypothetical prices. They are not investment funds and can’t be bought or sold.</p>';
   if(!own){h+='<div class="row" style="justify-content:flex-end"><button class="btn" data-act="share">Copy link</button></div>'+foot;return h;}
@@ -553,9 +553,10 @@ function chartSvg(pts,base){base=base||100;
     '<text x="'+pl+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)">'+fmtDate(pts[0].d)+'</text><text x="'+(W-pr)+'" y="'+(Hh-6)+'" font-size="12" fill="var(--muted)" text-anchor="end">'+fmtDate(last.d)+'</text></svg>'+
     (pts.length<3?'<div class="note">More points appear at each month-end.</div>':'');
 }
-function watchBell(s){if(!s||!s.t||!window.YS_WATCH)return '';
-  if(window.YS_BELLS)YS_BELLS.check(s.t,{sigma:s.sigma,yld:s.yld,price:s.price});
-  return YS_WATCH.star(s.t)+(window.YS_BELLS?YS_BELLS.btn(s.t):'');}
+/* star and bell for the ETF itself: it goes on the watchlist like a stock; the bell watches its price, yield and average σ */
+function etfWatch(etf,v,w){if(!window.YS_WATCH)return '';
+  if(window.YS_BELLS)YS_BELLS.check(etf.sym,{sigma:wavg(w,function(s){return s.sigma;}),yld:wavg(w,function(s){return s.yld;}),price:v.nav});
+  return '<span class="eWatch">'+YS_WATCH.star(etf.sym)+(window.YS_BELLS?YS_BELLS.btn(etf.sym):'')+'</span>';}
 function sectorBars(w){
   var s={};Object.keys(w).forEach(function(k){var n=U[k]?U[k].sector:'Other';s[n]=(s[n]||0)+w[k];});
   return Object.keys(s).sort(function(a,b){return s[b]-s[a];}).map(function(n){return '<div class="b"><span>'+esc(n)+'</span><div class="tr"><div class="fi" style="width:'+s[n].toFixed(1)+'%"></div></div><span class="pc">'+s[n].toFixed(1)+'%</span></div>';}).join('');
