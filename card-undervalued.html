@@ -6,7 +6,26 @@
 <script>(function(){try{if(window.top!==window.self)return;}catch(e){return;}var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-1RSYCK579K';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config','G-1RSYCK579K');})();</script>
 <script>/* published card: hide the editor side from the first moment, and start the data downloads right away */document.documentElement.classList.add("pm");window.YS_PRE={};["stocks","reits"].forEach(function(k){var u="https://gist.githubusercontent.com/feurgabi-create/94abe3b6de993ea6a6e888053b242b82/raw/"+k+".csv";try{YS_PRE[u]=fetch(u,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});YS_PRE[u].catch(function(){});}catch(e){}});</script>
 <script src="https://tools.yieldsigma.com/pe-check.js?v=4"></script>
-<style>#ysWaitBox{max-width:760px;margin:40px auto;padding:90px 20px;text-align:center;font:600 14px "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.03em;color:var(--muted,#5e6f63);background:var(--paper,#fff);border:1px solid var(--rule,#d2dbd1);border-radius:12px}html.ysWait #card{display:none}</style>
+<style>#ysWaitBox{max-width:760px;margin:40px auto;padding:90px 20px;text-align:center;font:600 14px "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.03em;color:var(--muted,#5e6f63);background:var(--paper,#fff);border:1px solid var(--rule,#d2dbd1);border-radius:12px}html.ysWait #card{display:none}
+/* ===== Card corner (Nov 2026): SORT BY box, ticker + star, price lined up under the ticker ===== */
+.pricebox .tickRow{align-items:flex-start}
+.ysFind{position:static}
+.ysSortBtn{display:inline-flex;align-items:center;gap:9px;height:28px;box-sizing:border-box;padding:0 11px;border:0;border-radius:8px;background:color-mix(in srgb,var(--c-ink) 7%,transparent);color:var(--c-muted);font:700 11px/1 var(--mono);letter-spacing:.08em;cursor:pointer}
+.ysSortBtn i{font-style:normal;font-size:9px}
+.ysSortBtn:hover,.ysSortBtn[aria-expanded="true"]{color:var(--c-jade);background:var(--c-jade-soft)}
+.ysHits{right:0;left:auto;width:270px}
+.ysHits #ysFindIn{display:block;width:100%;box-sizing:border-box;margin:0 0 6px;font:500 12px/1 var(--mono);color:var(--c-ink);background:transparent;border:1px solid var(--c-rule);border-radius:7px;padding:8px 10px;-webkit-appearance:none;appearance:none}
+.ysHits input:focus{outline:none;border-color:var(--c-jade)}
+.ysHits input::-webkit-search-cancel-button{display:none}
+@media (pointer:coarse){.ysHits input{font-size:16px}}
+.tkCol{display:flex;flex-direction:column;align-items:flex-start}
+.tkLine{display:flex;align-items:center;gap:8px}
+.pxLine{position:relative;margin-top:8px;font:600 clamp(30px,4vw,42px)/1 var(--serif);font-variant-numeric:tabular-nums;color:var(--c-ink);white-space:nowrap}
+.pxLine .pxSign{position:absolute;right:100%;top:.12em;margin-right:2px;font:600 .55em/1 var(--serif)}
+.tvBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;gap:0;padding:0;border:1px solid var(--c-rule);border-radius:20px;background:transparent;color:var(--c-muted)}
+.tvBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
+.tvBtn[aria-pressed="true"]{color:var(--c-jade);border-color:var(--c-jade);background:var(--c-jade-soft)}
+</style>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
 <script src="https://tools.yieldsigma.com/auth.js?v=7"></script>
 <script src="https://tools.yieldsigma.com/watchlist.js?v=1"></script>
@@ -1674,9 +1693,8 @@ function buildCard(rec,a){
   h+='<header class="mast"><div><h2 class="name" title="'+esc(a.name||'')+'">'+esc(shortCompanyName(a.name)||'\u2013')+'</h2><div class="exch"><span><a class="ysHome" href="https://www.yieldsigma.com/home" target="_blank" rel="noopener">Yield Sigma™</a> valuation card</span><button type="button" class="abPill" id="abPill" aria-expanded="false" aria-controls="abPanel">About '+esc(a.ticker||rec.ticker||'')+' <i aria-hidden="true">i</i></button></div><div class="labsBy">from <a href="'+esc(LINKS.labs)+'" target="_blank" rel="noopener">Stardust Capital Labs</a></div>'+
     (a.streak?'<div class="streakBadge'+(a.streak.tier?' tiered':'')+'"><span class="dot"></span>'+esc(a.streak.text)+'</div>':'')+
     '</div>'+
-    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+tickHtml+(window.YS_WATCH?YS_WATCH.star(a.ticker,' style="font-size:20px"'):'')+(window.YS_BELLS?YS_BELLS.btn(a.ticker):'')+'</div>'+
-    '<div class="pxEdit"><span class="pxSign">$</span><input type="number" id="priceInput" class="pxInput" step="0.01" min="0" inputmode="decimal" value="'+(rec.price===null?'':rec.price.toFixed(2))+'" aria-label="Current price — edit to recalculate"></div>'+
-    '<div class="lbl">'+(priceOverride!==null?'<span class="pxAdj">adjusted</span>':'')+'<span class="pxHint">edit to recalculate</span></div>'+
+    '<div class="pricebox"><div class="tickRow">'+ysFindHtml()+'<div class="tkCol"><div class="tkLine">'+tickHtml+(window.YS_WATCH?YS_WATCH.star(a.ticker,' style="font-size:20px"'):'')+'</div>'+
+    '<div class="pxLine"><span class="pxSign">$</span>'+(rec.price===null?'\u2013':rec.price.toFixed(2))+'</div></div></div>'+
     '</div></header>';
   h+='<div class="chips">'+chips.join('')+'</div>';
 
@@ -2393,7 +2411,7 @@ function ysNavHtml(a){
       '<div class="ysMenuSep"></div>'+
       '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
     '</div></div></div>'+
-    '<div class="ysNavR">'+(window.YS_THEME?YS_THEME.button():'')+'<button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(YS_TILES?'true':'false')+'">Tile view<span class="sw" aria-hidden="true"></span></button></div>'+
+    '<div class="ysNavR"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(YS_TILES?'true':'false')+'" aria-label="Tile view" title="Tile view"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></button>'+(window.YS_THEME?YS_THEME.button():'')+'</div>'+
     '</nav>';
   return h;
 }
@@ -2457,11 +2475,8 @@ document.addEventListener('click',function(e){if(!YS_TILES)return;var sm=e.targe
 /* Find a stock box, beside the ticker dropdown. Typing searches every
    name; the ▾ inside fills the dropdown with a filtered top 20. */
 function ysFindHtml(){
-  var f=ysFiltDef(YS_FILTER);
-  var ph=f?f.label:'Find a stock';
-  return '<div class="ysFind'+(f?' filtered':'')+'"><input type="search" id="ysFindIn" style="width:calc('+Math.max(ph.length,14)+'ch + 46px)" placeholder="'+esc(ph)+'" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker">'+
-    '<button type="button" class="ysFiltBtn" id="ysFiltBtn" aria-haspopup="true" aria-expanded="false" aria-label="Filter the list" title="Filter the list">▾</button>'+
-    '<div class="ysHits" id="ysHits" role="listbox"></div></div>';
+  return '<div class="ysFind"><button type="button" class="ysSortBtn" id="ysFiltBtn" aria-haspopup="true" aria-expanded="false">SORT BY <i aria-hidden="true">▾</i></button>'+
+    '<div class="ysHits" id="ysHits" role="listbox"><input type="search" id="ysFindIn" placeholder="Find a stock" autocomplete="off" spellcheck="false" aria-label="Find a stock by name or ticker"><div id="ysHitList"></div></div></div>';
 }
 window.ysGo=function(k,t){return ysGo(k,t);};
 /* the address follows the screen: a tool opened over the card shows that tool's own address,
@@ -2574,7 +2589,7 @@ function ysApplyFilter(k){
 }
 function wireYsNav(rec){
   var t=String(rec.ticker||'').trim().toUpperCase();
-  var tb=$('#ysToolsBtn'),menu=$('#ysMenu'),dir=$('#ysDirBtn'),inp=$('#ysFindIn'),box=$('#ysHits'),fb=$('#ysFiltBtn');
+  var tb=$('#ysToolsBtn'),menu=$('#ysMenu'),dir=$('#ysDirBtn'),inp=$('#ysFindIn'),box=$('#ysHits'),fb=$('#ysFiltBtn'),lst=$('#ysHitList');
   if(tb&&menu){
     tb.addEventListener('click',function(e){e.stopPropagation();var on=!menu.classList.contains('on');menu.classList.toggle('on',on);tb.setAttribute('aria-expanded',on?'true':'false');if(box)box.classList.remove('on');});
     menu.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-go]');if(!b)return;menu.classList.remove('on');tb.setAttribute('aria-expanded','false');ysGo(b.getAttribute('data-go'),t);});
@@ -2583,7 +2598,7 @@ function wireYsNav(rec){
   var list=[],act=-1;
   function paint(){
     var q=inp.value.trim();
-    if(!q){box.classList.remove('on');box.innerHTML='';return;}
+    if(!q){paintFilters();return;}
     list=ysHits(q);
     var h='';
     list.forEach(function(x,i){
@@ -2591,37 +2606,37 @@ function wireYsNav(rec){
     });
     if(!list.length)h='<div class="ysHitNote">No match. <a href="'+YS_DIR+'" target="_blank" rel="noopener">Browse the Directory</a></div>';
     if(!YS_FULL_LIST.length)h+='<div class="ysHitNote">Loading the full list…</div>';
-    box.innerHTML=h;box.classList.add('on');
+    lst.innerHTML=h;box.classList.add('on');
   }
   function pick(i){
     var x=list[i];if(!x)return;
-    if(x.ok){inp.value='';box.classList.remove('on');ysOpenTicker(x.o.t,true);return;}
-    box.innerHTML='<div class="ysHitNote"><b>'+esc(x.o.t)+'</b>’s full card is for members. <a href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">Subscribe on Substack ↗</a></div>';
+    if(x.ok){inp.value='';closeBox();ysOpenTicker(x.o.t,true);return;}
+    lst.innerHTML='<div class="ysHitNote"><b>'+esc(x.o.t)+'</b>’s full card is for members. <a href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">Subscribe on Substack ↗</a></div>';
   }
   var fMode=false;
   function paintFilters(){
-    var h='<div class="ysHitHd">Fill the list with</div>';
+    var h='';
     var L=YS_FULL_LIST.map(function(o){return o.line;}),G=YS_FULL_LIST.map(function(o){return o.tag;});
     YS_FILTERS.forEach(function(f){if(L.length&&f.k!==YS_FILTER&&!ysFiltPick(L,G,f.k).lines.length)return;h+='<button type="button" role="option" class="ysHit'+(f.k===YS_FILTER?' on':'')+'" data-f="'+f.k+'">'+esc(f.label)+(f.k===YS_FILTER?'<em>✓</em>':'')+'</button>';});
     if(!YS_FULL_LIST.length)h+='<div class="ysHitNote">Loading the full list…</div>';
-    box.innerHTML=h;box.classList.add('on');fMode=true;if(fb)fb.setAttribute('aria-expanded','true');
+    lst.innerHTML=h;box.classList.add('on');fMode=true;if(fb)fb.setAttribute('aria-expanded','true');
   }
   function closeBox(){box.classList.remove('on');fMode=false;if(fb)fb.setAttribute('aria-expanded','false');}
   if(fb)fb.addEventListener('click',function(e){
     e.stopPropagation();if(menu)menu.classList.remove('on');
     if(fMode&&box.classList.contains('on')){closeBox();return;}
-    inp.value='';paintFilters();
+    inp.value='';paintFilters();try{if(!matchMedia('(pointer:coarse)').matches)inp.focus();}catch(_){}
   });
   box.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('[data-f]');if(!b)return;
     e.stopPropagation();closeBox();ysApplyFilter(b.getAttribute('data-f'));
   });
   inp.addEventListener('input',function(){act=-1;fMode=false;if(fb)fb.setAttribute('aria-expanded','false');paint();});
-  inp.addEventListener('focus',function(){if(menu)menu.classList.remove('on');if(inp.value.trim())paint();});
+  inp.addEventListener('focus',function(){if(menu)menu.classList.remove('on');});
   inp.addEventListener('keydown',function(e){
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!list.length)return;e.preventDefault();act=(act+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;paint();}
     else if(e.key==='Enter'){e.preventDefault();if(act>=0)pick(act);else{for(var i=0;i<list.length;i++){if(list[i].ok){pick(i);return;}}if(list.length)pick(0);}}
-    else if(e.key==='Escape'){inp.value='';box.classList.remove('on');}
+    else if(e.key==='Escape'){inp.value='';closeBox();}
   });
   box.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('[data-i]');if(b){e.stopPropagation();pick(+b.getAttribute('data-i'));}
