@@ -24,6 +24,7 @@
 .pxLine .pxSign{position:absolute;right:100%;top:.12em;margin-right:2px;font:600 .55em/1 var(--serif)}
 .tvBtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;gap:0;padding:0;border:1px solid var(--c-rule);border-radius:20px;background:transparent;color:var(--c-muted)}
 .tvBtn:hover{color:var(--c-jade);border-color:var(--c-jade)}
+.tvBtn svg{flex:none;width:15px;height:15px}
 .tvBtn[aria-pressed="true"]{color:var(--c-jade);border-color:var(--c-jade);background:var(--c-jade-soft)}
 </style>
 <script src="https://tools.yieldsigma.com/theme.js?v=1"></script>
@@ -2411,7 +2412,7 @@ function ysNavHtml(a){
       '<div class="ysMenuSep"></div>'+
       '<a class="ysMenuSub" role="menuitem" href="'+YS_SUBSTACK+'" target="_blank" rel="noopener">More stats on Substack ↗</a>'+
     '</div></div></div>'+
-    '<div class="ysNavR"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(YS_TILES?'true':'false')+'" aria-label="Tile view" title="Tile view"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></button>'+(window.YS_THEME?YS_THEME.button():'')+'</div>'+
+    '<div class="ysNavR"><button type="button" class="tvBtn" id="tvBtn" aria-pressed="'+(YS_TILES?'true':'false')+'" aria-label="Tile view" title="Tile view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button>'+(window.YS_THEME?YS_THEME.button():'')+'</div>'+
     '</nav>';
   return h;
 }
