@@ -11,7 +11,7 @@
 (function(){
   if(window.YS_AUTH)return;
   var V='10.12.2',SDK='https://www.gstatic.com/firebasejs/'+V+'/';
-  var CFG={apiKey:"AIzaSyBMoVUKGQfvFMtDfo8Vexw8th3tADBBeR8",authDomain:"yield-sigma.firebaseapp.com",projectId:"yield-sigma",
+  var CFG={apiKey:"AIzaSyBMoVUKGQfvFMtDfo8Vexw8th3tADBBeR8",authDomain:"auth.yieldsigma.com",projectId:"yield-sigma",
     storageBucket:"yield-sigma.firebasestorage.app",messagingSenderId:"281792973419",appId:"1:281792973419:web:dc8a668218eb1d9bfabf2e"};
   var SYNC=['ysWatch','ysBells','ysPresets'];   /* lists that follow the account (ETFs live in their own collection) */
   var FLAG='ysAuthed',MERGED='ysAuthMerged',fns=[],A={user:null,profile:{},on:function(f){fns.push(f);}};
